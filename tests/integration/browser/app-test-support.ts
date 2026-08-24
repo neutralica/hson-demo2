@@ -30,5 +30,5 @@ export async function reach_demo(page: Page): Promise<void> {
 }
 
 export async function open_demo(page: Page, name: string): Promise<void> {
-  await page.getByRole("button", { name, exact: true }).click();
+  await page.getByRole("button", { name: name === "test" ? "tests" : name, exact: true }).click();
 }

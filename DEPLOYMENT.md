@@ -67,15 +67,21 @@ sibling directories in that layout. `ws` is a direct runtime dependency of
 
 ## Local development
 
-From `hson-demo2`, run the server and frontend in separate terminals:
+The browser tests explorer is frozen in local development as well as production.
+Generate its exact immutable evidence root and start the frontend:
 
 ```sh
-npm run hosted:test-server
+npm run pack
 npm run dev
 ```
 
-The server defaults to `HOST=127.0.0.1`, `PORT=8787`, and the development
-browser defaults to `ws://127.0.0.1:8787`.
+`pack` writes the generated `.env.frozen-local.local` pointer. Vite reads that
+local-only file and serves the matching evidence directory from the packed
+static artifact. No manual copy or environment export is required.
+
+Run `npm run hosted:test-server` separately only when CLI/build tooling or
+internal LiveHost diagnostics require the hosted execution substrate. The
+ordinary browser tests explorer never connects to it.
 
 ## Frontend production build
 
@@ -101,14 +107,18 @@ Frozen public test exploration is built with an accepted immutable evidence root
 VITE_TEST_EVIDENCE_ROOT=/test-evidence/<exact-40-hex-hson-deploy-commit> npm run build
 ```
 
-The frozen public panel uses ordinary HTTP to load its index and explicit row
+The frozen browser explorer uses ordinary HTTP to load its index and explicit row
 evidence artifacts; it never starts hosted tests or opens a hosted-test
-WebSocket. `VITE_HOSTED_TEST_WS_URL` remains public configuration for the
-live/internal test runner and, when explicit overrides are absent, the existing
+WebSocket in either development or production. `VITE_HOSTED_TEST_WS_URL` remains configuration for the
+internal test runner and, when explicit overrides are absent, the existing
 TOWL and circuit-verification clients. Their optional `VITE_TOWL_WS_URL` and
 `VITE_CIRCUIT_VERIFICATION_WS_URL` overrides remain available for split-service
 or compatibility testing. Missing frozen evidence is a visible frozen
 infrastructure error, never a live-test fallback.
+
+Generate and execute test evidence through `npm run test:cli`, `npm run pack`,
+or `npm run certify`. LiveHost remains the execution substrate for those paths;
+the browser is an evidence consumer, not a test authority.
 
 An explicit runtime `url` remains available for tests and embedding and takes
 precedence over the Vite value.

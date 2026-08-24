@@ -84,12 +84,16 @@ export type HostedCaseReportSurface = Readonly<{
   dispose(): void;
 }>;
 
-export function mount_hosted_case_report(host: LiveTree, diagnostic: HostedTestCaseDiagnostic): HostedCaseReportSurface {
+export function mount_hosted_case_report(
+  host: LiveTree,
+  diagnostic: HostedTestCaseDiagnostic,
+  options: Readonly<{ archiveNavigation?: boolean; onClose?: () => void }> = {},
+): HostedCaseReportSurface {
   const root = host.create.div()
     .attrs.setMany({
-      role: "dialog",
-      "aria-modal": "true",
-      "aria-label": `Transform report for ${diagnostic.name}`,
+      role: options.archiveNavigation === true ? "region" : "dialog",
+      ...(options.archiveNavigation === true ? {} : { "aria-modal": "true" }),
+      "aria-label": options.archiveNavigation === true ? `Frozen case evidence for ${diagnostic.name}` : `Transform report for ${diagnostic.name}`,
       "data-testid": "hosted-case-report",
       "data-case-key": diagnostic.caseKey,
     })
@@ -117,13 +121,19 @@ export function mount_hosted_case_report(host: LiveTree, diagnostic: HostedTestC
     paddingBottom: "0.75rem",
   });
   const identity = header.create.div();
+  if (options.archiveNavigation === true) {
+    identity.create.div()
+      .attrs.set("data-testid", "frozen-inspector-navigation")
+      .text.set("Archived case evidence · Browser Back returns to the tests explorer")
+      .css.setMany({ color: "#7dd8cf", marginBottom: "0.35rem" });
+  }
   identity.create.div().text.set(diagnostic.name).css.setMany({ color: "#d7ff70", fontSize: "1rem" });
   identity.create.div().text.set(diagnostic.caseKey).css.setMany({ color: "#b7c3bb", overflowWrap: "anywhere" });
   identity.create.div()
     .text.set(`${diagnostic.status.toUpperCase()} · ${format_hosted_test_duration(diagnostic.ms)}`)
     .css.setMany({ color: diagnostic.status === "pass" ? "#9ddf8b" : "#ff8778" });
   const close = header.create.button()
-    .attrs.setMany({ type: "button", "aria-label": "Close Transform report" })
+    .attrs.setMany({ type: "button", "aria-label": options.archiveNavigation === true ? "Close case evidence" : "Close Transform report" })
     .text.set("[ close ]")
     .css.setMany({ color: "#d7ff70", border: "1px solid #49534d", padding: "0.35rem 0.6rem", cursor: "pointer" });
   const body = root.create.div().css.setMany({ overflow: "auto", minHeight: "0", paddingTop: "1rem" });
@@ -179,7 +189,7 @@ export function mount_hosted_case_report(host: LiveTree, diagnostic: HostedTestC
     closeListener.off();
     if (!root.isDisposed) root.remove();
   };
-  const closeListener = close.listen.onClick(dispose);
+  const closeListener = close.listen.onClick(() => options.onClose?.() ?? dispose());
   return Object.freeze({ root, dispose });
 }
 

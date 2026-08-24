@@ -71,8 +71,8 @@ npm run cloudflare:dev
 ```
 
 Wrangler prints the local HTTP origin. Use its equivalent `ws://` URL plus the
-existing `locus` query for direct probes. The production browser must be
-built with the deployed secure endpoint:
+existing `locus` query for direct internal probes. Tooling that explicitly
+exercises this optional adapter can use the deployed secure endpoint:
 
 ```sh
 VITE_HOSTED_TEST_WS_URL=wss://hson-demo2-hosted-tests.<account>.workers.dev/socket npm run build
@@ -92,7 +92,7 @@ through the `v1` `new_sqlite_classes` migration and binds it as `HOSTED_TESTS`.
 
 Before deploying, authenticate Wrangler with `wrangler login` or provide the
 standard Cloudflare API token/account environment configuration. After the
-first deploy, copy the generated `https://...workers.dev` hostname, convert it
-to `wss://`, set it as the frontend build-time
-`VITE_HOSTED_TEST_WS_URL`, and rebuild the frontend. A custom Worker route is
-optional and must support WebSocket upgrades.
+first deploy, internal hosted-test diagnostics can convert the generated
+`https://...workers.dev` hostname to `wss://` and pass it explicitly as
+`VITE_HOSTED_TEST_WS_URL`. The ordinary browser test explorer does not use this
+endpoint. A custom Worker route is optional and must support WebSocket upgrades.

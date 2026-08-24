@@ -52,6 +52,7 @@ export type TestSurfaceCatalogEntry = Readonly<{
 }>;
 
 const DEMO_TEST_SCRIPTS = Object.freeze({
+  "test:cli": "scripts/certified-package.mjs",
   "test:towl": "tests/runners/towl/run-towl-suites.node.mts",
   "test:towl-room": "tests/runners/towl/run-towl-room-suite.node.mts",
   "test:replay-node": "tests/runners/livemap/run-replay-suite.node.mts",
@@ -135,6 +136,7 @@ const DEMO_TEST_SCRIPTS = Object.freeze({
 
 const CANONICAL_COMMANDS = new Set(["test:canonical-node", "test:node-application-host"]);
 const AGGREGATE_COMMANDS = new Set([
+  "test:cli",
   "test:surface-enumeration-node",
   "test:stage2-contracts-node",
   "test:stage3-discovery-node",
@@ -177,6 +179,7 @@ const UTILITY_REASONS = Object.freeze({
   "test:h2-boundary": "H2 hostile boundary harness; it validates executor controls and is intentionally excluded from the supported certification denominator.",
 } satisfies Readonly<Record<string, string>>);
 const DEMO_ENVIRONMENT_OVERRIDES = Object.freeze({
+  "test:cli": Object.freeze({ environment: "Node + CLI/build tooling", transport: "LiveHost execution and frozen evidence capture" }),
   "test:node-application-host": Object.freeze({ environment: "Node", transport: "real HTTP + WebSocket" }),
   "test:node-application-host-entry": Object.freeze({ environment: "Node child process", transport: "real HTTP + WebSocket" }),
   "test:livehost-bootstrap-integration": Object.freeze({ environment: "Node", transport: "real HTTP + WebSocket" }),
@@ -230,6 +233,7 @@ function demo_role(name: string): Readonly<{
 }
 
 function category_for(name: string): TestSurfaceCategory {
+  if (name === "test:cli") return "Build / Types";
   if (name === "test:parsing-browser-certificate" || name === "test:parsing-verification-coordinator") return "Transforms";
   if (name.includes("real-websocket") || name.includes("websocket-lifecycle")) return "Real WebSocket";
   if (name.includes("liveinspect")) return "LiveInspector";

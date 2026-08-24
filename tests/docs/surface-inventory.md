@@ -52,7 +52,7 @@ from current authorities.
 - **Semantic checks** means cases plus opaque checks only when those sets are
   semantically nonduplicative.
 
-The Test panel summary uses suites, cases, checks, certifications, their
+The tests explorer summary uses suites, cases, checks, certifications, their
 applicable pass/fail/skip/cancel metrics, and elapsed. The Inspector retains the
 same denominator per suite. The Logger remains chronological evidence, never a
 second totals authority.

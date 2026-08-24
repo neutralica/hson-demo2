@@ -129,7 +129,7 @@ function active_menu_ids(view: DemoView, widgets: readonly WidgetId[]): readonly
 function amoebi_menu_items(): readonly AmoebiMenuItem[] {
   return MENU_OPTIONS.map((key) => ({
     id: key,
-    label: key,
+    label: key === $TEST ? "tests" : key,
     tone: is_widget_menu_key(key) ? _colors.txt.widget : _colors.txt.menu,
   }));
 }
@@ -150,13 +150,14 @@ function make_plain_menu(menuBox: LiveTree, onToggle: (key: MenuKey) => void): P
   const release: Array<() => void> = [];
   for (const key of MENU_OPTIONS) {
     const widget = is_widget_menu_key(key);
+    const label = key === $TEST ? "tests" : key;
     const button = root.create.button()
       .id.set(`${key}-button`)
       .classlist.set(widget ? "widget-button" : "view-button")
-      .attrs.setMany({ type: "button", "aria-label": key, "aria-pressed": "false", "data-menu-key": key })
+      .attrs.setMany({ type: "button", "aria-label": label, "aria-pressed": "false", "data-menu-key": key })
       .css.setMany({ ...MAIN_MENUcss, color: widget ? _colors.txt.widget : _colors.txt.menu });
     button.create.span().classlist.set("plain-menu-marker").attrs.set("aria-hidden", "true");
-    button.create.span().classlist.set("plain-menu-label").text.set(key);
+    button.create.span().classlist.set("plain-menu-label").text.set(label);
     const listener = button.listen.stopProp().onClick(() => onToggle(key));
     release.push(() => listener.off());
     buttons.set(key, button);

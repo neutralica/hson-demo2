@@ -31,6 +31,8 @@ test("application boot reaches one clean usable demo without auto-running hosted
   await expect(page.getByTestId("parse-root")).toHaveCount(0);
   await expect(page.getByTestId("towl-root")).toHaveCount(0);
   await expect(page.locator("#plain-menu-demo")).toBeVisible();
+  await expect(page.getByRole("button", { name: "tests", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "test", exact: true })).toHaveCount(0);
   await expect(page.locator("#amoebi-menu-demo")).toBeHidden();
   await expect(page.locator("#hson-headline")).toBeVisible();
   await expect(page.locator("#livedemo-subhead")).toBeVisible();

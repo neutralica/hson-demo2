@@ -28,8 +28,13 @@ const _shortpause = () => _sleep(PHASE_LINGER * 0.15);
   log_oklch_palette(OKLCH_NEUTRALS, "neutrals");
 
 export async function run_app(root: LiveTree): Promise<void> {
-  const entry = classify_towl_entry_url(new URL(globalThis.location.href));
-  set_view(entry.selectsTowl ? "towl" : null);
+  const applicationUrl = new URL(globalThis.location.href);
+  const entry = classify_towl_entry_url(applicationUrl);
+  const frozenEvidence = applicationUrl.searchParams.get("frozen-evidence");
+  const frozenCase = applicationUrl.searchParams.get("frozen-case");
+  const frozenSuite = applicationUrl.searchParams.get("frozen-suite");
+  const selectsFrozenInspector = /^[0-9a-f]{40}$/.test(frozenEvidence ?? "") && ((frozenCase === null) !== (frozenSuite === null));
+  set_view(entry.selectsTowl ? "towl" : selectsFrozenInspector ? "test" : null);
   const widgets = demo_shell_locations.activeWidgets.snap().filter((widget) => widget !== "bling");
   demo_shell_locations.activeWidgets.set(canonicalize_widget_ids(
     read_bling_preference() ? [...widgets, "bling"] : widgets,
@@ -49,7 +54,7 @@ export async function run_app(root: LiveTree): Promise<void> {
     .attrs.set("data-app-phase", "bootstrap")
     .css.setMany(STAGE_CSS);
 
-  if (entry.selectsTowl) {
+  if (entry.selectsTowl || selectsFrozenInspector) {
     stage.attrs.set("data-app-phase", "demo-loading");
     demoShell = await mount_demo(stage, { directTowlEntry: entry.direct });
     stage.attrs.set("data-app-phase", "demo-ready");

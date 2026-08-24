@@ -147,6 +147,7 @@ export const BROWSER_SPEC_PATHS = Object.freeze([
   "tests/integration/browser/cellsheet-resize.spec.ts",
   "tests/integration/browser/cellsheet.spec.ts",
   "tests/integration/browser/final-presentation.spec.ts",
+  "tests/integration/browser/frozen-test-panel.spec.ts",
   "tests/integration/browser/parse-verification-performance.spec.ts",
   "tests/integration/browser/parse-verification.spec.ts",
   "tests/integration/browser/parse.spec.ts",

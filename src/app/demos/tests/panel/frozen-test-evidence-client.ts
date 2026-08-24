@@ -141,7 +141,7 @@ function fail(code: string, message: string): never {
 }
 
 export function validate_frozen_test_evidence_root(configured: string | undefined): Readonly<{ root: string; deploymentCommit: string }> {
-  if (configured === undefined) fail("FROZEN_EVIDENCE_ROOT_MISSING", "VITE_TEST_EVIDENCE_ROOT is required in frozen production.");
+  if (configured === undefined) fail("FROZEN_EVIDENCE_ROOT_MISSING", "VITE_TEST_EVIDENCE_ROOT is required by the frozen test explorer.");
   const root = configured.trim();
   if (root === "") fail("FROZEN_EVIDENCE_ROOT_EMPTY", "VITE_TEST_EVIDENCE_ROOT must not be empty.");
   if (!root.startsWith("/")) fail("FROZEN_EVIDENCE_ROOT_NOT_ROOT_RELATIVE", "Evidence root must be a root-relative path.");

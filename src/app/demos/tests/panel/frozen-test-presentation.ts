@@ -71,10 +71,14 @@ export function serialize_frozen_index_summary(index: FrozenTestEvidenceIndex): 
 
 export type FrozenEvidenceSurface = Readonly<{ root: LiveTree; dispose(): void }>;
 
-export function mount_frozen_generic_evidence(host: LiveTree, artifact: FrozenRowArtifact): FrozenEvidenceSurface {
+export function mount_frozen_generic_evidence(
+  host: LiveTree,
+  artifact: FrozenRowArtifact,
+  options: Readonly<{ onClose?: () => void }> = {},
+): FrozenEvidenceSurface {
   const id = artifact.owner === "case" ? artifact.caseId : artifact.suiteId;
   const root = host.create.div().attrs.setMany({
-    role: "dialog", "aria-modal": "true", "aria-label": `Frozen evidence for ${id}`,
+    role: "region", "aria-label": `Frozen evidence for ${id}`,
     "data-testid": "frozen-row-evidence", "data-frozen-evidence-owner": artifact.owner,
   }).css.setMany({
     position: "absolute", inset: "0", zIndex: "120", display: "grid", gridTemplateRows: "auto minmax(0,1fr)",
@@ -82,7 +86,11 @@ export function mount_frozen_generic_evidence(host: LiveTree, artifact: FrozenRo
     fontFamily: '"DM Mono",ui-monospace,monospace', pointerEvents: "auto",
   });
   const header = root.create.header().css.setMany({ display: "grid", gridTemplateColumns: "minmax(0,1fr) auto", gap: "1rem", borderBottom: "1px solid #49534d", paddingBottom: ".75rem" });
-  header.create.div().text.set(id).css.setMany({ color: "#d7ff70", overflowWrap: "anywhere" });
+  const identity = header.create.div();
+  identity.create.div().attrs.set("data-testid", "frozen-inspector-navigation")
+    .text.set(`Archived ${artifact.owner} evidence · Browser Back returns to the tests explorer`)
+    .css.setMany({ color: "#7dd8cf", marginBottom: ".35rem" });
+  identity.create.div().text.set(id).css.setMany({ color: "#d7ff70", overflowWrap: "anywhere" });
   const close = header.create.button().attrs.setMany({ type: "button", "aria-label": "Close frozen evidence" }).text.set("[ close ]")
     .css.setMany({ color: "#d7ff70", border: "1px solid #49534d", padding: ".35rem .6rem", cursor: "pointer" });
   root.create.pre().attrs.set("data-testid", "frozen-row-evidence-text").text.set(serialize_frozen_row_artifact(artifact))
@@ -94,7 +102,7 @@ export function mount_frozen_generic_evidence(host: LiveTree, artifact: FrozenRo
     listener.off();
     if (!root.isDisposed) root.remove();
   };
-  const listener = close.listen.onClick(dispose);
+  const listener = close.listen.onClick(() => options.onClose?.() ?? dispose());
   return Object.freeze({ root, dispose });
 }
 

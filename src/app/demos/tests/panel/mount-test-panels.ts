@@ -8,14 +8,14 @@ export type MountedTestPanels = Readonly<{
   dispose(): void;
 }>;
 
-export type TestPanelAcquisitionMode = "frozen" | "live";
+export type TestPanelAcquisitionMode = "frozen";
 
 type MountedPanel = Readonly<{ branch: LiveTree; dispose(): void; ready?: Promise<unknown> }>;
 
 export type TestPanelLoader = (root: LiveTree) => Promise<MountedPanel>;
 
-export function test_panel_acquisition_mode(production: boolean): TestPanelAcquisitionMode {
-  return production ? "frozen" : "live";
+export function test_panel_acquisition_mode(_production: boolean): TestPanelAcquisitionMode {
+  return "frozen";
 }
 
 export function mount_test_panels_with_mode(
@@ -27,7 +27,7 @@ export function mount_test_panels_with_mode(
   const root = host.create.div().id.set("test-panels-root").css.setMany(TP_ROOTcss);
   const loading = root.create.div()
     .attrs.setMany({ "data-testid": "test-panel-loading", "data-test-acquisition": mode })
-    .text.set(mode === "frozen" ? "loading frozen test evidence…" : "connecting to live test host…");
+    .text.set("loading frozen test evidence…");
   let disposed = false;
   let mounted: MountedPanel | undefined;
   const ready = load(root).then(async (panel) => {
@@ -57,15 +57,9 @@ export function mount_test_panels_with_mode(
 }
 
 export function mount_test_panels(host: LiveTree): MountedTestPanels {
-  if (import.meta.env.PROD) {
-    return mount_test_panels_with_mode(host, "frozen", async (root) => {
-      const module = await import("./mount-tp-frozen");
-      const evidenceRoot = import.meta.env.VITE_TEST_EVIDENCE_ROOT;
-      return module.mount_frozen_test_panel(root, evidenceRoot === undefined ? {} : { evidenceRoot });
-    });
-  }
-  return mount_test_panels_with_mode(host, "live", async (root) => {
-    const module = await import("./mount-tp");
-    return module.mount_live_test_panel(root);
+  return mount_test_panels_with_mode(host, test_panel_acquisition_mode(import.meta.env.PROD), async (root) => {
+    const module = await import("./mount-tp-frozen");
+    const evidenceRoot = import.meta.env.VITE_TEST_EVIDENCE_ROOT;
+    return module.mount_frozen_test_panel(root, evidenceRoot === undefined ? {} : { evidenceRoot });
   });
 }

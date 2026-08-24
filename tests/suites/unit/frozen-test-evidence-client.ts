@@ -5,6 +5,7 @@ import {
   validate_frozen_test_evidence_root,
 } from "../../../src/app/demos/tests/panel/frozen-test-evidence-client";
 import { format_frozen_evidence_size, serialize_frozen_index_summary } from "../../../src/app/demos/tests/panel/frozen-test-presentation";
+import { test_panel_acquisition_mode } from "../../../src/app/demos/tests/panel/mount-test-panels";
 import {
   FROZEN_TEST_EVIDENCE_COMMIT,
   FROZEN_TEST_EVIDENCE_ROOT,
@@ -65,6 +66,13 @@ function configured_case_fixture(artifact: unknown): Readonly<{ index: Record<st
 
 export function frozen_test_evidence_client_suite(): TestSuite {
   const cases: readonly TestCase[] = [
+    {
+      suite: SUITE, caseId: "development-production-composition-parity", name: "development and production select the same frozen acquisition path",
+      run: () => {
+        expect(test_panel_acquisition_mode(false) === "frozen", "development must select frozen evidence");
+        expect(test_panel_acquisition_mode(true) === "frozen", "production must select frozen evidence");
+      },
+    },
     {
       suite: SUITE, caseId: "valid-index-loads-once-and-caches", name: "valid index loads once and caches without lazy evidence fetches",
       run: async () => {

@@ -4,11 +4,11 @@
 
 Do not reintroduce `src/tests`, `src/test-system`, `src/hosted-test`, `src/app/hosted-test`, `tests/browser`, or `tests/cloudflare`.
 
-## Public test visibility
+## Test visibility and execution
 
-Any automated test added, restored, split, renamed, or materially expanded must also be reachable from the LiveDemo hosted-test panel.
+Any automated test added, restored, split, renamed, or materially expanded must remain reachable from the canonical hosted-test application used by CLI, capture, and certification tooling, and must be represented truthfully in generated frozen evidence.
 
-This is part of completing the test change, not optional follow-up work. Do not leave maintained automated tests accessible only through a CLI command or standalone launcher.
+This is part of completing the test change, not optional follow-up work. The ordinary browser surface is a frozen evidence explorer and must not initiate test execution.
 
 ### Tests owned by hson-demo2
 
@@ -17,7 +17,7 @@ Register new `TestSuite` / `TestCase` factories with the canonical hosted-test r
 - present in `tests.discover`;
 - assigned accurate subject, collection, and execution-context metadata;
 - selectable through `tests.runSelected`;
-- visible under the appropriate LiveDemo category and suite selectors.
+- materialized under the appropriate frozen evidence category and suite navigation after capture.
 
 Do not create a second panel-specific test list.
 
@@ -33,9 +33,9 @@ For a new or changed acceptance/runtime-probe launcher, update the exported `hso
 - accurate executable case count;
 - relevant collections.
 
-The corresponding hson-demo2 integration must discover and expose it in LiveDemo under its functional category. Do not create a separate “library verification” category when the test belongs to LiveHost, LiveMap, LiveTree, Transform, or another established subject.
+The corresponding hson-demo2 integration must expose it to the internal hosted registry and generated evidence under its functional category. Do not create a separate “library verification” category when the test belongs to LiveHost, LiveMap, LiveTree, Transform, or another established subject.
 
-A test change is not complete until the test is publicly discoverable and runnable through LiveDemo, or an unsupported-environment exception is explicitly documented.
+A test change is not complete until the test is runnable through supported CLI/build tooling and represented in generated evidence, or an unsupported-environment exception is explicitly documented.
 
 ### Unsupported environments
 
@@ -53,8 +53,8 @@ Treat the task as incomplete unless this exception is explicit and justified.
 Before reporting a test-related task complete, verify that:
 
 - the original CLI command still passes;
-- LiveDemo discovery includes the new test or launcher;
+- hosted discovery includes the new test or launcher;
 - category and suite counts reflect it;
-- selecting its category or suite executes it;
+- CLI/capture selection executes it;
 - Worker discovery remains free of Node-only tests;
 - no test is registered twice.

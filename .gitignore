@@ -5,6 +5,7 @@ node_modules/
 # vite caches
 **/.vite/
 .wrangler/
+.env.frozen-local.local
 
 .DS_Store
 _archive-delete/

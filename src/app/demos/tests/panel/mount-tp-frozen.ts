@@ -35,7 +35,7 @@ export type FrozenTestPanel = Readonly<{
 
 const STYLES = Object.freeze({
   root: { position: "relative", width: "100%", height: "100%", overflow: "auto", fontFamily: "DM Mono, monospace", fontSize: _fontSize.wee },
-  notice: { display: "grid", gridTemplateColumns: "minmax(0,1fr) auto", alignItems: "center", gap: "8px", padding: "10px 8px", color: "#9bb3a6", borderBottom: "1px solid rgba(125,216,207,.25)" },
+  notice: { display: "grid", gridTemplateColumns: "minmax(0,1fr) auto", alignItems: "center", gap: "10px", padding: "12px 10px", color: "#d7e9dd", fontSize: ".76rem", fontWeight: "600", background: "rgba(125,216,207,.06)", borderTop: "1px solid rgba(125,216,207,.24)", borderBottom: "1px solid rgba(125,216,207,.42)" },
   error: { padding: "12px 8px", color: "#ff8778", border: "1px solid rgba(255,135,120,.45)", whiteSpace: "pre-wrap" },
   category: { borderBottom: "1px solid rgba(125,216,207,.26)" },
   categoryHeading: { padding: "9px 8px 5px", color: "#d7ff70", letterSpacing: ".08em", textTransform: "uppercase" },
@@ -57,6 +57,10 @@ const STYLES = Object.freeze({
 
 type RowAction = "view" | "copy";
 type Surface = Readonly<{ dispose(): void }>;
+const FROZEN_EVIDENCE_PARAM = "frozen-evidence";
+const FROZEN_CASE_PARAM = "frozen-case";
+const FROZEN_SUITE_PARAM = "frozen-suite";
+const FROZEN_HISTORY_MARKER = "hsonFrozenInspectorEntry";
 
 function row_selection(suite: FrozenTestSuite, testCase?: FrozenTestSuite["cases"][number]): FrozenRowEvidenceSelection {
   return Object.freeze({ category: suite.category, suite, ...(testCase === undefined ? {} : { testCase }), reference: (testCase?.evidence ?? suite.evidence)! });
@@ -69,8 +73,8 @@ function append_actions(row: LiveTree, label: string, selection: FrozenRowEviden
   const view = controls.create.button().classlist.set("frozen-test-action").attrs.setMany({ type: "button", "data-frozen-action": "view", "aria-label": `View evidence for ${label}` }).text.set("View");
   controls.create.span().attrs.set("data-testid", "frozen-evidence-size").text.set(`· ${format_frozen_evidence_size(reference.rawBytes)}`);
   const copy = controls.create.button().classlist.set("frozen-test-action").attrs.setMany({ type: "button", "data-frozen-action": "copy", "aria-label": `Copy evidence for ${label}` }).text.set("Copy");
-  view.listen.onClick(() => onAction("view", selection, row, view));
-  copy.listen.onClick(() => onAction("copy", selection, row, copy));
+  view.listen.stopProp().onClick(() => onAction("view", selection, row, view));
+  copy.listen.stopProp().onClick(() => onAction("copy", selection, row, copy));
 }
 
 function render_index(
@@ -81,20 +85,28 @@ function render_index(
 ): void {
   branch.empty();
   const notice = branch.create.div().classlist.set("frozen-test-notice").attrs.set("data-testid", "frozen-test-summary");
-  notice.create.span().text.set(`${index.suites.length} suites · ${index.suites.reduce((total, suite) => total + suite.cases.length, 0)} cases · frozen · ${index.deployment.hsonDeployCommit.slice(0, 10)}`);
+  const totalCases = index.suites.reduce((total, suite) => total + suite.cases.length, 0);
+  const passed = index.categories.reduce((total, category) => total + (category.summary.pass ?? 0), 0);
+  const failed = index.categories.reduce((total, category) => total + (category.summary.fail ?? 0), 0);
+  const summary = notice.create.span();
+  summary.create.span().text.set(`${index.suites.length} suites · ${totalCases} cases · `);
+  summary.create.span().text.set(`${passed} pass`).css.set.color("#9ddf8b");
+  summary.create.span().text.set(" · ");
+  summary.create.span().text.set(`${failed} fail`).css.set.color(failed === 0 ? "#9bb3a6" : "#ff8778");
+  summary.create.span().text.set(` · ${index.deployment.hsonDeployCommit.slice(0, 10)}`).css.set.color("#9bb3a6");
   const copyReports = notice.create.button().classlist.set("frozen-test-action").attrs.setMany({ type: "button", "data-testid": "frozen-copy-reports", "aria-label": "Copy Reports" }).text.set("Copy Reports");
   copyReports.listen.onClick(() => onCopyReports(copyReports));
 
   for (const categoryId of FROZEN_TEST_CATEGORIES) {
     const category = index.categories.find((item) => item.id === categoryId)!;
-    const group = branch.create.section().classlist.set("frozen-test-category").attrs.setMany({ "data-frozen-category": categoryId, "data-testid": `frozen-category-${categoryId}` });
-    const heading = group.create.div().classlist.set("frozen-test-category-heading");
+    const group = branch.create.details().classlist.set("frozen-test-category").attrs.setMany({ "data-frozen-category": categoryId, "data-testid": `frozen-category-${categoryId}` });
+    const heading = group.create.summary().classlist.set("frozen-test-category-heading");
     heading.create.span().text.set(categoryId);
     heading.create.span().classlist.set("frozen-test-category-summary").text.set(`${category.status.toUpperCase()} · ${category.suiteCounts.total} suites · ${category.caseCounts.total} cases · ${format_frozen_test_duration(category.timing)}`);
     const suites = index.suites.filter((suite) => suite.category === categoryId).sort((a, b) => a.order - b.order || a.id.localeCompare(b.id));
     for (const suite of suites) {
-      const suiteGroup = group.create.div().classlist.set("frozen-test-suite").attrs.setMany({ "data-frozen-suite": suite.id, "data-frozen-status": suite.status });
-      const row = suiteGroup.create.div().classlist.set("frozen-test-suite-row").attrs.set("data-testid", "frozen-suite-row");
+      const suiteGroup = group.create.details().classlist.set("frozen-test-suite").attrs.setMany({ "data-frozen-suite": suite.id, "data-frozen-status": suite.status });
+      const row = suiteGroup.create.summary().classlist.set("frozen-test-suite-row").attrs.set("data-testid", "frozen-suite-row");
       if (suite.status === "fail") row.classlist.add("is-fail");
       const name = row.create.span();
       name.create.span().text.set(suite.id);
@@ -145,6 +157,8 @@ export function mount_frozen_test_panel(host: LiveTree, options: Readonly<{ evid
   let index: FrozenTestEvidenceIndex | undefined;
   let disposed = false;
   let surface: Surface | undefined;
+  let activeInspectorKey: string | undefined;
+  let navigationRevision = 0;
   let client: FrozenTestEvidenceClient;
   try {
     client = options.client ?? make_frozen_test_evidence_client({ ...(options.evidenceRoot === undefined ? {} : { root: options.evidenceRoot }) });
@@ -161,18 +175,113 @@ export function mount_frozen_test_panel(host: LiveTree, options: Readonly<{ evid
     row.find.byClass("frozen-test-row-error")?.remove();
     row.create.span().classlist.set("frozen-test-row-error").attrs.setMany({ role: "alert", "data-testid": "frozen-row-evidence-error" }).text.set(`Frozen row evidence could not be loaded. ${cause instanceof Error ? cause.message : String(cause)}`);
   };
+
+  const selection_key = (selection: FrozenRowEvidenceSelection): string => selection.testCase === undefined
+    ? `suite:${selection.suite.id}`
+    : `case:${selection.testCase.id}`;
+  const selection_from_url = (loaded: FrozenTestEvidenceIndex): FrozenRowEvidenceSelection | undefined => {
+    const url = new URL(location.href);
+    if (url.searchParams.get(FROZEN_EVIDENCE_PARAM) !== loaded.deployment.hsonDeployCommit) return undefined;
+    const caseId = url.searchParams.get(FROZEN_CASE_PARAM);
+    const suiteId = url.searchParams.get(FROZEN_SUITE_PARAM);
+    if ((caseId === null) === (suiteId === null)) return undefined;
+    if (caseId !== null) {
+      for (const suite of loaded.suites) {
+        const testCase = suite.cases.find((item) => item.id === caseId);
+        if (testCase?.evidence?.available === true) return row_selection(suite, testCase);
+      }
+      return undefined;
+    }
+    const suite = loaded.suites.find((item) => item.id === suiteId);
+    return suite?.evidence?.available === true ? row_selection(suite) : undefined;
+  };
+  const inspector_url = (loaded: FrozenTestEvidenceIndex, selection?: FrozenRowEvidenceSelection): URL => {
+    const url = new URL(location.href);
+    url.searchParams.delete(FROZEN_EVIDENCE_PARAM);
+    url.searchParams.delete(FROZEN_CASE_PARAM);
+    url.searchParams.delete(FROZEN_SUITE_PARAM);
+    if (selection !== undefined) {
+      url.searchParams.set(FROZEN_EVIDENCE_PARAM, loaded.deployment.hsonDeployCommit);
+      url.searchParams.set(selection.testCase === undefined ? FROZEN_SUITE_PARAM : FROZEN_CASE_PARAM, selection.testCase?.id ?? selection.suite.id);
+    }
+    return url;
+  };
+  const close_surface = (): void => {
+    navigationRevision += 1;
+    surface?.dispose();
+    surface = undefined;
+    activeInspectorKey = undefined;
+    branch.attrs.set("data-frozen-inspector-state", "closed");
+    branch.attrs.drop("data-frozen-inspector-key");
+  };
+  const close_from_control = (): void => {
+    const state = history.state as Readonly<Record<string, unknown>> | null;
+    if (state?.[FROZEN_HISTORY_MARKER] === true) {
+      history.back();
+      return;
+    }
+    if (index !== undefined) history.replaceState(state, "", inspector_url(index));
+    close_surface();
+  };
+  const mount_surface = (artifact: FrozenRowArtifact): Surface => artifact.owner === "case" && artifact.diagnostic !== null
+    ? mount_hosted_case_report(branch, artifact.diagnostic, { archiveNavigation: true, onClose: close_from_control })
+    : mount_frozen_generic_evidence(branch, artifact, { onClose: close_from_control });
+  const open_selection = async (
+    selection: FrozenRowEvidenceSelection,
+    pushHistory: boolean,
+    row?: LiveTree,
+    control?: LiveTree,
+  ): Promise<void> => {
+    const revision = ++navigationRevision;
+    const key = selection_key(selection);
+    if (control !== undefined) control.flags.set("disabled");
+    row?.attrs.set("data-frozen-row-state", "loading");
+    try {
+      const artifact = await client.loadRowEvidence(selection);
+      if (disposed || revision !== navigationRevision) return;
+      if (pushHistory && index !== undefined) {
+        const previous = typeof history.state === "object" && history.state !== null ? history.state as Record<string, unknown> : {};
+        history.pushState({ ...previous, [FROZEN_HISTORY_MARKER]: true }, "", inspector_url(index, selection));
+      }
+      surface?.dispose();
+      surface = mount_surface(artifact);
+      activeInspectorKey = key;
+      branch.attrs.setMany({ "data-frozen-inspector-state": "open", "data-frozen-inspector-key": key });
+      row?.attrs.set("data-frozen-row-state", "ready");
+    } catch (cause) {
+      if (!disposed && revision === navigationRevision && row !== undefined) show_row_error(row, cause);
+    } finally {
+      if (!disposed) {
+        branch.attrs.set("data-frozen-row-evidence-requests", String(client.snapshot().rowEvidenceRequests));
+        control?.flags.clear("disabled");
+      }
+    }
+  };
+  const reconcile_location = (): void => {
+    if (disposed || index === undefined) return;
+    const selection = selection_from_url(index);
+    if (selection === undefined) {
+      close_surface();
+      return;
+    }
+    if (selection_key(selection) === activeInspectorKey) return;
+    void open_selection(selection, false);
+  };
+  const popstateListener = (): void => reconcile_location();
+  window.addEventListener("popstate", popstateListener);
+
   const onAction = async (action: RowAction, selection: FrozenRowEvidenceSelection, row: LiveTree, control: LiveTree): Promise<void> => {
     row.find.byClass("frozen-test-row-error")?.remove();
     row.attrs.set("data-frozen-row-state", "loading");
     control.flags.set("disabled");
     try {
+      if (action === "view") {
+        await open_selection(selection, true, row, control);
+        return;
+      }
       const artifact: FrozenRowArtifact = await client.loadRowEvidence(selection);
       if (disposed) return;
-      if (action === "copy") await navigator.clipboard.writeText(serialize_frozen_row_artifact(artifact));
-      else {
-        surface?.dispose();
-        surface = artifact.owner === "case" && artifact.diagnostic !== null ? mount_hosted_case_report(branch, artifact.diagnostic) : mount_frozen_generic_evidence(branch, artifact);
-      }
+      await navigator.clipboard.writeText(serialize_frozen_row_artifact(artifact));
       row.attrs.set("data-frozen-row-state", "ready");
     } catch (cause) {
       if (!disposed) show_row_error(row, cause);
@@ -207,6 +316,7 @@ export function mount_frozen_test_panel(host: LiveTree, options: Readonly<{ evid
       "data-frozen-case-count": String(loaded.suites.reduce((total, suite) => total + suite.cases.length, 0)), "data-frozen-index-requests": String(requests.indexRequests),
       "data-frozen-initial-evidence-requests": String(requests.rowEvidenceRequests), "data-frozen-row-evidence-requests": String(requests.rowEvidenceRequests),
     });
+    reconcile_location();
     return loaded;
   }).catch((cause: unknown) => {
     if (disposed) return undefined;
@@ -224,6 +334,7 @@ export function mount_frozen_test_panel(host: LiveTree, options: Readonly<{ evid
     dispose() {
       if (disposed) return;
       disposed = true;
+      window.removeEventListener("popstate", popstateListener);
       surface?.dispose();
       branch.remove();
     },
