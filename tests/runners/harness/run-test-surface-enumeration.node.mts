@@ -8,7 +8,6 @@ import {
   TEST_SURFACE_CATEGORIES,
 } from "../../harness/hosted/test-surface-catalog";
 import {
-  BROWSER_SPEC_PATHS,
   PHASE5_DUPLICATE_RETIREMENTS,
   TEST_CENSUS_CAPABILITIES,
   build_test_surface_census,
@@ -23,6 +22,7 @@ import {
 } from "hson-live/test-launchers";
 import { make_local_node_locus_executor_registry } from "../../harness/runtimes/node/livehost-node-executor";
 import {
+  ALL_BROWSER_SUITE_MANIFEST,
   BROWSER_RASTER_SUITE_MANIFEST,
   BROWSER_SUITE_MANIFEST,
 } from "../../harness/runtimes/node/browser/browser-test-manifest";
@@ -96,9 +96,10 @@ const browserSources = await sourceFiles(browserRoot);
 const browserSpecs = browserSources.filter((path) => path.endsWith(".spec.ts"));
 expect_surface(browserSpecs.length > 0, "the test:browser aggregate must own at least one browser journey spec");
 const browserSpecPaths = browserSpecs.map((path) => relative(demoRoot, path)).sort();
+const manifestedBrowserSpecPaths = [...new Set(ALL_BROWSER_SUITE_MANIFEST.map((entry) => entry.path))].sort();
 expect_surface(
-  JSON.stringify(browserSpecPaths) === JSON.stringify([...BROWSER_SPEC_PATHS].sort()),
-  `browser spec census differs: source ${browserSpecPaths.join(", ")}; census ${BROWSER_SPEC_PATHS.join(", ")}`,
+  JSON.stringify(browserSpecPaths) === JSON.stringify(manifestedBrowserSpecPaths),
+  `browser spec census differs: source ${browserSpecPaths.join(", ")}; manifest ${manifestedBrowserSpecPaths.join(", ")}`,
 );
 const browserSurfaceInventory: readonly BrowserSurfaceInventory[] = Object.freeze(await Promise.all(browserSpecs.map(async (path) => {
   const source = await readFile(path, "utf8");

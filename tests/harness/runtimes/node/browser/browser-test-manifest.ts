@@ -93,7 +93,7 @@ export const BROWSER_SUITE_MANIFEST = Object.freeze([
   ]),
   browser_suite("frozen-test-panel", [
     "localhost application mount loads one immutable frozen index without browser execution",
-    "accepted evidence maps every suite once and mounts in the report explorer",
+    "decoded retained evidence maps every suite once and mounts in the report explorer",
     "frozen explorer accents come from the shared vibrant palette",
     "test report explorer uses report-loading terminology",
     "frozen case inspector URL supports Back, Forward, refresh, and direct reopening",

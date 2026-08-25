@@ -50,7 +50,9 @@ export function frozen_test_evidence_fixture(): Record<string, any> {
 export const FROZEN_TEST_EVIDENCE_COMMIT = COMMIT;
 export const FROZEN_TEST_EVIDENCE_ROOT = `/test-evidence/${COMMIT}`;
 
-export function complete_frozen_test_evidence_inventory_fixture(): Record<string, any> {
+/** Synthetic current-scale explorer fixture. Its values intentionally do not
+ * mirror or constrain the executable test inventory. */
+export function large_frozen_test_evidence_inventory_fixture(): Record<string, any> {
   const semanticDomains = [
     { id: "transform", suites: 36, cases: 314 },
     { id: "livetree", suites: 36, cases: 314 },
@@ -63,8 +65,8 @@ export function complete_frozen_test_evidence_inventory_fixture(): Record<string
   ] as const;
   const categoryPlan = [
     { id: "semantic", suites: 285, cases: 2505, shape: "cases" },
-    { id: "browser", suites: 17, cases: 81, shape: "browser-journeys" },
-    { id: "certification", suites: 57, cases: 0, shape: "certification-aggregate" },
+    { id: "browser", suites: 19, cases: 83, shape: "browser-journeys" },
+    { id: "certification", suites: 61, cases: 0, shape: "certification-aggregate" },
   ] as const;
   const semanticSuites = semanticDomains.flatMap((domain) => {
     const baseCases = Math.floor(domain.cases / domain.suites);
@@ -129,7 +131,7 @@ export function complete_frozen_test_evidence_inventory_fixture(): Record<string
   ];
   return {
     deployment: { hsonDeployCommit: COMMIT },
-    accounting: { inventory: { suites: 359, cases: 2586 } },
+    accounting: { inventory: { suites: suites.length, cases: suites.flatMap((suite) => suite.cases).length } },
     selectionCategories: ["semantic", "browser", "certification"],
     categories: categoryPlan.map((plan) => ({
       id: plan.id,

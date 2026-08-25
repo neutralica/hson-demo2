@@ -54,7 +54,7 @@ export default defineConfig({
       stderr: "pipe",
     },
     {
-      command: `VITE_TEST_EVIDENCE_ROOT=/test-evidence/${"a".repeat(40)} VITE_HOSTED_TEST_WS_URL=${hostedTestUrl} VITE_TOWL_WS_URL=${hostedTestUrl} VITE_CIRCUIT_VERIFICATION_WS_URL=${hostedTestUrl} npm run dev -- --host 127.0.0.1 --port ${appPort} --strictPort`,
+      command: `VITE_TEST_EVIDENCE_ROOT=/test-evidence/${"a".repeat(40)} VITE_HOSTED_TEST_WS_URL=${hostedTestUrl} VITE_TOWL_WS_URL=${hostedTestUrl} VITE_CIRCUIT_VERIFICATION_WS_URL=${hostedTestUrl} npm run dev:test -- --host 127.0.0.1 --port ${appPort} --strictPort`,
       url: appUrl,
       timeout: 30_000,
       reuseExistingServer: liveHostExecution ? false : localDevelopment,

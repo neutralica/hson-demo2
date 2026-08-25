@@ -75,13 +75,6 @@ export type CertificationAccounting = Readonly<{
   developerUtilities: number;
   dynamicSurfaces: number;
   externalDeployedDiagnostics: number;
-  alreadyHostedBeforeH2: number;
-  h2bSupportedAdditions: number;
-  h2cSupportedAdditions: number;
-  h2dSupportedAdditions: number;
-  h2SupportedAdditions: number;
-  hostedAfterH2: number;
-  remainingH2CD: number;
 }>;
 export type TestSurfaceShape =
   | "canonical suite"
@@ -139,26 +132,6 @@ export type BrowserSurfaceInventory = Readonly<{
   path: `tests/integration/browser/${string}.spec.ts`;
   cases: number;
 }>;
-
-export const BROWSER_SPEC_PATHS = Object.freeze([
-  "tests/integration/browser/app-boot.spec.ts",
-  "tests/integration/browser/binary-hson.spec.ts",
-  "tests/integration/browser/build.spec.ts",
-  "tests/integration/browser/cellsheet-resize.spec.ts",
-  "tests/integration/browser/cellsheet.spec.ts",
-  "tests/integration/browser/final-presentation.spec.ts",
-  "tests/integration/browser/frozen-test-panel.spec.ts",
-  "tests/integration/browser/parse-verification-performance.spec.ts",
-  "tests/integration/browser/parse-verification.spec.ts",
-  "tests/integration/browser/parse.spec.ts",
-  "tests/integration/browser/quid-selector.spec.ts",
-  "tests/integration/browser/sanitizer-metadata.spec.ts",
-  "tests/integration/browser/shell-resource-lifecycle.spec.ts",
-  "tests/integration/browser/small-state-surfaces.spec.ts",
-  "tests/integration/browser/towl-direct-entry.spec.ts",
-  "tests/integration/browser/towl-rooms.spec.ts",
-  "tests/integration/browser/visual-determinism-authority.spec.ts",
-] as const satisfies readonly BrowserSurfaceInventory["path"][]);
 
 export type DuplicateRetirement = Readonly<{
   removedTestIdentity: string;
@@ -418,63 +391,23 @@ export function test_census_denominators(census: readonly TestSurfaceCensusEntry
   return Object.freeze(totals);
 }
 
-const DUPLICATE_CERTIFICATION_ALIASES = new Set<string>([
-  "hson-demo2:test:stage4a-selected-worker",
-]);
-const SEMANTIC_CERTIFICATION_ALIASES = new Set<string>([
-  "hson-demo2:test:phase3b-cancellation-node",
-  "hson-demo2:test:phase3b-process-cancellation-node",
-  "hson-demo2:test:phase3b-panel-cancellation-node",
-  "hson-demo2:test:external-library-node",
-  "hson-demo2:test:external-library-all-node",
-  "hson-demo2:test:inclusive-library-node",
-]);
-const H2B_SUPPORTED_CERTIFICATION_IDS = new Set<string>([
-  "hson-demo2:test:surface-enumeration-node",
-  "hson-demo2:test:stage2-contracts-node",
-  "hson-demo2:test:stage3-discovery-node",
-  "hson-demo2:test:stage4a-selected-node",
-  "hson-demo2:test:stage4b-panel-node",
-  "hson-demo2:test:phase1-convergence-node",
-  "hson-demo2:test:phase2a-lifecycle-node",
-  "hson-demo2:test:phase2b-presentation-node",
-  "hson-demo2:test:phase4a-layering-node",
-  "hson-demo2:test:phase4b-retirement-node",
-]);
-const H2C_SUPPORTED_CERTIFICATION_IDS = new Set<string>([
-  "hson-live:build",
-  "hson-live:check",
-  "hson-live:check:source",
-  "hson-live:check:tests",
-  "hson-live:check:entrypoints",
-  "hson-live:test:diagnostics-inventory",
-  "hson-demo2:build",
-  "hson-demo2:check",
-  "hson-demo2:build:node-production",
-  "hson-demo2:check:cloudflare",
-  "hson-demo2:cloudflare:types",
-]);
-const H2D_SUPPORTED_CERTIFICATION_IDS = new Set<string>([
-  "hson-demo2:test:stage5a-corpus-node",
-  "hson-demo2:test:phase6a-node-hosted",
-  "hson-demo2:test:phase6a-full-node-hosted",
-  "hson-demo2:test:phase6b-browser-executor",
-  "hson-demo2:test:phase6b-browser-cancellation",
-  "hson-demo2:test:phase6b-mixed-run",
-  "hson-demo2:test:phase6b-full-browser-hosted",
-]);
-const H2_SUPPORTED_CERTIFICATION_IDS = new Set<string>([
-  ...H2B_SUPPORTED_CERTIFICATION_IDS,
-  ...H2C_SUPPORTED_CERTIFICATION_IDS,
-  ...H2D_SUPPORTED_CERTIFICATION_IDS,
+const DUPLICATE_CERTIFICATION_ALIASES = new Set(
+  TEST_SURFACE_CATALOG.filter((entry) => entry.aliasOf !== undefined).map((entry) => entry.id),
+);
+const SEMANTIC_CERTIFICATION_ALIASES = new Set<string>(NODE_HOSTED_SEMANTIC_ALIAS_SURFACE_IDS);
+const HARNESS_CERTIFICATION_IDS = new Set<string>([
+  // This is the CLI front door for run/inspect/pack/certify, not an independently
+  // executable semantic certification.
+  "hson-demo2:test:cli",
 ]);
 
-/** Mechanical H2 denominator reconciliation.  Each raw certification command
- * belongs to exactly one category, so aliases remain inspectable exclusions. */
+/** Each current certification-like command belongs to exactly one semantic
+ * category. Counts are projections of the catalog, never live denominators. */
 export function classify_certification_surface(entry: TestSurfaceCensusEntry): CertificationAccountingCategory | undefined {
   if (entry.denominator !== "certification surfaces") return undefined;
   if (DUPLICATE_CERTIFICATION_ALIASES.has(entry.id)) return "DUPLICATE_ALIAS";
   if (SEMANTIC_CERTIFICATION_ALIASES.has(entry.id)) return "SEMANTIC_ALIAS";
+  if (HARNESS_CERTIFICATION_IDS.has(entry.id)) return "HARNESS_CERTIFICATE";
   return "SUPPORTED_CERTIFICATION";
 }
 
@@ -485,12 +418,6 @@ export function reconcile_certification_accounting(census: readonly TestSurfaceC
   };
   const raw = census.filter((entry) => classify_certification_surface(entry) !== undefined);
   for (const entry of raw) totals[classify_certification_surface(entry)!] += 1;
-  const supported = raw.filter((entry) => classify_certification_surface(entry) === "SUPPORTED_CERTIFICATION");
-  const h2bSupportedAdditions = supported.filter((entry) => H2B_SUPPORTED_CERTIFICATION_IDS.has(entry.id)).length;
-  const h2cSupportedAdditions = supported.filter((entry) => H2C_SUPPORTED_CERTIFICATION_IDS.has(entry.id)).length;
-  const h2dSupportedAdditions = supported.filter((entry) => H2D_SUPPORTED_CERTIFICATION_IDS.has(entry.id)).length;
-  const h2SupportedAdditions = h2bSupportedAdditions + h2cSupportedAdditions + h2dSupportedAdditions;
-  const alreadyHostedBeforeH2 = supported.filter((entry) => entry.currentLocalLocusAvailability && !H2_SUPPORTED_CERTIFICATION_IDS.has(entry.id)).length;
   const reconciled = Object.values(totals).reduce((sum, count) => sum + count, 0);
   if (reconciled !== raw.length) throw new Error(`CERTIFICATION_ACCOUNTING_UNRECONCILED: ${raw.length} raw entries, ${reconciled} classified.`);
   return Object.freeze({
@@ -502,12 +429,5 @@ export function reconcile_certification_accounting(census: readonly TestSurfaceC
     developerUtilities: totals.DEVELOPER_UTILITY,
     dynamicSurfaces: totals.DYNAMIC_SURFACE,
     externalDeployedDiagnostics: totals.EXTERNAL_DEPLOYED_DIAGNOSTIC,
-    alreadyHostedBeforeH2,
-    h2bSupportedAdditions,
-    h2cSupportedAdditions,
-    h2dSupportedAdditions,
-    h2SupportedAdditions,
-    hostedAfterH2: alreadyHostedBeforeH2 + h2SupportedAdditions,
-    remainingH2CD: totals.SUPPORTED_CERTIFICATION - (alreadyHostedBeforeH2 + h2SupportedAdditions),
   });
 }

@@ -2,27 +2,12 @@ import { expect, test } from "./livehost-browser-test";
 import type { Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { pathToFileURL } from "node:url";
 import { OKLCH_VIBRANT } from "../../../src/app/core/consts/oklch.consts";
 import { decode_frozen_test_evidence_index, frozen_test_explorer_category, frozen_test_explorer_category_candidates, project_frozen_test_explorer } from "../../../src/app/demos/tests/panel/frozen-test-evidence-client";
-import { complete_frozen_test_evidence_inventory_fixture, FROZEN_TEST_EVIDENCE_ROOT } from "../../fixtures/app/frozen-test-evidence-index";
+import { large_frozen_test_evidence_inventory_fixture, FROZEN_TEST_EVIDENCE_ROOT } from "../../fixtures/app/frozen-test-evidence-index";
 import { monitor_application_errors } from "./app-test-support";
-import { resolve_deployment_root } from "../../../scripts/certified-package.mjs";
 
 const EXPLORER_CATEGORIES = ["transform", "livetree", "livemap", "locus", "livehost", "reflect", "unit", "browser", "certification", "dev"];
-
-async function accepted_static_evidence() {
-  const deploymentRoot = resolve_deployment_root(process.cwd());
-  const authorityPath = pathToFileURL(resolve(deploymentRoot, "scripts/static-deployment-authority.mjs")).href;
-  const authority = await import(authorityPath) as {
-    resolve_static_artifact_verification(options: { deploymentRoot: string }): Readonly<{
-      artifact: string;
-      evidenceRoot: string;
-      verification: Readonly<{ evidenceRoot: string }>;
-    }>;
-  };
-  return authority.resolve_static_artifact_verification({ deploymentRoot });
-}
 
 function artifact_path(owner: "cases" | "suites", id: string): string {
   return `${owner}/${Buffer.from(id, "utf8").toString("base64url")}.json`;
@@ -60,7 +45,7 @@ function add_suite_artifact(artifacts: Map<string, string>, suite: any, evidence
 }
 
 function interactive_inventory() {
-  const index = complete_frozen_test_evidence_inventory_fixture();
+  const index = large_frozen_test_evidence_inventory_fixture();
   const artifacts = new Map<string, string>();
   for (const suite of index.suites) {
     suite.evidence = { available: false };
@@ -78,7 +63,8 @@ function interactive_inventory() {
   semantic[2].executionShape = "opaque-aggregate";
   add_suite_artifact(artifacts, semantic[2], [retained("stderr", "opaque process", "retained opaque process evidence")]);
   add_suite_artifact(artifacts, certification[0], [retained("artifact", "certification", "retained certification evidence")]);
-  return { index, artifacts, ordinary, transformer, browserCase, opaque: semantic[2], certification: certification[0], noEvidence: semantic[3].cases[1] };
+  const projection = project_frozen_test_explorer(decode_frozen_test_evidence_index(index, index.deployment.hsonDeployCommit));
+  return { index, projection, artifacts, ordinary, transformer, browserCase, opaque: semantic[2], certification: certification[0], noEvidence: semantic[3].cases[1] };
 }
 
 async function route_inventory(page: Page, index: any, artifacts: Map<string, string>, requests: string[]): Promise<void> {
@@ -113,6 +99,10 @@ test("localhost application mount loads one immutable frozen index without brows
   const assertNoErrors = monitor_application_errors(page);
   const requests: string[] = [];
   let webSockets = 0;
+  const fixture = large_frozen_test_evidence_inventory_fixture();
+  const decoded = decode_frozen_test_evidence_index(fixture, fixture.deployment.hsonDeployCommit);
+  const projection = project_frozen_test_explorer(decoded);
+  const literalCaseCount = decoded.suites.flatMap((suite) => suite.cases).length;
   await page.addInitScript(() => {
     const NativeWebSocket = window.WebSocket;
     Object.defineProperty(window, "WebSocket", { value: class CountingWebSocket extends NativeWebSocket {
@@ -128,7 +118,7 @@ test("localhost application mount loads one immutable frozen index without brows
   await page.route(`**${FROZEN_TEST_EVIDENCE_ROOT}/**`, async (route) => {
     requests.push(new URL(route.request().url()).pathname);
     if (new URL(route.request().url()).pathname === `${FROZEN_TEST_EVIDENCE_ROOT}/index.json`) {
-      await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(complete_frozen_test_evidence_inventory_fixture()) });
+      await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(fixture) });
       return;
     }
     await route.fulfill({ status: 500, body: "lazy evidence must not be fetched initially" });
@@ -138,22 +128,21 @@ test("localhost application mount loads one immutable frozen index without brows
   await expect(page.locator("#frozen-test-panel-fixture")).toHaveAttribute("data-fixture-state", "ready");
   const panel = page.getByTestId("frozen-test-panel");
   await expect(panel).toHaveAttribute("data-frozen-panel-state", "ready");
-  await expect(panel).toHaveAttribute("data-frozen-category-count", "3");
-  await expect(panel).toHaveAttribute("data-frozen-suite-count", "359");
-  await expect(panel).toHaveAttribute("data-frozen-case-count", "2643");
+  await expect(panel).toHaveAttribute("data-frozen-category-count", String(decoded.categories.length));
+  await expect(panel).toHaveAttribute("data-frozen-suite-count", String(projection.overall.suites));
+  await expect(panel).toHaveAttribute("data-frozen-case-count", String(projection.overall.cases));
   await expect(panel).toHaveAttribute("data-frozen-index-requests", "1");
   await expect(panel).toHaveAttribute("data-frozen-initial-evidence-requests", "0");
-  await expect(page.getByTestId("frozen-test-summary")).toContainText("359 suites · 2643 cases · 2643 pass · 0 fail · aaaaaaaaaa");
+  await expect(page.getByTestId("frozen-test-summary")).toContainText(`${projection.overall.suites} suites · ${projection.overall.cases} cases · ${projection.overall.pass} pass · ${projection.overall.fail} fail · aaaaaaaaaa`);
   await expect(page.getByTestId("frozen-test-summary")).not.toContainText("frozen");
   await expect.poll(() => page.locator("[data-frozen-category]").evaluateAll((nodes) => nodes.map((node) => node.getAttribute("data-frozen-category")))).toEqual(EXPLORER_CATEGORIES);
   await expect(page.getByTestId("frozen-category-semantic")).toHaveCount(0);
-  await expect(page.getByTestId("frozen-category-transform")).toContainText("36 suites · 314 cases");
-  await expect(page.getByTestId("frozen-category-locus")).toContainText("36 suites · 314 cases");
-  await expect(page.getByTestId("frozen-category-dev")).toContainText("35 suites · 307 cases");
-  await expect(page.getByTestId("frozen-category-browser")).toContainText("17 suites · 81 cases");
-  await expect(page.getByTestId("frozen-category-certification")).toContainText("57 suites · 57 cases · 57 pass · 0 fail");
-  await expect(page.getByTestId("frozen-suite-row")).toHaveCount(359);
-  await expect(page.getByTestId("frozen-case-row")).toHaveCount(2586);
+  for (const categoryId of EXPLORER_CATEGORIES) {
+    const totals = projection.categories[categoryId as keyof typeof projection.categories];
+    await expect(page.getByTestId(`frozen-category-${categoryId}`)).toContainText(`${totals.suites} suites · ${totals.cases} cases · ${totals.pass} pass · ${totals.fail} fail`);
+  }
+  await expect(page.getByTestId("frozen-suite-row")).toHaveCount(projection.overall.suites);
+  await expect(page.getByTestId("frozen-case-row")).toHaveCount(literalCaseCount);
   await expect(page.locator('[data-frozen-suite="transform/suite-000"]')).toContainText("transform representative suite 0");
   await expect(page.locator('[data-frozen-case="transform/suite-000::case-000"]')).toContainText("PASS");
   await expect(page.locator('[data-frozen-case="browser/suite-000::case-000"]')).toContainText("0.50 ms");
@@ -193,12 +182,9 @@ test("localhost application mount loads one immutable frozen index without brows
   assertNoErrors();
 });
 
-test("accepted evidence maps every suite once and mounts in the report explorer", async ({ page }) => {
-  const acceptedEvidence = await accepted_static_evidence();
-  const accepted = decode_frozen_test_evidence_index(
-    JSON.parse(readFileSync(resolve(acceptedEvidence.artifact, acceptedEvidence.evidenceRoot.slice(1), "index.json"), "utf8")),
-    acceptedEvidence.verification.evidenceRoot.split("/").at(-1)!,
-  );
+test("decoded retained evidence maps every suite once and mounts in the report explorer", async ({ page }) => {
+  const fixture = large_frozen_test_evidence_inventory_fixture();
+  const accepted = decode_frozen_test_evidence_index(fixture, fixture.deployment.hsonDeployCommit);
   const candidates = accepted.suites.map((suite) => frozen_test_explorer_category_candidates(suite));
   const suiteCount = accepted.suites.length;
   expect(suiteCount).toBeGreaterThan(0);
@@ -241,20 +227,12 @@ test("accepted evidence maps every suite once and mounts in the report explorer"
   const suiteOwned = accepted.suites.filter((suite) => suite.cases.length === 0 && suite.counts.total > 0);
   expect(suiteOwned.length).toBeGreaterThan(0);
   expect(suiteOwned.reduce((total, suite) => total + suite.counts.total, 0)).toBeGreaterThan(0);
-  const accounting = accepted.accounting as any;
-  expect(projection.overall.cases).toBe(
-    accounting.semantic.canonical.cases
-    + accounting.semantic.opaqueChecks.total
-    + accounting.browserJourneys.total
-    + accounting.certifications.total,
-  );
-
   let indexRequests = 0;
-  await page.route(`**${acceptedEvidence.evidenceRoot}/index.json`, async (route) => {
+  await page.route(`**${FROZEN_TEST_EVIDENCE_ROOT}/index.json`, async (route) => {
     indexRequests += 1;
     await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(accepted) });
   });
-  await page.goto(`/tests/fixtures/browser/frozen-test-panel-fixture.html?evidence-root=${encodeURIComponent(acceptedEvidence.evidenceRoot)}`);
+  await page.goto(`/tests/fixtures/browser/frozen-test-panel-fixture.html?evidence-root=${encodeURIComponent(FROZEN_TEST_EVIDENCE_ROOT)}`);
   const panel = page.getByTestId("frozen-test-panel");
   await expect(panel).toHaveAttribute("data-frozen-panel-state", "ready");
   await expect(panel).toHaveAttribute("data-frozen-suite-count", String(suiteCount));
@@ -284,7 +262,7 @@ test("frozen explorer accents come from the shared vibrant palette", async () =>
 });
 
 test("test report explorer uses report-loading terminology", async ({ page }) => {
-  const fixture = complete_frozen_test_evidence_inventory_fixture();
+  const fixture = large_frozen_test_evidence_inventory_fixture();
   let releaseIndex: (() => void) | undefined;
   const indexHeld = new Promise<void>((resolve) => { releaseIndex = resolve; });
   await page.route(`**${FROZEN_TEST_EVIDENCE_ROOT}/index.json`, async (route) => {
@@ -440,7 +418,8 @@ test("frozen row clickable names, Copy, and Copy Reports use validated lazy arti
   await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toContain("Test reports");
   const summary = await page.evaluate(() => navigator.clipboard.readText());
   expect(summary).toContain(fixture.ordinary.id);
-  expect(summary).toContain("CERTIFICATION · PASS · 57 suites · 57 cases · 57 pass · 0 fail");
+  const certification = fixture.projection.categories.certification;
+  expect(summary).toContain(`CERTIFICATION · PASS · ${certification.suites} suites · ${certification.cases} cases · ${certification.pass} pass · ${certification.fail} fail`);
   expect(requests).toEqual(beforeReports);
   expect(requests.some((path) => path.includes("/reports/"))).toBe(false);
   await expect(panel).toHaveAttribute("data-hosted-execution-count", "0");

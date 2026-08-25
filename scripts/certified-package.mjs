@@ -93,7 +93,14 @@ function capture_metadata(candidate) {
   const capture = join(resolve(candidate), "capture");
   const path = join(capture, "capture-metadata.json");
   if (!existsSync(path)) throw new Error(`PACK_CAPTURE_METADATA_MISSING:${candidate}`);
-  return Object.freeze({ capture, path, value: JSON.parse(readFileSync(path, "utf8")) });
+  const cleanupPath = join(capture, "capture-cleanup.json");
+  if (!existsSync(cleanupPath)) throw new Error(`PACK_CAPTURE_CLEANUP_MISSING:${candidate}`);
+  return Object.freeze({
+    capture,
+    path,
+    value: JSON.parse(readFileSync(path, "utf8")),
+    cleanup: JSON.parse(readFileSync(cleanupPath, "utf8")),
+  });
 }
 
 function same_json(left, right) {
@@ -129,6 +136,10 @@ export function combine_certification_capture({ deploymentRoot, normalCandidate,
   const temporary = `${metadataPath}.${crypto.randomUUID()}.tmp`;
   writeFileSync(temporary, `${JSON.stringify(metadata, null, 2)}\n`, { flag: "wx" });
   renameSync(temporary, metadataPath);
+  const cleanupPath = join(combined, "capture", "capture-cleanup.json");
+  const cleanupTemporary = `${cleanupPath}.${crypto.randomUUID()}.tmp`;
+  writeFileSync(cleanupTemporary, `${JSON.stringify({ captures: { normal: normal.cleanup, certification: certification.cleanup } }, null, 2)}\n`, { flag: "wx" });
+  renameSync(cleanupTemporary, cleanupPath);
   return combined;
 }
 

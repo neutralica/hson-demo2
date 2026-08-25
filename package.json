@@ -9,6 +9,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "vite --mode frozen-local",
+    "dev:test": "vite --mode test",
     "hosted:test-server": "tsx tests/harness/runtimes/node/server/hosted-test-server-entry.node.ts",
     "start:hosted-test-server": "tsx tests/harness/runtimes/node/server/hosted-test-server-entry.node.ts",
     "host": "osascript -e 'tell application \"Terminal\" to do script \"cd \\\"'\"$PWD\"'\\\" && npm run hosted:test-server\"' -e 'tell application \"Terminal\" to do script \"cd \\\"'\"$PWD\"'\\\" && npm run dev\"' -e 'tell application \"Terminal\" to activate'",
