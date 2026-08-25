@@ -2,14 +2,26 @@ import { expect, test } from "./livehost-browser-test";
 import type { Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { pathToFileURL } from "node:url";
 import { decode_frozen_test_evidence_index, frozen_test_explorer_category_candidates } from "../../../src/app/demos/tests/panel/frozen-test-evidence-client";
 import { complete_frozen_test_evidence_inventory_fixture, FROZEN_TEST_EVIDENCE_ROOT } from "../../fixtures/app/frozen-test-evidence-index";
 import { monitor_application_errors } from "./app-test-support";
+import { resolve_deployment_root } from "../../../scripts/certified-package.mjs";
 
-const ACCEPTED_EVIDENCE_COMMIT = "d1db60517707f1ca2659404f500ff9ec4752407d";
-const ACCEPTED_EVIDENCE_ROOT = `/test-evidence/${ACCEPTED_EVIDENCE_COMMIT}`;
-const ACCEPTED_INDEX_PATH = resolve(process.cwd(), `../static-production${ACCEPTED_EVIDENCE_ROOT}/index.json`);
 const EXPLORER_CATEGORIES = ["transform", "livetree", "livemap", "locus", "livehost", "reflect", "unit", "browser", "certification", "dev"];
+
+async function accepted_static_evidence() {
+  const deploymentRoot = resolve_deployment_root(process.cwd());
+  const authorityPath = pathToFileURL(resolve(deploymentRoot, "scripts/static-deployment-authority.mjs")).href;
+  const authority = await import(authorityPath) as {
+    resolve_static_artifact_verification(options: { deploymentRoot: string }): Readonly<{
+      artifact: string;
+      evidenceRoot: string;
+      verification: Readonly<{ evidenceRoot: string }>;
+    }>;
+  };
+  return authority.resolve_static_artifact_verification({ deploymentRoot });
+}
 
 function artifact_path(owner: "cases" | "suites", id: string): string {
   return `${owner}/${Buffer.from(id, "utf8").toString("base64url")}.json`;
@@ -181,25 +193,27 @@ test("localhost application mount loads one immutable frozen index without brows
 });
 
 test("accepted evidence maps every suite once and mounts in the report explorer", async ({ page }) => {
+  const acceptedEvidence = await accepted_static_evidence();
   const accepted = decode_frozen_test_evidence_index(
-    JSON.parse(readFileSync(ACCEPTED_INDEX_PATH, "utf8")),
-    ACCEPTED_EVIDENCE_COMMIT,
+    JSON.parse(readFileSync(resolve(acceptedEvidence.artifact, acceptedEvidence.evidenceRoot.slice(1), "index.json"), "utf8")),
+    acceptedEvidence.verification.evidenceRoot.split("/").at(-1)!,
   );
   const candidates = accepted.suites.map((suite) => frozen_test_explorer_category_candidates(suite));
-  expect(accepted.suites).toHaveLength(359);
-  expect(candidates.filter((candidate) => candidate.length === 1)).toHaveLength(359);
+  const suiteCount = accepted.suites.length;
+  expect(suiteCount).toBeGreaterThan(0);
+  expect(candidates.filter((candidate) => candidate.length === 1)).toHaveLength(suiteCount);
   expect(candidates.filter((candidate) => candidate.length === 0)).toHaveLength(0);
   expect(candidates.filter((candidate) => candidate.length > 1)).toHaveLength(0);
 
   let indexRequests = 0;
-  await page.route(`**${ACCEPTED_EVIDENCE_ROOT}/index.json`, async (route) => {
+  await page.route(`**${acceptedEvidence.evidenceRoot}/index.json`, async (route) => {
     indexRequests += 1;
     await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(accepted) });
   });
-  await page.goto(`/tests/fixtures/browser/frozen-test-panel-fixture.html?evidence-root=${encodeURIComponent(ACCEPTED_EVIDENCE_ROOT)}`);
+  await page.goto(`/tests/fixtures/browser/frozen-test-panel-fixture.html?evidence-root=${encodeURIComponent(acceptedEvidence.evidenceRoot)}`);
   const panel = page.getByTestId("frozen-test-panel");
   await expect(panel).toHaveAttribute("data-frozen-panel-state", "ready");
-  await expect(panel).toHaveAttribute("data-frozen-suite-count", "359");
+  await expect(panel).toHaveAttribute("data-frozen-suite-count", String(suiteCount));
   await expect.poll(() => page.locator("[data-frozen-category]").evaluateAll((nodes) => nodes.map((node) => node.getAttribute("data-frozen-category")))).toEqual(EXPLORER_CATEGORIES);
   expect(indexRequests).toBe(1);
 });
