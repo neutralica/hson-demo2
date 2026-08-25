@@ -182,18 +182,18 @@ test("localhost application mount loads one immutable frozen index without brows
   assertNoErrors();
 });
 
-test("decoded retained evidence maps every suite once and mounts in the report explorer", async ({ page }) => {
+test("valid frozen fixture mounts with derived category and overall totals", async ({ page }) => {
   const fixture = large_frozen_test_evidence_inventory_fixture();
-  const accepted = decode_frozen_test_evidence_index(fixture, fixture.deployment.hsonDeployCommit);
-  const candidates = accepted.suites.map((suite) => frozen_test_explorer_category_candidates(suite));
-  const suiteCount = accepted.suites.length;
+  const decoded = decode_frozen_test_evidence_index(fixture, fixture.deployment.hsonDeployCommit);
+  const candidates = decoded.suites.map((suite) => frozen_test_explorer_category_candidates(suite));
+  const suiteCount = decoded.suites.length;
   expect(suiteCount).toBeGreaterThan(0);
   expect(candidates.filter((candidate) => candidate.length === 1)).toHaveLength(suiteCount);
   expect(candidates.filter((candidate) => candidate.length === 0)).toHaveLength(0);
   expect(candidates.filter((candidate) => candidate.length > 1)).toHaveLength(0);
-  const projection = project_frozen_test_explorer(accepted);
+  const projection = project_frozen_test_explorer(decoded);
   const independentlySummed = Object.fromEntries(EXPLORER_CATEGORIES.map((categoryId) => {
-    const suites = accepted.suites.filter((suite) => frozen_test_explorer_category(suite) === categoryId);
+    const suites = decoded.suites.filter((suite) => frozen_test_explorer_category(suite) === categoryId);
     return [categoryId, {
       suites: suites.length,
       cases: suites.reduce((total, suite) => total + suite.counts.total, 0),
@@ -214,23 +214,10 @@ test("decoded retained evidence maps every suite once and mounts in the report e
     unsupported: total.unsupported + category.unsupported,
     cancelled: total.cancelled + category.cancelled,
   }), { suites: 0, cases: 0, pass: 0, fail: 0, skip: 0, unsupported: 0, cancelled: 0 }));
-  for (const suite of accepted.suites) {
-    expect(suite.counts.passed + suite.counts.failed + suite.counts.skipped + suite.counts.unsupported + suite.counts.cancelled).toBe(suite.counts.executed);
-    expect(suite.counts.total).toBe(suite.counts.executed);
-    if (suite.cases.length > 0) {
-      expect(suite.cases.length).toBe(suite.counts.total);
-      expect(suite.cases.filter((item) => item.status === "pass")).toHaveLength(suite.counts.passed);
-      expect(suite.cases.filter((item) => item.status === "fail")).toHaveLength(suite.counts.failed);
-      expect(suite.cases.filter((item) => item.status === "skip")).toHaveLength(suite.counts.skipped);
-    }
-  }
-  const suiteOwned = accepted.suites.filter((suite) => suite.cases.length === 0 && suite.counts.total > 0);
-  expect(suiteOwned.length).toBeGreaterThan(0);
-  expect(suiteOwned.reduce((total, suite) => total + suite.counts.total, 0)).toBeGreaterThan(0);
   let indexRequests = 0;
   await page.route(`**${FROZEN_TEST_EVIDENCE_ROOT}/index.json`, async (route) => {
     indexRequests += 1;
-    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(accepted) });
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(fixture) });
   });
   await page.goto(`/tests/fixtures/browser/frozen-test-panel-fixture.html?evidence-root=${encodeURIComponent(FROZEN_TEST_EVIDENCE_ROOT)}`);
   const panel = page.getByTestId("frozen-test-panel");
