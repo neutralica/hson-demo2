@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { copyFileSync, cpSync, existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -13,6 +13,7 @@ export const PACK_STAGES = Object.freeze([
 ]);
 
 export const CERTIFICATION_RECEIPT = "certification-receipt.json";
+export const CERTIFICATION_AUTHORITY = "npm run capture:deployment-tests:certification";
 
 function is_deployment_root(path) {
   if (!existsSync(join(path, "package.json")) || !existsSync(join(path, "scripts", "capture-deployment-tests.mts"))) return false;
@@ -88,7 +89,50 @@ export function provision_local_frozen_evidence({ applicationRoot, explorerArtif
   return Object.freeze({ environmentFile, publicRoot, evidenceDirectory });
 }
 
-export function execute_pack({ deploymentRoot, applicationRoot, run = run_command, environment = process.env }) {
+function capture_metadata(candidate) {
+  const capture = join(resolve(candidate), "capture");
+  const path = join(capture, "capture-metadata.json");
+  if (!existsSync(path)) throw new Error(`PACK_CAPTURE_METADATA_MISSING:${candidate}`);
+  return Object.freeze({ capture, path, value: JSON.parse(readFileSync(path, "utf8")) });
+}
+
+function same_json(left, right) {
+  return JSON.stringify(left) === JSON.stringify(right);
+}
+
+/** Bind an already-executed certification capture to a fresh normal capture. */
+export function combine_certification_capture({ deploymentRoot, normalCandidate, certificationCandidate }) {
+  const normal = capture_metadata(normalCandidate);
+  const certification = capture_metadata(certificationCandidate);
+  if (!same_json(normal.value.selectedStages, ["semantic", "browser"])) throw new Error("PACK_NORMAL_CAPTURE_STAGE_MISMATCH");
+  if (!same_json(certification.value.selectedStages, ["certification"])) throw new Error("PACK_CERTIFICATION_CAPTURE_STAGE_MISMATCH");
+  if (!same_json(normal.value.deployment, certification.value.deployment)) throw new Error("PACK_CERTIFICATION_DEPLOYMENT_MISMATCH");
+  if (certification.value.selection?.certification === undefined || certification.value.runs?.certification === undefined) {
+    throw new Error("PACK_CERTIFICATION_CAPTURE_METADATA_INCOMPLETE");
+  }
+  if (!existsSync(join(certification.capture, "certification.json"))) throw new Error("PACK_CERTIFICATION_REPORT_MISSING");
+
+  const workRoot = canonical_package_locations(deploymentRoot).workRoot;
+  mkdirSync(workRoot, { recursive: true });
+  const combined = join(workRoot, `capture-certified-${Date.now().toString(36)}-${crypto.randomUUID()}`);
+  cpSync(resolve(normalCandidate), combined, { recursive: true, errorOnExist: true });
+  copyFileSync(join(certification.capture, "certification.json"), join(combined, "capture", "certification.json"));
+  const metadata = {
+    ...normal.value,
+    selectedStages: ["semantic", "browser", "certification"],
+    selection: { ...normal.value.selection, certification: certification.value.selection?.certification },
+    observedStages: [...(certification.value.observedStages ?? []), ...(normal.value.observedStages ?? [])],
+    timeline: [...(certification.value.timeline ?? []), ...(normal.value.timeline ?? [])],
+    runs: { ...normal.value.runs, certification: certification.value.runs?.certification },
+  };
+  const metadataPath = join(combined, "capture", "capture-metadata.json");
+  const temporary = `${metadataPath}.${crypto.randomUUID()}.tmp`;
+  writeFileSync(temporary, `${JSON.stringify(metadata, null, 2)}\n`, { flag: "wx" });
+  renameSync(temporary, metadataPath);
+  return combined;
+}
+
+export function execute_pack({ deploymentRoot, applicationRoot, run = run_command, environment = process.env, certificationCandidate, combineCapture = combine_certification_capture }) {
   const locations = canonical_package_locations(deploymentRoot);
   const verifiedEnvironment = applicationRoot === undefined
     ? environment
@@ -110,7 +154,13 @@ export function execute_pack({ deploymentRoot, applicationRoot, run = run_comman
 
     stage = PACK_STAGES[3];
     console.log(`stage: ${stage}`);
-    captureCandidate = last_output_line(npm(run, deploymentRoot, ["run", "capture:deployment-tests:normal"], verifiedEnvironment), "CAPTURE");
+    const normalCandidate = last_output_line(npm(run, deploymentRoot, ["run", "capture:deployment-tests:normal"], verifiedEnvironment), "CAPTURE");
+    captureCandidate = normalCandidate;
+    if (certificationCandidate !== undefined) {
+      stage = "bind-certification-evidence";
+      console.log(`stage: ${stage}`);
+      captureCandidate = combineCapture({ deploymentRoot, normalCandidate, certificationCandidate });
+    }
 
     stage = PACK_STAGES[4];
     console.log(`stage: ${stage}`);
@@ -164,7 +214,7 @@ export function write_certification_receipt(result, completedAt = new Date().toI
     kind: "hson-tests-explorer-certification",
     certified: true,
     completedAt,
-    authority: "npm -w hson-demo2 run test:inclusive-library-node",
+    authority: CERTIFICATION_AUTHORITY,
     evidenceRoot: result.evidenceRoot,
     deploymentCommit: result.evidenceRoot?.split("/").at(-1),
     evidenceArtifactSetSha256: result.artifactSetSha256,
@@ -181,19 +231,20 @@ export function execute_certification(options) {
     ? environment
     : { ...environment, HSON_INVOKING_APPLICATION_ROOT: resolve(options.applicationRoot) };
   let stage = "verify-source";
+  let certificationCandidate;
   try {
     console.log(`stage: ${stage}`);
     npm(run, options.deploymentRoot, ["run", "verify"], verifiedEnvironment);
     stage = "certification-authority";
     console.log(`stage: ${stage}`);
-    npm(run, options.deploymentRoot, ["-w", "hson-demo2", "run", "test:inclusive-library-node"], verifiedEnvironment);
+    certificationCandidate = last_output_line(npm(run, options.deploymentRoot, ["run", "capture:deployment-tests:certification"], verifiedEnvironment), "CERTIFICATION_CAPTURE");
   } catch (cause) {
     console.error(JSON.stringify({ pass: false, stage, outputDirectory: locations.explorerArtifact, evidencePackage: null, failureLocation: locations.workRoot }, null, 2));
     throw cause;
   }
-  const packed = execute_pack(options);
+  const packed = execute_pack({ ...options, certificationCandidate });
   const receipt = (options.writeReceipt ?? write_certification_receipt)(packed);
-  const result = Object.freeze({ ...packed, certified: true, certificationReceipt: receipt });
+  const result = Object.freeze({ ...packed, certified: true, certificationCaptureCandidate: certificationCandidate, certificationReceipt: receipt });
   console.log(JSON.stringify(result, null, 2));
   return result;
 }

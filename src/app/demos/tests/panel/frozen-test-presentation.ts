@@ -1,5 +1,7 @@
 import type { LiveTree } from "hson-live/livetree";
+import { OKLCH_VIBRANT } from "../../../core/consts/oklch.consts";
 import { serialize_hosted_case_diagnostic } from "./hosted-test-report-view";
+import { FROZEN_TEST_EXPLORER_CATEGORIES, frozen_test_explorer_category, project_frozen_test_explorer } from "./frozen-test-evidence-client";
 import type {
   FrozenRowArtifact,
   FrozenTestEvidenceIndex,
@@ -48,17 +50,21 @@ export function serialize_frozen_row_artifact(artifact: FrozenRowArtifact): stri
 }
 
 export function serialize_frozen_index_summary(index: FrozenTestEvidenceIndex): string {
-  const totalCases = index.suites.reduce((total, suite) => total + suite.cases.length, 0);
+  const projection = project_frozen_test_explorer(index);
   const lines = [
     "Test reports",
     `deployment: ${index.deployment.hsonDeployCommit}`,
     ...(index.capture?.candidateId === undefined ? [] : [`capture: ${String(index.capture.candidateId)}`]),
     ...(index.capture?.capturedAt === undefined ? [] : [`captured: ${String(index.capture.capturedAt)}`]),
-    `totals: ${index.suites.length} suites · ${totalCases} cases`,
+    `totals: ${projection.overall.suites} suites · ${projection.overall.cases} cases · ${projection.overall.pass} pass · ${projection.overall.fail} fail`,
   ];
-  for (const category of index.categories) {
-    lines.push("", `${category.id.toUpperCase()} · ${category.status.toUpperCase()} · ${category.suiteCounts.total} suites · ${category.caseCounts.total} cases · ${format_frozen_test_duration(category.timing)}`);
-    const suites = index.suites.filter((suite) => suite.category === category.id).sort((a, b) => a.order - b.order || a.id.localeCompare(b.id));
+  for (const categoryId of FROZEN_TEST_EXPLORER_CATEGORIES) {
+    const totals = projection.categories[categoryId];
+    const suites = index.suites.filter((suite) => frozen_test_explorer_category(suite) === categoryId).sort((a, b) => a.order - b.order || a.id.localeCompare(b.id));
+    const unexecuted = suites.length === 0 && index.categories.find((category) => category.id === categoryId)?.status === "cancelled";
+    const status = unexecuted ? "UNEXECUTED" : suites.some((suite) => suite.status === "fail") ? "FAIL" : suites.some((suite) => suite.status === "skip") ? "SKIP" : "PASS";
+    const durationMs = suites.reduce((total, suite) => total + (suite.timing.ms ?? suite.timing.durationMs ?? 0), 0);
+    lines.push("", `${categoryId.toUpperCase()} · ${status} · ${totals.suites} suites · ${totals.cases} cases · ${totals.pass} pass · ${totals.fail} fail · ${unexecuted ? "—" : format_frozen_test_duration({ ms: durationMs })}`);
     for (const suite of suites) {
       lines.push(`${suite.status.toUpperCase().padEnd(5)} ${format_frozen_test_duration(suite.timing).padStart(10)} ${suite.id} — ${suite.title} — ${suite.counts.passed} pass · ${suite.counts.failed} fail · ${suite.counts.skipped} skip`);
       for (const item of [...suite.cases].sort((a, b) => a.order - b.order || a.id.localeCompare(b.id))) {
@@ -82,17 +88,17 @@ export function mount_frozen_generic_evidence(
     "data-testid": "frozen-row-evidence", "data-frozen-evidence-owner": artifact.owner,
   }).css.setMany({
     position: "absolute", inset: "0", zIndex: "120", display: "grid", gridTemplateRows: "auto minmax(0,1fr)",
-    padding: "1rem", boxSizing: "border-box", background: "rgba(8,10,9,.985)", color: "#e8e4d7",
+    padding: "1rem", boxSizing: "border-box", background: OKLCH_VIBRANT.voidInk, color: OKLCH_VIBRANT.ghost,
     fontFamily: '"DM Mono",ui-monospace,monospace', pointerEvents: "auto",
   });
-  const header = root.create.header().css.setMany({ display: "grid", gridTemplateColumns: "minmax(0,1fr) auto", gap: "1rem", borderBottom: "1px solid #49534d", paddingBottom: ".75rem" });
+  const header = root.create.header().css.setMany({ display: "grid", gridTemplateColumns: "minmax(0,1fr) auto", gap: "1rem", borderBottom: `1px solid ${OKLCH_VIBRANT.graphite}`, paddingBottom: ".75rem" });
   const identity = header.create.div();
   identity.create.div().attrs.set("data-testid", "frozen-inspector-navigation")
     .text.set(`Saved ${artifact.owner} evidence · Browser Back returns to the tests explorer`)
-    .css.setMany({ color: "#7dd8cf", marginBottom: ".35rem" });
-  identity.create.div().text.set(id).css.setMany({ color: "#d7ff70", overflowWrap: "anywhere" });
+    .css.setMany({ color: OKLCH_VIBRANT.cyanGlass, marginBottom: ".35rem" });
+  identity.create.div().text.set(id).css.setMany({ color: OKLCH_VIBRANT.cyanGlass, overflowWrap: "anywhere" });
   const close = header.create.button().attrs.setMany({ type: "button", "aria-label": "Close evidence" }).text.set("[ close ]")
-    .css.setMany({ color: "#d7ff70", border: "1px solid #49534d", padding: ".35rem .6rem", cursor: "pointer" });
+    .css.setMany({ color: OKLCH_VIBRANT.cyanGlass, background: OKLCH_VIBRANT.voidInk, border: `1px solid ${OKLCH_VIBRANT.graphite}`, padding: ".35rem .6rem", cursor: "pointer" });
   root.create.pre().attrs.set("data-testid", "frozen-row-evidence-text").text.set(serialize_frozen_row_artifact(artifact))
     .css.setMany({ whiteSpace: "pre-wrap", overflow: "auto", minHeight: "0", margin: "0", paddingTop: "1rem" });
   let disposed = false;

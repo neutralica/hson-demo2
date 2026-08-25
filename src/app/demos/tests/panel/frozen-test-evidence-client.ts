@@ -83,6 +83,21 @@ export type FrozenTestEvidenceIndex = Readonly<{
   accounting: Readonly<Record<string, unknown>>;
 }>;
 
+export type FrozenTestExplorerTotals = Readonly<{
+  suites: number;
+  cases: number;
+  pass: number;
+  fail: number;
+  skip: number;
+  unsupported: number;
+  cancelled: number;
+}>;
+
+export type FrozenTestExplorerProjection = Readonly<{
+  categories: Readonly<Record<FrozenTestExplorerCategoryId, FrozenTestExplorerTotals>>;
+  overall: FrozenTestExplorerTotals;
+}>;
+
 export type FrozenRowEvidenceSelection = Readonly<{
   category: FrozenTestCategoryId;
   suite: FrozenTestSuite;
@@ -113,6 +128,38 @@ export function frozen_test_explorer_category(suite: FrozenTestSuite): FrozenTes
   if (candidates.length === 1) return candidates[0]!;
   const reason = candidates.length === 0 ? "has no" : `has multiple (${candidates.join(", ")})`;
   throw new FrozenTestEvidenceError("FROZEN_INDEX_PRESENTATION_CATEGORY", `Suite ${suite.id} ${reason} report-explorer domain.`);
+}
+
+function empty_explorer_totals(): Record<keyof FrozenTestExplorerTotals, number> {
+  return { suites: 0, cases: 0, pass: 0, fail: 0, skip: 0, unsupported: 0, cancelled: 0 };
+}
+
+/**
+ * Projects each suite's lifecycle authority exactly once. Literal case rows are
+ * presentation detail and are deliberately not added a second time.
+ */
+export function project_frozen_test_explorer(index: FrozenTestEvidenceIndex): FrozenTestExplorerProjection {
+  const mutable = Object.fromEntries(FROZEN_TEST_EXPLORER_CATEGORIES.map((id) => [id, empty_explorer_totals()])) as
+    Record<FrozenTestExplorerCategoryId, Record<keyof FrozenTestExplorerTotals, number>>;
+
+  for (const suite of index.suites) {
+    const totals = mutable[frozen_test_explorer_category(suite)];
+    totals.suites += 1;
+    totals.cases += suite.counts.total;
+    totals.pass += suite.counts.passed;
+    totals.fail += suite.counts.failed;
+    totals.skip += suite.counts.skipped;
+    totals.unsupported += suite.counts.unsupported;
+    totals.cancelled += suite.counts.cancelled;
+  }
+
+  const categories = Object.fromEntries(FROZEN_TEST_EXPLORER_CATEGORIES.map((id) => [id, Object.freeze({ ...mutable[id] })])) as
+    Record<FrozenTestExplorerCategoryId, FrozenTestExplorerTotals>;
+  const overall = empty_explorer_totals();
+  for (const totals of Object.values(categories)) {
+    for (const key of Object.keys(overall) as (keyof FrozenTestExplorerTotals)[]) overall[key] += totals[key];
+  }
+  return Object.freeze({ categories: Object.freeze(categories), overall: Object.freeze(overall) });
 }
 
 export type FrozenRetainedEvidence = Readonly<{

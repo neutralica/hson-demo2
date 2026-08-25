@@ -1,10 +1,12 @@
 import type { LiveTree } from "hson-live/livetree";
+import { OKLCH_VIBRANT } from "../../../core/consts/oklch.consts";
 import { _fontSize } from "../../../core/consts/ui-consts";
 import { mount_hosted_case_report } from "./hosted-test-report-view";
 import {
   FROZEN_TEST_EXPLORER_CATEGORIES,
   frozen_test_explorer_category,
   make_frozen_test_evidence_client,
+  project_frozen_test_explorer,
   type FrozenRowArtifact,
   type FrozenRowEvidenceSelection,
   type FrozenTestEvidenceClient,
@@ -36,30 +38,34 @@ export type FrozenTestPanel = Readonly<{
 
 const STYLES = Object.freeze({
   root: { position: "relative", width: "100%", height: "100%", overflow: "auto", fontFamily: "DM Mono, monospace", fontSize: _fontSize.wee },
-  notice: { display: "grid", gridTemplateColumns: "minmax(0,1fr) auto", alignItems: "center", gap: "10px", padding: "12px 10px", color: "#d7e9dd", fontSize: ".76rem", fontWeight: "600", background: "rgba(125,216,207,.06)", borderTop: "1px solid rgba(125,216,207,.24)", borderBottom: "1px solid rgba(125,216,207,.42)" },
-  error: { padding: "12px 8px", color: "#ff8778", border: "1px solid rgba(255,135,120,.45)", whiteSpace: "pre-wrap" },
-  category: { borderBottom: "1px solid rgba(125,216,207,.26)" },
-  categoryHeading: { padding: "9px 8px 5px", color: "#d7ff70", letterSpacing: ".08em", textTransform: "uppercase" },
-  categorySummary: { marginLeft: "10px", color: "#9bb3a6", letterSpacing: "normal", textTransform: "none" },
-  suite: { borderTop: "1px solid rgba(125,216,207,.14)" },
-  suiteRow: { display: "grid", gridTemplateColumns: "150px minmax(0,1fr) minmax(270px,auto)", gap: "8px", alignItems: "center", padding: "7px 8px", color: "#7dd8cf" },
-  suiteIdentity: { display: "grid", gridTemplateColumns: "12px minmax(0,1fr)", gap: "5px", alignItems: "center", minWidth: "0", overflowWrap: "anywhere" },
-  suiteDisclosure: { color: "#d7ff70", transform: "rotate(0deg)", transformOrigin: "center", transition: "transform 120ms ease" },
-  suiteTitle: { color: "#9bb3a6", marginLeft: "8px" },
-  summary: { color: "#9bb3a6", whiteSpace: "nowrap" },
-  duration: { color: "#89948d", textAlign: "right", whiteSpace: "nowrap" },
-  rowSummary: { display: "grid", gridTemplateColumns: "minmax(0,1fr) 72px", gap: "8px", alignItems: "center", minWidth: "0" },
-  failed: { color: "#ff8778" },
-  caseRow: { display: "grid", gridTemplateColumns: "150px minmax(0,1fr) minmax(120px,auto)", gap: "8px", minHeight: "27px", alignItems: "center", padding: "3px 8px", borderTop: "1px solid rgba(200,220,208,.09)", color: "#ddd9cd" },
-  caseIdentity: { minWidth: "0", paddingLeft: "18px", overflowWrap: "anywhere" },
-  caseSummary: { display: "grid", gridTemplateColumns: "44px 70px", gap: "7px", alignItems: "center", justifyContent: "end" },
-  casePass: { color: "#9ddf8b" },
-  caseFail: { color: "#ff8778" },
-  caseSkip: { color: "#c4b070" },
-  actions: { display: "grid", gridTemplateColumns: "30px 42px 30px", gap: "4px", alignItems: "center", justifyContent: "start", color: "#81948a", whiteSpace: "nowrap" },
-  action: { color: "#d7ff70", border: "0", padding: "2px", cursor: "pointer", font: "inherit", textAlign: "left" },
+  notice: { display: "grid", gridTemplateColumns: "minmax(0,1fr) auto", alignItems: "center", gap: "10px", padding: "12px 10px", color: OKLCH_VIBRANT.ghost, fontSize: ".76rem", fontWeight: "600", background: OKLCH_VIBRANT.voidInk, borderTop: `1px solid ${OKLCH_VIBRANT.graphite}`, borderBottom: `1px solid ${OKLCH_VIBRANT.cyanGlass}` },
+  error: { padding: "12px 8px", color: OKLCH_VIBRANT.redSignal, border: `1px solid ${OKLCH_VIBRANT.redOxide}`, whiteSpace: "pre-wrap" },
+  category: { borderBottom: `1px solid ${OKLCH_VIBRANT.graphite}` },
+  categoryHeading: { padding: "9px 8px 5px", color: OKLCH_VIBRANT.cyanGlass, letterSpacing: ".08em", textTransform: "uppercase" },
+  categorySummary: { marginLeft: "10px", color: OKLCH_VIBRANT.ghost, letterSpacing: "normal", textTransform: "none" },
+  suite: { borderTop: `1px solid ${OKLCH_VIBRANT.graphite}` },
+  suiteRow: { display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(300px,auto)", gap: "8px", alignItems: "center", padding: "7px 8px", color: OKLCH_VIBRANT.cyanGlass },
+  suiteRowEvidence: { gridTemplateColumns: "80px minmax(0,1fr) minmax(300px,auto)" },
+  suiteIdentity: { display: "flex", gap: "7px", alignItems: "center", minWidth: "0", overflowWrap: "anywhere" },
+  suiteDisclosure: { flex: "0 0 12px", color: OKLCH_VIBRANT.cyanGlass, transform: "rotate(0deg)", transformOrigin: "center", transition: "transform 120ms ease" },
+  suiteTitle: { color: OKLCH_VIBRANT.ghost, marginLeft: "8px" },
+  summary: { color: OKLCH_VIBRANT.ghost, whiteSpace: "nowrap", textAlign: "right" },
+  duration: { color: OKLCH_VIBRANT.graphite, textAlign: "right", whiteSpace: "nowrap" },
+  rowSummary: { display: "grid", gridTemplateColumns: "minmax(8ch,1fr) minmax(8ch,1fr) minmax(8ch,1fr) 72px", gap: "10px", alignItems: "center", minWidth: "300px", fontVariantNumeric: "tabular-nums" },
+  metric: { textAlign: "right", whiteSpace: "nowrap" },
+  failed: { color: OKLCH_VIBRANT.redSignal },
+  caseRow: { display: "grid", gridTemplateColumns: "80px minmax(0,1fr) minmax(120px,auto)", gap: "8px", minHeight: "27px", alignItems: "center", padding: "3px 8px", borderTop: `1px solid ${OKLCH_VIBRANT.graphite}`, color: OKLCH_VIBRANT.ghost },
+  caseIdentity: { display: "flex", gap: "8px", alignItems: "center", minWidth: "0", paddingLeft: "18px", overflowWrap: "anywhere" },
+  caseSummary: { display: "grid", gridTemplateColumns: "minmax(8ch,1fr) minmax(8ch,1fr) minmax(8ch,1fr) 72px", gap: "10px", alignItems: "center", minWidth: "300px", fontVariantNumeric: "tabular-nums" },
+  caseStatus: { gridColumn: "1 / 4", textAlign: "right" },
+  casePass: { color: OKLCH_VIBRANT.fernStatic },
+  caseFail: { color: OKLCH_VIBRANT.redSignal },
+  caseSkip: { color: OKLCH_VIBRANT.yellowBrass },
+  actions: { display: "grid", gridTemplateColumns: "30px 42px", gap: "4px", alignItems: "center", justifyContent: "start", color: OKLCH_VIBRANT.graphite, whiteSpace: "nowrap" },
+  action: { color: OKLCH_VIBRANT.cyanGlass, background: "transparent", border: "0", padding: "2px", cursor: "pointer", font: "inherit", textAlign: "left" },
+  evidenceName: { color: "inherit", background: "transparent", border: "0", padding: "0", cursor: "pointer", font: "inherit", textAlign: "left", textDecoration: "none" },
   evidenceSize: { textAlign: "center" },
-  rowError: { gridColumn: "1 / -1", color: "#ff8778", whiteSpace: "pre-wrap", overflowWrap: "anywhere" },
+  rowError: { gridColumn: "1 / -1", color: OKLCH_VIBRANT.redSignal, whiteSpace: "pre-wrap", overflowWrap: "anywhere" },
 } as const);
 
 type RowAction = "view" | "copy";
@@ -74,19 +80,14 @@ function row_selection(suite: FrozenTestSuite, testCase?: FrozenTestSuite["cases
 }
 
 function append_actions(row: LiveTree, label: string, selection: FrozenRowEvidenceSelection | undefined, onAction: (action: RowAction, selection: FrozenRowEvidenceSelection, row: LiveTree, control: LiveTree) => void): void {
+  if (selection === undefined || selection.reference.available !== true || selection.reference.rawBytes === undefined) return;
   const controls = row.create.span().classlist.set("frozen-test-actions").attrs.set("data-testid", "frozen-row-actions");
-  if (selection === undefined || selection.reference.available !== true || selection.reference.rawBytes === undefined) {
-    controls.attrs.setMany({ "aria-hidden": "true", "data-frozen-actions": "absent" });
-    return;
-  }
   const reference = selection.reference;
   const rawBytes = reference.rawBytes;
   if (rawBytes === undefined) return;
   controls.attrs.set("data-frozen-actions", "available");
-  const view = controls.create.button().classlist.set("frozen-test-action").attrs.setMany({ type: "button", "data-frozen-action": "view", "aria-label": `View evidence for ${label}` }).text.set("View");
-  controls.create.span().classlist.set("frozen-test-evidence-size").attrs.set("data-testid", "frozen-evidence-size").text.set(format_frozen_evidence_size(rawBytes));
   const copy = controls.create.button().classlist.set("frozen-test-action").attrs.setMany({ type: "button", "data-frozen-action": "copy", "aria-label": `Copy evidence for ${label}` }).text.set("Copy");
-  view.listen.stopProp().onClick(() => onAction("view", selection, row, view));
+  controls.create.span().classlist.set("frozen-test-evidence-size").attrs.set("data-testid", "frozen-evidence-size").text.set(format_frozen_evidence_size(rawBytes));
   copy.listen.stopProp().onClick(() => onAction("copy", selection, row, copy));
 }
 
@@ -97,30 +98,28 @@ function render_index(
   onCopyReports: (control: LiveTree) => void,
 ): void {
   branch.empty();
+  const projection = project_frozen_test_explorer(index);
   const notice = branch.create.div().classlist.set("frozen-test-notice").attrs.set("data-testid", "frozen-test-summary");
-  const totalCases = index.suites.reduce((total, suite) => total + suite.cases.length, 0);
-  const passed = index.categories.reduce((total, category) => total + (category.summary.pass ?? 0), 0);
-  const failed = index.categories.reduce((total, category) => total + (category.summary.fail ?? 0), 0);
   const summary = notice.create.span();
-  summary.create.span().text.set(`${index.suites.length} suites · ${totalCases} cases · `);
-  summary.create.span().text.set(`${passed} pass`).css.set.color("#9ddf8b");
+  summary.create.span().text.set(`${projection.overall.suites} suites · ${projection.overall.cases} cases · `);
+  summary.create.span().text.set(`${projection.overall.pass} pass`).css.set.color(OKLCH_VIBRANT.fernStatic);
   summary.create.span().text.set(" · ");
-  summary.create.span().text.set(`${failed} fail`).css.set.color(failed === 0 ? "#9bb3a6" : "#ff8778");
-  summary.create.span().text.set(` · ${index.deployment.hsonDeployCommit.slice(0, 10)}`).css.set.color("#9bb3a6");
+  summary.create.span().text.set(`${projection.overall.fail} fail`).css.set.color(projection.overall.fail === 0 ? OKLCH_VIBRANT.ghost : OKLCH_VIBRANT.redSignal);
+  summary.create.span().text.set(` · ${index.deployment.hsonDeployCommit.slice(0, 10)}`).css.set.color(OKLCH_VIBRANT.ghost);
   const copyReports = notice.create.button().classlist.set("frozen-test-action").attrs.setMany({ type: "button", "data-testid": "frozen-copy-reports", "aria-label": "Copy Reports" }).text.set("Copy Reports");
   copyReports.listen.onClick(() => onCopyReports(copyReports));
 
   for (const categoryId of FROZEN_TEST_EXPLORER_CATEGORIES) {
     const suites = index.suites.filter((suite) => frozen_test_explorer_category(suite) === categoryId).sort((a, b) => a.order - b.order || a.id.localeCompare(b.id));
-    const cases = suites.flatMap((suite) => suite.cases);
-    const passed = cases.filter((item) => item.status === "pass").length;
-    const failed = cases.filter((item) => item.status === "fail").length;
-    const status = suites.some((suite) => suite.status === "fail") ? "FAIL" : suites.some((suite) => suite.status === "skip") ? "SKIP" : "PASS";
+    const totals = projection.categories[categoryId];
+    const captureStatus = index.categories.find((category) => category.id === categoryId)?.status;
+    const unexecuted = suites.length === 0 && captureStatus === "cancelled";
+    const status = unexecuted ? "UNEXECUTED" : suites.some((suite) => suite.status === "fail") ? "FAIL" : suites.some((suite) => suite.status === "skip") ? "SKIP" : "PASS";
     const durationMs = suites.reduce((total, suite) => total + (suite.timing.ms ?? suite.timing.durationMs ?? 0), 0);
     const group = branch.create.details().classlist.set("frozen-test-category").attrs.setMany({ "data-frozen-category": categoryId, "data-testid": `frozen-category-${categoryId}` });
     const heading = group.create.summary().classlist.set("frozen-test-category-heading");
     heading.create.span().text.set(categoryId);
-    heading.create.span().classlist.set("frozen-test-category-summary").text.set(`${status} · ${suites.length} suites · ${cases.length} cases · ${passed} pass · ${failed} fail · ${format_frozen_test_duration({ ms: durationMs })}`);
+    heading.create.span().classlist.set("frozen-test-category-summary").text.set(`${status} · ${totals.suites} suites · ${totals.cases} cases · ${totals.pass} pass · ${totals.fail} fail · ${unexecuted ? "—" : format_frozen_test_duration({ ms: durationMs })}`);
     for (const suite of suites) {
       const expandable = suite.cases.length > 0;
       const suiteGroup = expandable
@@ -128,27 +127,45 @@ function render_index(
         : group.create.div().classlist.set("frozen-test-suite").attrs.setMany({ "data-frozen-suite": suite.id, "data-frozen-status": suite.status, "data-frozen-expandable": "false" });
       const row = (expandable ? suiteGroup.create.summary() : suiteGroup.create.div()).classlist.set("frozen-test-suite-row").attrs.set("data-testid", "frozen-suite-row");
       if (suite.status === "fail") row.classlist.add("is-fail");
-      append_actions(row, suite.title, suite.evidence?.available === true ? row_selection(suite) : undefined, onAction);
-      const name = row.create.span().classlist.set("frozen-test-suite-identity");
-      if (expandable) name.create.span().classlist.set("frozen-test-suite-disclosure").attrs.setMany({ "aria-hidden": "true", "data-testid": "frozen-suite-disclosure" }).text.set("›");
-      else name.classlist.add("is-static");
-      const nameText = name.create.span();
-      nameText.create.span().text.set(suite.id);
-      nameText.create.span().classlist.set("frozen-test-suite-title").text.set(suite.title);
+      const suiteSelection = suite.evidence?.available === true ? row_selection(suite) : undefined;
+      if (suiteSelection !== undefined) {
+        row.classlist.add("has-evidence");
+        append_actions(row, suite.title, suiteSelection, onAction);
+      }
+      const identity = row.create.span().classlist.set("frozen-test-suite-identity");
+      if (expandable) identity.create.span().classlist.set("frozen-test-suite-disclosure").attrs.setMany({ "aria-hidden": "true", "data-testid": "frozen-suite-disclosure" }).text.set("›");
+      const name = suiteSelection === undefined
+        ? identity.create.span().text.set(suite.id)
+        : identity.create.button().attrs.setMany({ type: "button", "data-frozen-action": "view", "aria-label": `Open evidence for ${suite.title}` }).text.set(suite.id);
+      if (suiteSelection !== undefined) {
+        name.classlist.add("frozen-test-evidence-name");
+        name.listen.stopProp().onClick(() => onAction("view", suiteSelection, row, name));
+      }
+      identity.create.span().classlist.set("frozen-test-suite-title").text.set(suite.title);
       const suiteSummary = row.create.span().classlist.set("frozen-test-row-summary");
-      suiteSummary.create.span().classlist.set("frozen-test-suite-summary").text.set(`${suite.status.toUpperCase()} · ${suite.counts.passed} pass · ${suite.counts.failed} fail · ${suite.counts.skipped} skip`);
+      suiteSummary.create.span().classlist.set("frozen-test-suite-summary frozen-test-metric").text.set(`${suite.counts.passed} pass`);
+      suiteSummary.create.span().classlist.set("frozen-test-suite-summary frozen-test-metric").text.set(`${suite.counts.failed} fail`);
+      suiteSummary.create.span().classlist.set("frozen-test-suite-summary frozen-test-metric").text.set(`${suite.counts.skipped} skip`);
       suiteSummary.create.span().classlist.set("frozen-test-duration").text.set(format_frozen_test_duration(suite.timing));
       for (const item of [...suite.cases].sort((a, b) => a.order - b.order || a.id.localeCompare(b.id))) {
         const caseRow = suiteGroup.create.div().classlist.set("frozen-test-case-row").attrs.setMany({
           "data-testid": "frozen-case-row", "data-frozen-case": item.id, "data-frozen-suite-id": suite.id,
           "data-frozen-status": item.status, "data-frozen-evidence": item.evidence?.available === true ? "available" : "absent",
         });
-        append_actions(caseRow, item.title, item.evidence?.available === true ? row_selection(suite, item) : undefined, onAction);
-        const title = caseRow.create.span().classlist.set("frozen-test-case-identity");
-        title.create.span().text.set(item.title);
-        title.create.span().css.setMany({ color: "#81948a", marginLeft: "8px", fontSize: ".66rem" }).text.set(item.caseId);
+        const caseSelection = item.evidence?.available === true ? row_selection(suite, item) : undefined;
+        if (caseSelection !== undefined) append_actions(caseRow, item.title, caseSelection, onAction);
+        else caseRow.classlist.add("has-no-evidence");
+        const identity = caseRow.create.span().classlist.set("frozen-test-case-identity");
+        const title = caseSelection === undefined
+          ? identity.create.span().text.set(item.title)
+          : identity.create.button().attrs.setMany({ type: "button", "data-frozen-action": "view", "aria-label": `Open evidence for ${item.title}` }).text.set(item.title);
+        if (caseSelection !== undefined) {
+          title.classlist.add("frozen-test-evidence-name");
+          title.listen.stopProp().onClick(() => onAction("view", caseSelection, caseRow, title));
+        }
+        identity.create.span().css.setMany({ color: OKLCH_VIBRANT.graphite, fontSize: ".66rem" }).text.set(item.caseId);
         const caseSummary = caseRow.create.span().classlist.set("frozen-test-case-summary");
-        caseSummary.create.span().classlist.set(`frozen-test-status is-${item.status}`).text.set(item.status.toUpperCase());
+        caseSummary.create.span().classlist.set(`frozen-test-status frozen-test-case-status-cell is-${item.status}`).text.set(item.status.toUpperCase());
         caseSummary.create.span().classlist.set("frozen-test-duration").text.set(format_frozen_test_duration(item.timing));
       }
     }
@@ -165,24 +182,28 @@ export function mount_frozen_test_panel(host: LiveTree, options: Readonly<{ evid
   branch.css.selector("& .frozen-test-category-summary").setMany(STYLES.categorySummary);
   branch.css.selector("& .frozen-test-suite").setMany(STYLES.suite);
   branch.css.selector("& .frozen-test-suite-row").setMany(STYLES.suiteRow);
+  branch.css.selector("& .frozen-test-suite-row.has-evidence").setMany(STYLES.suiteRowEvidence);
   branch.css.selector("& summary.frozen-test-suite-row::-webkit-details-marker").set.display("none");
   branch.css.selector("& .frozen-test-suite-identity").setMany(STYLES.suiteIdentity);
-  branch.css.selector("& .frozen-test-suite-identity.is-static").set.gridTemplateColumns("minmax(0,1fr)");
   branch.css.selector("& .frozen-test-suite-disclosure").setMany(STYLES.suiteDisclosure);
   branch.css.selector("& .frozen-test-suite[open] > .frozen-test-suite-row .frozen-test-suite-disclosure").set.transform("rotate(90deg)");
   branch.css.selector("& .frozen-test-suite-title").setMany(STYLES.suiteTitle);
   branch.css.selector("& .frozen-test-suite-summary").setMany(STYLES.summary);
   branch.css.selector("& .frozen-test-row-summary").setMany(STYLES.rowSummary);
+  branch.css.selector("& .frozen-test-metric").setMany(STYLES.metric);
   branch.css.selector("& .frozen-test-duration").setMany(STYLES.duration);
   branch.css.selector("& .frozen-test-suite-row.is-fail").setMany(STYLES.failed);
   branch.css.selector("& .frozen-test-case-row").setMany(STYLES.caseRow);
   branch.css.selector("& .frozen-test-case-identity").setMany(STYLES.caseIdentity);
+  branch.css.selector("& .frozen-test-case-row.has-no-evidence > .frozen-test-case-identity").set.gridColumn("2");
   branch.css.selector("& .frozen-test-case-summary").setMany(STYLES.caseSummary);
+  branch.css.selector("& .frozen-test-case-status-cell").setMany(STYLES.caseStatus);
   branch.css.selector("& .frozen-test-status.is-pass").setMany(STYLES.casePass);
   branch.css.selector("& .frozen-test-status.is-fail").setMany(STYLES.caseFail);
   branch.css.selector("& .frozen-test-status.is-skip").setMany(STYLES.caseSkip);
   branch.css.selector("& .frozen-test-actions").setMany(STYLES.actions);
   branch.css.selector("& .frozen-test-action").setMany(STYLES.action);
+  branch.css.selector("& .frozen-test-evidence-name").setMany(STYLES.evidenceName);
   branch.css.selector("& .frozen-test-evidence-size").setMany(STYLES.evidenceSize);
   branch.css.selector("& .frozen-test-row-error").setMany(STYLES.rowError);
 
@@ -363,9 +384,10 @@ export function mount_frozen_test_panel(host: LiveTree, options: Readonly<{ evid
     render_index(branch, loaded, (action, selection, row, control) => { void onAction(action, selection, row, control); }, (control) => { void onCopyReports(control); });
     state = "ready";
     const requests = client.snapshot();
+    const projection = project_frozen_test_explorer(loaded);
     branch.attrs.setMany({
       "data-frozen-panel-state": "ready", "data-frozen-category-count": String(loaded.categories.length), "data-frozen-suite-count": String(loaded.suites.length),
-      "data-frozen-case-count": String(loaded.suites.reduce((total, suite) => total + suite.cases.length, 0)), "data-frozen-index-requests": String(requests.indexRequests),
+      "data-frozen-case-count": String(projection.overall.cases), "data-frozen-index-requests": String(requests.indexRequests),
       "data-frozen-initial-evidence-requests": String(requests.rowEvidenceRequests), "data-frozen-row-evidence-requests": String(requests.rowEvidenceRequests),
     });
     void reconcile_location();
@@ -382,7 +404,7 @@ export function mount_frozen_test_panel(host: LiveTree, options: Readonly<{ evid
   return Object.freeze({
     branch,
     ready,
-    snapshot: () => Object.freeze({ state, categories: index?.categories.length ?? 0, suites: index?.suites.length ?? 0, cases: index?.suites.reduce((total, suite) => total + suite.cases.length, 0) ?? 0, evidenceRequests: client.snapshot().rowEvidenceRequests }),
+    snapshot: () => Object.freeze({ state, categories: index?.categories.length ?? 0, suites: index?.suites.length ?? 0, cases: index === undefined ? 0 : project_frozen_test_explorer(index).overall.cases, evidenceRequests: client.snapshot().rowEvidenceRequests }),
     dispose() {
       if (disposed) return;
       disposed = true;

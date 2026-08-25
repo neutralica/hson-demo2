@@ -3,7 +3,8 @@ import type { Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
-import { decode_frozen_test_evidence_index, frozen_test_explorer_category_candidates } from "../../../src/app/demos/tests/panel/frozen-test-evidence-client";
+import { OKLCH_VIBRANT } from "../../../src/app/core/consts/oklch.consts";
+import { decode_frozen_test_evidence_index, frozen_test_explorer_category, frozen_test_explorer_category_candidates, project_frozen_test_explorer } from "../../../src/app/demos/tests/panel/frozen-test-evidence-client";
 import { complete_frozen_test_evidence_inventory_fixture, FROZEN_TEST_EVIDENCE_ROOT } from "../../fixtures/app/frozen-test-evidence-index";
 import { monitor_application_errors } from "./app-test-support";
 import { resolve_deployment_root } from "../../../scripts/certified-package.mjs";
@@ -139,10 +140,10 @@ test("localhost application mount loads one immutable frozen index without brows
   await expect(panel).toHaveAttribute("data-frozen-panel-state", "ready");
   await expect(panel).toHaveAttribute("data-frozen-category-count", "3");
   await expect(panel).toHaveAttribute("data-frozen-suite-count", "359");
-  await expect(panel).toHaveAttribute("data-frozen-case-count", "2586");
+  await expect(panel).toHaveAttribute("data-frozen-case-count", "2643");
   await expect(panel).toHaveAttribute("data-frozen-index-requests", "1");
   await expect(panel).toHaveAttribute("data-frozen-initial-evidence-requests", "0");
-  await expect(page.getByTestId("frozen-test-summary")).toContainText("359 suites · 2586 cases · 2586 pass · 0 fail · aaaaaaaaaa");
+  await expect(page.getByTestId("frozen-test-summary")).toContainText("359 suites · 2643 cases · 2643 pass · 0 fail · aaaaaaaaaa");
   await expect(page.getByTestId("frozen-test-summary")).not.toContainText("frozen");
   await expect.poll(() => page.locator("[data-frozen-category]").evaluateAll((nodes) => nodes.map((node) => node.getAttribute("data-frozen-category")))).toEqual(EXPLORER_CATEGORIES);
   await expect(page.getByTestId("frozen-category-semantic")).toHaveCount(0);
@@ -150,7 +151,7 @@ test("localhost application mount loads one immutable frozen index without brows
   await expect(page.getByTestId("frozen-category-locus")).toContainText("36 suites · 314 cases");
   await expect(page.getByTestId("frozen-category-dev")).toContainText("35 suites · 307 cases");
   await expect(page.getByTestId("frozen-category-browser")).toContainText("17 suites · 81 cases");
-  await expect(page.getByTestId("frozen-category-certification")).toContainText("57 suites · 0 cases");
+  await expect(page.getByTestId("frozen-category-certification")).toContainText("57 suites · 57 cases · 57 pass · 0 fail");
   await expect(page.getByTestId("frozen-suite-row")).toHaveCount(359);
   await expect(page.getByTestId("frozen-case-row")).toHaveCount(2586);
   await expect(page.locator('[data-frozen-suite="transform/suite-000"]')).toContainText("transform representative suite 0");
@@ -204,6 +205,49 @@ test("accepted evidence maps every suite once and mounts in the report explorer"
   expect(candidates.filter((candidate) => candidate.length === 1)).toHaveLength(suiteCount);
   expect(candidates.filter((candidate) => candidate.length === 0)).toHaveLength(0);
   expect(candidates.filter((candidate) => candidate.length > 1)).toHaveLength(0);
+  const projection = project_frozen_test_explorer(accepted);
+  const independentlySummed = Object.fromEntries(EXPLORER_CATEGORIES.map((categoryId) => {
+    const suites = accepted.suites.filter((suite) => frozen_test_explorer_category(suite) === categoryId);
+    return [categoryId, {
+      suites: suites.length,
+      cases: suites.reduce((total, suite) => total + suite.counts.total, 0),
+      pass: suites.reduce((total, suite) => total + suite.counts.passed, 0),
+      fail: suites.reduce((total, suite) => total + suite.counts.failed, 0),
+      skip: suites.reduce((total, suite) => total + suite.counts.skipped, 0),
+      unsupported: suites.reduce((total, suite) => total + suite.counts.unsupported, 0),
+      cancelled: suites.reduce((total, suite) => total + suite.counts.cancelled, 0),
+    }];
+  }));
+  expect(projection.categories).toEqual(independentlySummed);
+  expect(projection.overall).toEqual(Object.values(projection.categories).reduce((total, category) => ({
+    suites: total.suites + category.suites,
+    cases: total.cases + category.cases,
+    pass: total.pass + category.pass,
+    fail: total.fail + category.fail,
+    skip: total.skip + category.skip,
+    unsupported: total.unsupported + category.unsupported,
+    cancelled: total.cancelled + category.cancelled,
+  }), { suites: 0, cases: 0, pass: 0, fail: 0, skip: 0, unsupported: 0, cancelled: 0 }));
+  for (const suite of accepted.suites) {
+    expect(suite.counts.passed + suite.counts.failed + suite.counts.skipped + suite.counts.unsupported + suite.counts.cancelled).toBe(suite.counts.executed);
+    expect(suite.counts.total).toBe(suite.counts.executed);
+    if (suite.cases.length > 0) {
+      expect(suite.cases.length).toBe(suite.counts.total);
+      expect(suite.cases.filter((item) => item.status === "pass")).toHaveLength(suite.counts.passed);
+      expect(suite.cases.filter((item) => item.status === "fail")).toHaveLength(suite.counts.failed);
+      expect(suite.cases.filter((item) => item.status === "skip")).toHaveLength(suite.counts.skipped);
+    }
+  }
+  const suiteOwned = accepted.suites.filter((suite) => suite.cases.length === 0 && suite.counts.total > 0);
+  expect(suiteOwned.length).toBeGreaterThan(0);
+  expect(suiteOwned.reduce((total, suite) => total + suite.counts.total, 0)).toBeGreaterThan(0);
+  const accounting = accepted.accounting as any;
+  expect(projection.overall.cases).toBe(
+    accounting.semantic.canonical.cases
+    + accounting.semantic.opaqueChecks.total
+    + accounting.browserJourneys.total
+    + accounting.certifications.total,
+  );
 
   let indexRequests = 0;
   await page.route(`**${acceptedEvidence.evidenceRoot}/index.json`, async (route) => {
@@ -214,8 +258,29 @@ test("accepted evidence maps every suite once and mounts in the report explorer"
   const panel = page.getByTestId("frozen-test-panel");
   await expect(panel).toHaveAttribute("data-frozen-panel-state", "ready");
   await expect(panel).toHaveAttribute("data-frozen-suite-count", String(suiteCount));
+  await expect(panel).toHaveAttribute("data-frozen-case-count", String(projection.overall.cases));
   await expect.poll(() => page.locator("[data-frozen-category]").evaluateAll((nodes) => nodes.map((node) => node.getAttribute("data-frozen-category")))).toEqual(EXPLORER_CATEGORIES);
+  await expect(page.getByTestId("frozen-test-summary")).toContainText(`${projection.overall.suites} suites · ${projection.overall.cases} cases · ${projection.overall.pass} pass · ${projection.overall.fail} fail`);
+  for (const categoryId of EXPLORER_CATEGORIES) {
+    const totals = projection.categories[categoryId as keyof typeof projection.categories];
+    await expect(page.getByTestId(`frozen-category-${categoryId}`)).toContainText(`${totals.suites} suites · ${totals.cases} cases · ${totals.pass} pass · ${totals.fail} fail`);
+  }
+  await expect(page.getByTestId("frozen-category-certification")).toContainText(
+    projection.categories.certification.suites === 0 ? "UNEXECUTED" : "PASS",
+  );
   expect(indexRequests).toBe(1);
+});
+
+test("frozen explorer accents come from the shared vibrant palette", async () => {
+  const sources = [
+    readFileSync(resolve(process.cwd(), "src/app/demos/tests/panel/mount-tp-frozen.ts"), "utf8"),
+    readFileSync(resolve(process.cwd(), "src/app/demos/tests/panel/frozen-test-presentation.ts"), "utf8"),
+  ].join("\n");
+  expect(sources).toContain("OKLCH_VIBRANT.cyanGlass");
+  expect(sources).toContain("OKLCH_VIBRANT.fernStatic");
+  expect(sources).toContain("OKLCH_VIBRANT.redSignal");
+  expect(sources).not.toMatch(/#[0-9a-f]{3,8}\b|rgba?\(|oklch\(/i);
+  expect(Object.values(OKLCH_VIBRANT)).toContain(OKLCH_VIBRANT.cyanGlass);
 });
 
 test("test report explorer uses report-loading terminology", async ({ page }) => {
@@ -243,7 +308,7 @@ test("frozen case inspector URL supports Back, Forward, refresh, and direct reop
   const ordinaryRow = page.locator(`[data-frozen-case="${fixture.ordinary.id}"]`);
   const transformerRow = page.locator(`[data-frozen-case="${fixture.transformer.id}"]`);
 
-  await ordinaryRow.getByRole("button", { name: /View evidence/ }).evaluate((button: HTMLButtonElement) => { button.click(); button.click(); });
+  await ordinaryRow.getByRole("button", { name: /Open evidence/ }).evaluate((button: HTMLButtonElement) => { button.click(); button.click(); });
   await expect(page.getByTestId("hosted-case-report")).toBeVisible();
   await expect(page.getByTestId("hosted-case-report")).toHaveCount(1);
   await expect(page.getByTestId("frozen-inspector-navigation")).toContainText("Browser Back returns to the tests explorer");
@@ -252,7 +317,7 @@ test("frozen case inspector URL supports Back, Forward, refresh, and direct reop
   expect(ordinaryInspectorUrl.searchParams.get("case")).toBe(fixture.ordinary.id);
   expect(requests.filter((path) => path.includes("/cases/"))).toHaveLength(1);
 
-  await transformerRow.getByRole("button", { name: /View evidence/ }).evaluate((button: HTMLButtonElement) => button.click());
+  await transformerRow.getByRole("button", { name: /Open evidence/ }).evaluate((button: HTMLButtonElement) => button.click());
   await expect(page.getByTestId("hosted-case-report")).toHaveCount(1);
   await expect(page.getByTestId("hosted-case-report")).toHaveAttribute("data-case-key", fixture.transformer.id);
   await expect(page.getByTestId("hosted-case-report")).not.toContainText("ordinary retained assertion");
@@ -286,7 +351,7 @@ test("frozen case inspector URL supports Back, Forward, refresh, and direct reop
   await expect(page.getByTestId("hosted-case-report")).toHaveAttribute("data-case-key", fixture.transformer.id);
 });
 
-test("frozen row View, Copy, and Copy Reports use validated lazy artifacts and truthful controls", async ({ page, context }) => {
+test("frozen row clickable names, Copy, and Copy Reports use validated lazy artifacts and truthful controls", async ({ page, context }) => {
   const assertNoErrors = monitor_application_errors(page);
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
   const fixture = interactive_inventory();
@@ -303,7 +368,10 @@ test("frozen row View, Copy, and Copy Reports use validated lazy artifacts and t
     : `${(fixture.ordinary.evidence.rawBytes / 1_000).toFixed(1)} kB`;
   await expect(ordinaryRow.getByTestId("frozen-evidence-size")).toHaveText(expectedOrdinarySize);
   expect(requests).toEqual([`${FROZEN_TEST_EVIDENCE_ROOT}/index.json`]);
-  await ordinaryRow.getByRole("button", { name: /View evidence/ }).click();
+  await expect(ordinaryRow.getByRole("button", { name: /Open evidence/ })).toContainText(fixture.ordinary.title);
+  await expect(ordinaryRow.getByText("View", { exact: true })).toHaveCount(0);
+  await ordinaryRow.getByRole("button", { name: /Open evidence/ }).focus();
+  await ordinaryRow.getByRole("button", { name: /Open evidence/ }).press("Enter");
   await expect(page.getByTestId("hosted-case-report")).toContainText("ordinary retained assertion");
   expect(requests.filter((path) => path.includes("/cases/"))).toHaveLength(1);
   await page.getByRole("button", { name: "Close case evidence" }).click();
@@ -314,7 +382,7 @@ test("frozen row View, Copy, and Copy Reports use validated lazy artifacts and t
 
   const transformerRow = page.locator(`[data-frozen-case="${fixture.transformer.id}"]`);
   await reveal_case(page, fixture.transformer.id);
-  await transformerRow.getByRole("button", { name: /View evidence/ }).click();
+  await transformerRow.getByRole("button", { name: /Open evidence/ }).click();
   await expect(page.getByTestId("hosted-case-report")).toContainText("retained transformation route");
   await expect(page.getByTestId("hosted-case-report")).toContainText("retained transform circuit");
   await page.getByRole("button", { name: "Close case evidence" }).click();
@@ -322,7 +390,7 @@ test("frozen row View, Copy, and Copy Reports use validated lazy artifacts and t
 
   const browserRow = page.locator(`[data-frozen-case="${fixture.browserCase.id}"]`);
   await reveal_case(page, fixture.browserCase.id);
-  await browserRow.getByRole("button", { name: /View evidence/ }).click();
+  await browserRow.getByRole("button", { name: /Open evidence/ }).click();
   await expect(page.getByTestId("frozen-row-evidence")).toContainText("retained browser journey output");
   await page.getByRole("button", { name: "Close evidence" }).click();
 
@@ -330,26 +398,49 @@ test("frozen row View, Copy, and Copy Reports use validated lazy artifacts and t
     const row = page.locator(`[data-frozen-suite="${suite.id}"]`).getByTestId("frozen-suite-row");
     const category = row.locator("xpath=ancestor::details[@data-frozen-category]");
     if (await category.getAttribute("open") === null) await category.locator(":scope > summary").click();
-    await row.getByRole("button", { name: /View evidence/ }).click();
+    await expect(row.getByRole("button", { name: /Open evidence/ })).toContainText(suite.id);
+    await row.getByRole("button", { name: /Open evidence/ }).click();
     await expect(page.getByTestId("frozen-row-evidence")).toContainText(suite === fixture.opaque ? "retained opaque process evidence" : "retained certification evidence");
     await page.getByRole("button", { name: "Close evidence" }).click();
   }
 
   const absent = page.locator(`[data-frozen-case="${fixture.noEvidence.id}"]`);
   await reveal_case(page, fixture.noEvidence.id);
-  await expect(absent.getByRole("button", { name: /View evidence|Copy evidence/ })).toHaveCount(0);
-  await expect(absent.getByTestId("frozen-row-actions")).toHaveAttribute("data-frozen-actions", "absent");
+  await expect(absent.getByRole("button", { name: /Open evidence|Copy evidence/ })).toHaveCount(0);
+  await expect(absent.getByTestId("frozen-row-actions")).toHaveCount(0);
   const ordinaryActionX = await ordinaryRow.getByTestId("frozen-row-actions").evaluate((node) => node.getBoundingClientRect().x);
   const transformerActionX = await transformerRow.getByTestId("frozen-row-actions").evaluate((node) => node.getBoundingClientRect().x);
-  const absentActionX = await absent.getByTestId("frozen-row-actions").evaluate((node) => node.getBoundingClientRect().x);
   expect(transformerActionX).toBe(ordinaryActionX);
-  expect(absentActionX).toBe(ordinaryActionX);
+  await expect(ordinaryRow.getByTestId("frozen-row-actions").locator(":scope > *").first()).toHaveText("Copy");
+  const suiteRow = page.locator(`[data-frozen-suite="${fixture.opaque.id}"]`).getByTestId("frozen-suite-row");
+  await expect(suiteRow.getByTestId("frozen-row-actions").locator(":scope > *").first()).toHaveText("Copy");
+  const suiteActionX = await suiteRow.getByTestId("frozen-row-actions").evaluate((node) => node.getBoundingClientRect().x);
+  expect(suiteActionX).toBe(ordinaryActionX);
+  await expect(suiteRow.getByText("PASS", { exact: true })).toHaveCount(0);
+  const suiteMetrics = suiteRow.locator(".frozen-test-row-summary > span");
+  await expect(suiteMetrics).toHaveCount(4);
+  await expect(suiteMetrics.nth(0)).toHaveText(`${fixture.opaque.counts.passed} pass`);
+  await expect(suiteMetrics.nth(1)).toHaveText(`${fixture.opaque.counts.failed} fail`);
+  await expect(suiteMetrics.nth(2)).toHaveText(`${fixture.opaque.counts.skipped} skip`);
+  expect(await suiteMetrics.nth(0).evaluate((node) => getComputedStyle(node).textAlign)).toBe("right");
+  expect(await suiteMetrics.nth(1).evaluate((node) => getComputedStyle(node).textAlign)).toBe("right");
+  expect(await suiteMetrics.nth(2).evaluate((node) => getComputedStyle(node).textAlign)).toBe("right");
+  await expect(ordinaryRow.getByText("PASS", { exact: true })).toHaveCount(1);
+  expect(await suiteRow.locator(".frozen-test-row-summary").evaluate((node) => getComputedStyle(node).gridTemplateColumns))
+    .toBe(await ordinaryRow.locator(".frozen-test-case-summary").evaluate((node) => getComputedStyle(node).gridTemplateColumns));
+  const suiteNameX = await suiteRow.locator(".frozen-test-suite-identity").evaluate((node) => node.getBoundingClientRect().x);
+  const caseNameX = await ordinaryRow.locator(".frozen-test-case-identity").evaluate((node) => node.getBoundingClientRect().x);
+  expect(suiteNameX).toBe(caseNameX);
+  const expandableWithoutEvidence = page.locator(`[data-frozen-suite="${fixture.ordinary.id.split("::")[0]}"]`).getByTestId("frozen-suite-row");
+  await expect(expandableWithoutEvidence.getByTestId("frozen-row-actions")).toHaveCount(0);
+  const expandableNameX = await expandableWithoutEvidence.locator(".frozen-test-suite-identity").evaluate((node) => node.getBoundingClientRect().x);
+  expect(expandableNameX).toBeLessThan(caseNameX);
   const beforeReports = [...requests];
   await page.getByTestId("frozen-copy-reports").click();
   await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toContain("Test reports");
   const summary = await page.evaluate(() => navigator.clipboard.readText());
   expect(summary).toContain(fixture.ordinary.id);
-  expect(summary).toContain("CERTIFICATION");
+  expect(summary).toContain("CERTIFICATION · PASS · 57 suites · 57 cases · 57 pass · 0 fail");
   expect(requests).toEqual(beforeReports);
   expect(requests.some((path) => path.includes("/reports/"))).toBe(false);
   await expect(panel).toHaveAttribute("data-hosted-execution-count", "0");
@@ -364,7 +455,7 @@ test("frozen row evidence failures stay local and never fall back to live acquis
   await page.goto("/tests/fixtures/browser/frozen-test-panel-fixture.html");
   const row = page.locator(`[data-frozen-case="${fixture.ordinary.id}"]`);
   await reveal_case(page, fixture.ordinary.id);
-  await row.getByRole("button", { name: /View evidence/ }).click();
+  await row.getByRole("button", { name: /Open evidence/ }).click();
   await expect(row.getByTestId("frozen-row-evidence-error")).toContainText("HTTP 404");
   await expect(page.getByTestId("frozen-test-panel")).toHaveAttribute("data-frozen-panel-state", "ready");
   expect(await page.evaluate(() => window.__frozenPanelFixture?.acquisition)).toBe("frozen");
