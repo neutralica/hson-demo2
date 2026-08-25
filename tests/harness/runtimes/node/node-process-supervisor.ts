@@ -168,7 +168,9 @@ export function create_node_process_supervisor(configuration: Readonly<{
       let forceTimer: ReturnType<typeof setTimeout> | undefined;
       let groupProbeTimer: ReturnType<typeof setInterval> | undefined;
       let settlementFailureTimer: ReturnType<typeof setTimeout> | undefined;
+      let stdioSettlementTimer: ReturnType<typeof setTimeout> | undefined;
       let parentClosed = false;
+      let parentExited = false;
       let parentExitCode: number | null = null;
       let parentSignal: NodeJS.Signals | null = null;
       const child = spawn(invocation.command, invocation.args, {
@@ -188,6 +190,7 @@ export function create_node_process_supervisor(configuration: Readonly<{
         if (forceTimer !== undefined) clearTimeout(forceTimer);
         if (groupProbeTimer !== undefined) clearInterval(groupProbeTimer);
         if (settlementFailureTimer !== undefined) clearTimeout(settlementFailureTimer);
+        if (stdioSettlementTimer !== undefined) clearTimeout(stdioSettlementTimer);
         options.signal?.removeEventListener("abort", abort);
         const stdout = stdoutCapture.snapshot();
         const stderr = stderrCapture.snapshot();
@@ -213,6 +216,20 @@ export function create_node_process_supervisor(configuration: Readonly<{
         if (process.platform === "win32" || groupProbeTimer !== undefined) return;
         groupProbeTimer = setInterval(resolve_settlement, 25);
       };
+      const require_stdio_settlement = (): void => {
+        if (settled || parentClosed || stdioSettlementTimer !== undefined) return;
+        stdioSettlementTimer = setTimeout(() => {
+          if (settled || parentClosed) return;
+          spawnError ??= "PROCESS_STDIO_SETTLEMENT_FAILED";
+          // A descendant outside the owned process group can keep inherited
+          // descriptors open after the supervised parent exits.  Do not wait
+          // for the command timeout or accept the execution as successful.
+          child.stdout?.destroy();
+          child.stderr?.destroy();
+          parentClosed = true;
+          resolve_settlement();
+        }, Math.max(1_000, configuration.terminationGraceMs));
+      };
       const terminate = (): void => {
         if (terminationRequested || settled) return;
         terminationRequested = true;
@@ -234,6 +251,7 @@ export function create_node_process_supervisor(configuration: Readonly<{
               activeChildren.delete(child);
               clearTimeout(timeoutTimer);
               if (groupProbeTimer !== undefined) clearInterval(groupProbeTimer);
+              if (stdioSettlementTimer !== undefined) clearTimeout(stdioSettlementTimer);
               options.signal?.removeEventListener("abort", abort);
               const stdout = stdoutCapture.snapshot();
               const stderr = stderrCapture.snapshot();
@@ -276,11 +294,25 @@ export function create_node_process_supervisor(configuration: Readonly<{
       const result = new Promise<NodeProcessResult>((resolve) => {
         resolveResult = resolve;
         child.once("error", (error) => { spawnError = error.message; });
+        child.once("exit", (exitCode, signal) => {
+          if (settled) return;
+          parentExited = true;
+          parentExitCode = exitCode;
+          parentSignal = signal;
+          // `close` is a stronger stdio-settlement event, but it may never
+          // arrive when an escaped descendant inherited a pipe.  Start the
+          // existing bounded settlement policy as soon as exit is observed.
+          if (owned_process_group_exists(child) && !terminationRequested) terminate();
+          begin_group_probe();
+          require_stdio_settlement();
+        });
         child.once("close", (exitCode, signal) => {
           if (settled) return;
           parentClosed = true;
-          parentExitCode = exitCode;
-          parentSignal = signal;
+          if (!parentExited) {
+            parentExitCode = exitCode;
+            parentSignal = signal;
+          }
           // A normal parent exit may still leave processes in the owned group.
           // Treat it as a tree termination, not as successful completion.
           if (owned_process_group_exists(child) && !terminationRequested) terminate();

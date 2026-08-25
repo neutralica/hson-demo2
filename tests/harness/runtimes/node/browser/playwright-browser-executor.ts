@@ -1,4 +1,4 @@
-import { createServer } from "node:net";
+import { createConnection, createServer } from "node:net";
 import { rm } from "node:fs/promises";
 import { delimiter, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -26,6 +26,9 @@ const EVENT_PREFIX = "<LOCUS_BROWSER_EVENT>";
 const TIMING_PREFIX = "<LOCUS_BROWSER_TIMING>";
 const PLAYWRIGHT_SERVER_STARTUP_BUDGET_MS = 60_000;
 const PLAYWRIGHT_CASE_TIMEOUT_MS = 30_000;
+// Playwright may spend five seconds in its graceful web-server handoff, after
+// which the hosted server retains its own five-second bounded shutdown.
+const PLAYWRIGHT_SERVER_SETTLEMENT_BUDGET_MS = 10_000;
 
 type BrowserReporterEvent = Readonly<Record<string, unknown> & { t: string }>;
 
@@ -45,6 +48,7 @@ export type BrowserExecutorMetrics = Readonly<{
   artifactCount: number;
   cancellations: number;
   forcedTerminations: number;
+  serverSettlementFailures: number;
   lastChildPid: number | null;
   lastChildJsdomModules: number | null;
   lastChildEncodingFallbackLoaded: boolean | null;
@@ -78,6 +82,25 @@ async function reserve_port(): Promise<number> {
       server.close((error) => error === undefined ? resolve(address.port) : reject(error));
     });
   });
+}
+
+async function port_accepts_connections(port: number): Promise<boolean> {
+  return new Promise<boolean>((resolve) => {
+    const socket = createConnection({ host: "127.0.0.1", port });
+    socket.once("connect", () => { socket.destroy(); resolve(true); });
+    socket.once("error", () => { socket.destroy(); resolve(false); });
+  });
+}
+
+async function assert_ports_released(ports: readonly number[]): Promise<void> {
+  const deadline = Date.now() + PLAYWRIGHT_SERVER_SETTLEMENT_BUDGET_MS;
+  while (true) {
+    const listening = (await Promise.all(ports.map(async (port) => await port_accepts_connections(port) ? port : undefined)))
+      .filter((port): port is number => port !== undefined);
+    if (listening.length === 0) return;
+    if (Date.now() >= deadline) throw new Error(`PLAYWRIGHT_SERVER_PROCESS_REMAINS:${listening.join(",")}`);
+    await new Promise<void>((resolve) => setTimeout(resolve, 25));
+  }
 }
 
 function string_array(value: unknown): readonly string[] {
@@ -118,6 +141,7 @@ function empty_metrics(): BrowserExecutorMetrics {
     artifactCount: 0,
     cancellations: 0,
     forcedTerminations: 0,
+    serverSettlementFailures: 0,
     lastChildPid: null,
     lastChildJsdomModules: null,
     lastChildEncodingFallbackLoaded: null,
@@ -321,6 +345,7 @@ export function create_playwright_browser_executor(
         retainedArtifactRoots: retainedArtifactRoots.size,
       });
       let result: NodeProcessResult;
+      let serverSettlementFailed = false;
       try {
         result = await supervisor.start({
           cwd: process.cwd(),
@@ -350,8 +375,17 @@ export function create_playwright_browser_executor(
           generation: supervisor.generation(),
           observeStdoutChunk: (chunk) => parseChunk(chunk.toString("utf8")),
         }).result;
+        await assert_ports_released([hostedPort, appPort]);
+      } catch (error) {
+        serverSettlementFailed = true;
+        throw error;
       } finally {
-        metrics = Object.freeze({ ...metrics, activeProcesses: Math.max(0, metrics.activeProcesses - 1) });
+        metrics = Object.freeze({
+          ...metrics,
+          activeProcesses: Math.max(0, metrics.activeProcesses - 1),
+          activeJourneys: 0,
+          serverSettlementFailures: metrics.serverSettlementFailures + (serverSettlementFailed ? 1 : 0),
+        });
       }
       parseChunk("\n");
       if (!result.cancelled) {

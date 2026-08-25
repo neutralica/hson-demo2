@@ -47,16 +47,20 @@ export default defineConfig({
   webServer: [
     {
       command: `PORT=${hostedTestPort} npm run hosted:test-server`,
+      env: { HSON_PLAYWRIGHT_OWNER_PID: String(process.pid) },
       port: hostedTestPort,
       timeout: 30_000,
+      gracefulShutdown: { signal: "SIGTERM", timeout: 5_000 },
       reuseExistingServer: liveHostExecution ? false : localDevelopment,
       stdout: "ignore",
       stderr: "pipe",
     },
     {
       command: `VITE_TEST_EVIDENCE_ROOT=/test-evidence/${"a".repeat(40)} VITE_HOSTED_TEST_WS_URL=${hostedTestUrl} VITE_TOWL_WS_URL=${hostedTestUrl} VITE_CIRCUIT_VERIFICATION_WS_URL=${hostedTestUrl} npm run dev:test -- --host 127.0.0.1 --port ${appPort} --strictPort`,
+      env: { HSON_PLAYWRIGHT_OWNER_PID: String(process.pid) },
       url: appUrl,
       timeout: 30_000,
+      gracefulShutdown: { signal: "SIGTERM", timeout: 5_000 },
       reuseExistingServer: liveHostExecution ? false : localDevelopment,
       stdout: "ignore",
       stderr: "pipe",

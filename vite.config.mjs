@@ -2,6 +2,38 @@ import { createReadStream, existsSync, statSync } from "node:fs";
 import { resolve, sep } from "node:path";
 import { defineConfig, loadEnv } from "vite";
 
+function process_exists(pid) {
+  try { process.kill(pid, 0); return true; }
+  catch (error) { return error.code !== "ESRCH"; }
+}
+
+function playwright_owner_lifecycle_plugin(environment) {
+  const rawOwnerPid = environment.HSON_PLAYWRIGHT_OWNER_PID;
+  if (rawOwnerPid === undefined) return undefined;
+  if (!/^\d+$/.test(rawOwnerPid) || Number(rawOwnerPid) <= 0) {
+    throw new Error("HSON_PLAYWRIGHT_OWNER_PID must be a positive process ID.");
+  }
+  const ownerPid = Number(rawOwnerPid);
+  return {
+    name: "hson-playwright-owner-lifecycle",
+    apply: "serve",
+    configureServer(server) {
+      let stopping = false;
+      const timer = setInterval(() => {
+        if (stopping || process_exists(ownerPid)) return;
+        stopping = true;
+        clearInterval(timer);
+        const forceTimer = setTimeout(() => process.exit(1), 5_000);
+        void server.close().then(
+          () => { clearTimeout(forceTimer); process.exit(0); },
+          () => { clearTimeout(forceTimer); process.exit(1); },
+        );
+      }, 100);
+      server.httpServer?.once("close", () => clearInterval(timer));
+    },
+  };
+}
+
 function local_frozen_evidence_plugin(environment) {
   const publicRoot = environment.VITE_TEST_EVIDENCE_ROOT;
   const evidenceDirectory = environment.HSON_LOCAL_FROZEN_EVIDENCE_DIRECTORY;
@@ -30,8 +62,9 @@ function local_frozen_evidence_plugin(environment) {
 
 export default defineConfig(({ mode }) => {
   const environment = loadEnv(mode, process.cwd(), "");
+  const ownerLifecycle = playwright_owner_lifecycle_plugin(environment);
   return {
-    plugins: [local_frozen_evidence_plugin(environment)],
+    plugins: [local_frozen_evidence_plugin(environment), ...(ownerLifecycle === undefined ? [] : [ownerLifecycle])],
     server: {
       hmr: false,
     },

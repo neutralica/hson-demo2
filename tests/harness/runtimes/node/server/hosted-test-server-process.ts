@@ -22,6 +22,8 @@ export type HostedTestServerEnvironment = Readonly<{
   LOCUS_MAX_HOSTED_REPORTS?: string;
   LOCUS_HOSTED_REPORT_RETENTION_MS?: string;
   LOCUS_AUTHORITY_SWEEP_INTERVAL_MS?: string;
+  /** Internal Playwright web-server ownership; the server exits if this process disappears. */
+  HSON_PLAYWRIGHT_OWNER_PID?: string;
 }>;
 
 export type HostedTestServerProcess = Readonly<{
@@ -35,6 +37,7 @@ export type HostedTestServerProcessOptions = Readonly<{
   startServer?: (options: Readonly<{ host: string; port: number; shutdownTimeoutMs: number }>) => Promise<HostedTestServer>;
   log?: (message: string) => void;
   logError?: (message: string) => void;
+  ownerProcessExists?: (pid: number) => boolean;
 }>;
 
 export function hosted_test_server_bind_options(
@@ -69,6 +72,19 @@ function positive_environment_integer(
   const parsed = Number(raw);
   if (!Number.isSafeInteger(parsed) || parsed <= 0) throw new Error(`${name} must be a positive integer.`);
   return parsed;
+}
+
+function optional_process_id(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+  if (!/^\d+$/.test(value)) throw new Error("HSON_PLAYWRIGHT_OWNER_PID must be a positive process ID.");
+  const parsed = Number(value);
+  if (!Number.isSafeInteger(parsed) || parsed <= 0) throw new Error("HSON_PLAYWRIGHT_OWNER_PID must be a positive process ID.");
+  return parsed;
+}
+
+function process_exists(pid: number): boolean {
+  try { process.kill(pid, 0); return true; }
+  catch (error) { return (error as NodeJS.ErrnoException).code !== "ESRCH"; }
 }
 
 export function hosted_test_authority_lifecycle_options(
@@ -115,6 +131,8 @@ export async function run_hosted_test_server_process(
   const logError = options.logError ?? console.error;
   const bind = hosted_test_server_bind_options(environment);
   const authorityLifecycle = hosted_test_authority_lifecycle_options(environment);
+  const ownerPid = optional_process_id(environment.HSON_PLAYWRIGHT_OWNER_PID);
+  const ownerProcessExists = options.ownerProcessExists ?? process_exists;
   let server: HostedTestServer;
   if (options.startServer !== undefined) {
     server = await options.startServer(bind);
@@ -163,7 +181,11 @@ assert_supported_livehost_node_runtime();
   log(`Hosted-test server listening at ${server.url} (bind address).`);
 
   let shutdown: Promise<void> | undefined;
-  const stop = (): Promise<void> => shutdown ??= server.stop();
+  let ownerTimer: ReturnType<typeof setInterval> | undefined;
+  const stop = (): Promise<void> => {
+    if (ownerTimer !== undefined) clearInterval(ownerTimer);
+    return shutdown ??= server.stop();
+  };
   const handleSignal = (signal: "SIGINT" | "SIGTERM"): void => {
     void stop().then(
       () => processHandle.exit(0),
@@ -175,5 +197,13 @@ assert_supported_livehost_node_runtime();
   };
   processHandle.once("SIGINT", () => handleSignal("SIGINT"));
   processHandle.once("SIGTERM", () => handleSignal("SIGTERM"));
+  if (ownerPid !== undefined) {
+    ownerTimer = setInterval(() => {
+      if (ownerProcessExists(ownerPid)) return;
+      clearInterval(ownerTimer);
+      ownerTimer = undefined;
+      handleSignal("SIGTERM");
+    }, 100);
+  }
   return server;
 }

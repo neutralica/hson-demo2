@@ -6,6 +6,18 @@ function expect_entry(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`node application host entry: ${message}`);
 }
 
+function child_exit(child: ReturnType<typeof spawn>): Promise<Readonly<{ code: number | null; signal: NodeJS.Signals | null }>> {
+  return new Promise((resolve) => {
+    const finish = (code: number | null, signal: NodeJS.Signals | null): void => resolve({ code, signal });
+    child.once("exit", finish);
+    // Close the attach-after-exit race without weakening the event result.
+    if (child.exitCode !== null || child.signalCode !== null) {
+      child.off("exit", finish);
+      resolve({ code: child.exitCode, signal: child.signalCode });
+    }
+  });
+}
+
 async function available_port(): Promise<number> {
   const server = createServer();
   await new Promise<void>((resolve, reject) => {
@@ -74,10 +86,12 @@ try {
       && stdout.includes('"type":"application-registration"'),
     "source entrypoint must expose health, both registrations, and structured startup events",
   );
+  const exitPromise = child_exit(child);
   child.kill("SIGTERM");
-  const exit = await new Promise<Readonly<{ code: number | null; signal: NodeJS.Signals | null }>>((resolve) => {
-    child.once("exit", (code, signal) => resolve({ code, signal }));
-  });
+  const forceTimer = setTimeout(() => {
+    if (child.exitCode === null && child.signalCode === null) child.kill("SIGKILL");
+  }, 5_000);
+  const exit = await exitPromise.finally(() => clearTimeout(forceTimer));
   expect_entry(
     exit.code === 0
       && exit.signal === null

@@ -5,10 +5,10 @@ import { make_remote_hosted_test_runtime } from "../../../src/app/demos/tests/pa
 import { hosted_test_report_cases } from "../../../src/shared/hosted-tests/hosted-test-report.types";
 import { start_hosted_test_server } from "../../harness/runtimes/node/server/hosted-test-server";
 
-async function wait_until(predicate: () => boolean, timeoutMs: number): Promise<void> {
+async function wait_until(predicate: () => boolean, timeoutMs: number, failure: string): Promise<void> {
   const deadline = Date.now() + timeoutMs;
   while (!predicate()) {
-    if (Date.now() >= deadline) throw new Error("Timed out waiting for active browser executor process.");
+    if (Date.now() >= deadline) throw new Error(failure);
     await new Promise((resolve) => setTimeout(resolve, 20));
   }
 }
@@ -29,10 +29,16 @@ try {
   ))!;
   const run = await runtime.start_selected([browserCase.id]);
   await run.ready();
-  await wait_until(() => server.browserMetrics!().activeJourneys === 1, 30_000);
+  await wait_until(() => server.browserMetrics!().activeJourneys === 1, 30_000, "Timed out waiting for active browser executor process.");
   const cancellation = await run.cancel();
   assert.equal(cancellation.accepted, true);
   const result = await run.actionResult;
+  await wait_until(() => {
+    const metrics = server.browserMetrics!();
+    return metrics.activeProcesses === 0
+      && metrics.activeJourneys === 0
+      && (metrics.cancellations === 1 || metrics.serverSettlementFailures > 0);
+  }, 15_000, "Timed out waiting for browser executor process settlement.");
   assert.equal(result.cancelled, true);
   const report = run.client.recovery.map.snap();
   assert.equal(report.run.status, "cancelled");
@@ -40,6 +46,7 @@ try {
   assert.equal(server.browserMetrics!().activeProcesses, 0);
   assert.equal(server.browserMetrics!().activeJourneys, 0);
   assert.equal(server.browserMetrics!().cancellations, 1);
+  assert.equal(server.browserMetrics!().serverSettlementFailures, 0);
 
   const recovered = await runtime.recover_run(run.association.runId, run.association.attemptId);
   const recoveredReport = recovered.client.recovery.map.snap();

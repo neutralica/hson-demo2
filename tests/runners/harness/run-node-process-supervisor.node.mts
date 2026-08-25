@@ -98,6 +98,23 @@ const wait = (milliseconds: number): Promise<void> => new Promise((resolve) => s
 const process_exists = (pid: number): boolean => {
   try { process.kill(pid, 0); return true; } catch (error) { return (error as NodeJS.ErrnoException).code !== "ESRCH"; }
 };
+
+let escapedStdioPid = 0;
+const escapedStdio = supervisor.start(invocation(
+  "const{spawn}=require('node:child_process');const c=spawn(process.execPath,['-e','setInterval(()=>{},1000)'],{detached:true,stdio:['ignore',process.stdout,'ignore']});c.unref();process.stdout.write('escaped:'+c.pid)",
+  10_000,
+), { observeStdoutChunk(chunk) {
+  const match = /escaped:(\d+)/.exec(chunk.toString("utf8"));
+  if (match !== null) escapedStdioPid = Number(match[1]);
+} });
+const escapedStdioResult = await escapedStdio.result;
+assert.equal(escapedStdioResult.timedOut, false, "parent exit must not wait for the command timeout when escaped stdio prevents close");
+assert.equal(escapedStdioResult.spawnError, "PROCESS_STDIO_SETTLEMENT_FAILED");
+assert.equal(escapedStdioResult.ok, false, "unsettled inherited stdio is an infrastructure failure, never a green result");
+if (process.platform !== "win32" && escapedStdioPid > 0) {
+  try { process.kill(-escapedStdioPid, "SIGKILL"); } catch { /* fixture already exited */ }
+}
+
 async function cancellation_tree(source: string, options: Readonly<{ descendantTermMarker?: string; mustSurviveGrace?: boolean }> = {}): Promise<Readonly<{ result: Awaited<ReturnType<typeof treeSupervisor.start>["result"]>; descendantPid: number; parentPid: number; parentTermObserved: boolean; descendantTermObserved: boolean }>> {
   let output = "";
   let descendantPid = 0;
@@ -190,6 +207,7 @@ console.log(JSON.stringify({
   resistantDescendantTermObserved: resistantTree.descendantTermObserved,
   cooperativeDescendantForceKilled: cooperativeTree.result.forceKilled,
   processTreeCleanup: true,
+  exitedParentStdioSettlement: escapedStdioResult.spawnError === "PROCESS_STDIO_SETTLEMENT_FAILED",
   activeChildDisposal: supervisor.metrics().activeChildren === 0,
   replacementEnvironment: replacedEnvironment.ok,
 }));

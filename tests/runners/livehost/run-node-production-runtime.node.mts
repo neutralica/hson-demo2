@@ -4,6 +4,17 @@ import { readFile } from "node:fs/promises";
 import { createServer } from "node:net";
 import WebSocket from "ws";
 
+function child_exit(child: ReturnType<typeof spawn>): Promise<Readonly<{ code: number | null; signal: NodeJS.Signals | null }>> {
+  return new Promise((resolve) => {
+    const finish = (code: number | null, signal: NodeJS.Signals | null): void => resolve({ code, signal });
+    child.once("exit", finish);
+    if (child.exitCode !== null || child.signalCode !== null) {
+      child.off("exit", finish);
+      resolve({ code: child.exitCode, signal: child.signalCode });
+    }
+  });
+}
+
 const artifact = new URL("../../../dist-node/livehost-server.mjs", import.meta.url);
 const source = await readFile(artifact, "utf8");
 assert.equal(source.includes("../hson-live/src"), false);
@@ -101,9 +112,13 @@ await new Promise<void>((resolve, reject) => {
 });
 towl.close();
 
+const exitPromise = child_exit(child);
 child.kill("SIGTERM");
-const exitCode = await new Promise<number | null>((resolve) => child.once("exit", resolve));
-assert.equal(exitCode, 0, `${stdout}\n${stderr}`);
+const forceTimer = setTimeout(() => {
+  if (child.exitCode === null && child.signalCode === null) child.kill("SIGKILL");
+}, 5_000);
+const exit = await exitPromise.finally(() => clearTimeout(forceTimer));
+assert.deepEqual(exit, { code: 0, signal: null }, `${stdout}\n${stderr}`);
 assert.equal(stderr.includes("production-smoke-secret"), false);
 assert.equal(stdout.includes("production-smoke-secret"), false);
 

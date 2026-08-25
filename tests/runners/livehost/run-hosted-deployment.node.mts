@@ -415,4 +415,24 @@ expect_deployment(
   "signals share the existing server stop path exactly once",
 );
 
+stopCalls = 0;
+const ownerExits: number[] = [];
+let observedOwnerPid: number = 0;
+await run_hosted_test_server_process({
+  environment: { HOST: "0.0.0.0", PORT: "4321", HSON_PLAYWRIGHT_OWNER_PID: "4242" },
+  process: {
+    once() {},
+    exit(code) { ownerExits.push(code); },
+  },
+  async startServer() { return fakeServer; },
+  ownerProcessExists(pid) { observedOwnerPid = pid; return false; },
+  log() {},
+  logError() {},
+});
+await new Promise<void>((resolve) => setTimeout(resolve, 150));
+expect_deployment(
+  observedOwnerPid === 4242 && stopCalls === 1 && ownerExits.length === 1 && ownerExits[0] === 0,
+  "a vanished Playwright owner shuts down its hosted web server through the bounded stop path",
+);
+
 console.log(JSON.stringify({ openedUrls, stopCalls, configurationFailure: missingError.message }));
