@@ -17,6 +17,8 @@ const H2_MARKER = "hson-h2-isolated-verification-v1";
 const MAX_WORKSPACE_BYTES = 1024 * 1024 * 1024;
 const OUTPUT_LIMIT_BYTES = 256 * 1024;
 const STALE_AGE_MS = 6 * 60 * 60 * 1000;
+const PREPARED_DEPENDENCIES_SCHEMA = "hson-h2-prepared-dependencies-v1";
+const PREPARED_DEPENDENCIES_MARKER = ".h2-prepared-dependencies.json";
 const H2C_CHILD_RELATIVE_PATH: H2CChildModule extends true ? string : never = "tests/runners/harness/h2-artifact-certification-child.node.mts";
 /** Polling detects growth while subprocesses run.  A writer may therefore
  * overshoot by up to one polling interval plus one filesystem walk; this is a
@@ -155,6 +157,12 @@ export type H2ExecutorTestHooks = Readonly<{
   /** Test-only seam used by hosted lifecycle certification fixtures after the
    * copied dependency graph is ready but before the verification child starts. */
   beforeExecution?(workspace: string, snapshotDemo: string): Promise<void> | void;
+  /** Deterministic test-only barrier immediately before an immutable dependency
+   * candidate is published to its content-addressed final path. */
+  beforeDependencyPublication?(key: string, staging: string, prepared: string): Promise<void> | void;
+  /** Test-only filesystem fault seam; production always uses node:fs rename. */
+  publishDependencyCandidate?(staging: string, prepared: string): Promise<void>;
+  afterDependencyPreparation?(prepared: string): Promise<void> | void;
 }>;
 export type H2ExecutorOptions = Readonly<{
   hsonLiveRoot: string;
@@ -324,40 +332,96 @@ export async function h2_workspace_bytes_for_tests(root: string, afterReadDirect
   return workspace_bytes(root, afterReadDirectory);
 }
 
-async function prepare_dependencies(sourceLive: string, sourceDemo: string, snapshotDemo: string, snapshotLive: string, preparedRoot: string): Promise<void> {
+async function require_valid_prepared_dependencies(prepared: string, key: string): Promise<boolean> {
+  let preparedInfo;
+  try { preparedInfo = await stat(prepared); }
+  catch (error) {
+    if (is_missing_path(error)) return false;
+    throw error;
+  }
+  if (!preparedInfo.isDirectory()) throw new Error(`H2_PREPARED_DEPENDENCIES_INVALID: ${key}`);
+  let markerBytes: string;
+  try { markerBytes = await readFile(join(prepared, PREPARED_DEPENDENCIES_MARKER), "utf8"); }
+  catch (error) {
+    if (is_missing_path(error)) throw new Error(`H2_PREPARED_DEPENDENCIES_INVALID: ${key}`);
+    throw error;
+  }
+  let marker: unknown;
+  try { marker = JSON.parse(markerBytes); }
+  catch { throw new Error(`H2_PREPARED_DEPENDENCIES_INVALID: ${key}`); }
+  if (typeof marker !== "object" || marker === null || Array.isArray(marker)
+    || (marker as Record<string, unknown>).schema !== PREPARED_DEPENDENCIES_SCHEMA
+    || (marker as Record<string, unknown>).key !== key) {
+    throw new Error(`H2_PREPARED_DEPENDENCIES_INVALID: ${key}`);
+  }
+  let dependenciesInfo;
+  try { dependenciesInfo = await stat(join(prepared, "node_modules")); }
+  catch (error) {
+    if (is_missing_path(error)) throw new Error(`H2_PREPARED_DEPENDENCIES_INVALID: ${key}`);
+    throw error;
+  }
+  if (!dependenciesInfo.isDirectory()) throw new Error(`H2_PREPARED_DEPENDENCIES_INVALID: ${key}`);
+  return true;
+}
+
+function is_concurrent_directory_publication(error: unknown): boolean {
+  const code = (error as NodeJS.ErrnoException).code;
+  return code === "EEXIST" || code === "ENOTEMPTY";
+}
+
+async function publish_prepared_dependencies(
+  staging: string,
+  prepared: string,
+  key: string,
+  publish: (staging: string, prepared: string) => Promise<void>,
+): Promise<void> {
+  await require_valid_prepared_dependencies(staging, key);
+  try { await publish(staging, prepared); }
+  catch (error) {
+    if (!is_concurrent_directory_publication(error)) throw error;
+    if (!await require_valid_prepared_dependencies(prepared, key)) throw error;
+  }
+}
+
+async function prepare_dependencies(sourceLive: string, sourceDemo: string, snapshotDemo: string, snapshotLive: string, preparedRoot: string, testHooks?: H2ExecutorTestHooks): Promise<void> {
   const key = createHash("sha256")
     .update(await readFile(join(sourceLive, "package-lock.json")))
     .update(await readFile(join(sourceDemo, "package-lock.json")))
     .update(process.version)
     .update(await execFileAsync("npm", ["--version"]).then((result) => result.stdout.trim()))
-    .update("h2-prepared-dependencies-v5")
+    .update("h2-prepared-dependencies-v6")
     .digest("hex");
-  const prepared = join(preparedRoot, key, "node_modules");
-  try { await stat(prepared); } catch {
+  const preparedDirectory = join(preparedRoot, key);
+  const prepared = join(preparedDirectory, "node_modules");
+  if (!await require_valid_prepared_dependencies(preparedDirectory, key)) {
     const staging = join(preparedRoot, `${key}.staging-${randomUUID()}`);
-    await mkdir(staging, { recursive: true });
-    await cp(join(sourceDemo, "node_modules"), join(staging, "node_modules"), { recursive: true, dereference: true, filter: (path) => basename(path) !== "hson-live" });
-    const copied = join(staging, "node_modules");
-    const sourceBin = join(sourceDemo, "node_modules", ".bin");
-    await rm(join(copied, ".bin"), { recursive: true, force: true });
-    await mkdir(join(copied, ".bin"));
-    for (const entry of await readdir(sourceBin)) {
-      const link = await readlink(join(sourceBin, entry));
-      const resolved = resolve(sourceBin, link);
-      if (!inside(join(sourceDemo, "node_modules"), resolved)) throw new Error("DEPENDENCY_BIN_ESCAPE");
-      await symlink(link, join(copied, ".bin", entry));
-    }
-    // tsx is an ESM entrypoint whose relative imports are resolved against a
-    // symlinked .bin path on Node 24.  A workspace-owned launcher preserves
-    // the package's real module location without pointing at developer files.
-    await rm(join(copied, ".bin", "tsx"), { force: true });
-    await writeFile(join(copied, ".bin", "tsx"), `#!${process.execPath}\nimport { dirname, resolve } from "node:path";\nimport { fileURLToPath, pathToFileURL } from "node:url";\nawait import(pathToFileURL(resolve(dirname(fileURLToPath(import.meta.url)), "../tsx/dist/cli.mjs")).href);\n`);
-    await chmod(join(copied, ".bin", "tsx"), 0o755);
-    try { await rename(staging, join(preparedRoot, key)); } catch (error) {
+    try {
+      await mkdir(staging, { recursive: true });
+      await cp(join(sourceDemo, "node_modules"), join(staging, "node_modules"), { recursive: true, dereference: true, filter: (path) => basename(path) !== "hson-live" });
+      const copied = join(staging, "node_modules");
+      const sourceBin = join(sourceDemo, "node_modules", ".bin");
+      await rm(join(copied, ".bin"), { recursive: true, force: true });
+      await mkdir(join(copied, ".bin"));
+      for (const entry of await readdir(sourceBin)) {
+        const link = await readlink(join(sourceBin, entry));
+        const resolved = resolve(sourceBin, link);
+        if (!inside(join(sourceDemo, "node_modules"), resolved)) throw new Error("DEPENDENCY_BIN_ESCAPE");
+        await symlink(link, join(copied, ".bin", entry));
+      }
+      // tsx is an ESM entrypoint whose relative imports are resolved against a
+      // symlinked .bin path on Node 24.  A workspace-owned launcher preserves
+      // the package's real module location without pointing at developer files.
+      await rm(join(copied, ".bin", "tsx"), { force: true });
+      await writeFile(join(copied, ".bin", "tsx"), `#!${process.execPath}\nimport { dirname, resolve } from "node:path";\nimport { fileURLToPath, pathToFileURL } from "node:url";\nawait import(pathToFileURL(resolve(dirname(fileURLToPath(import.meta.url)), "../tsx/dist/cli.mjs")).href);\n`);
+      await chmod(join(copied, ".bin", "tsx"), 0o755);
+      await writeFile(join(staging, PREPARED_DEPENDENCIES_MARKER), `${JSON.stringify({ schema: PREPARED_DEPENDENCIES_SCHEMA, key })}\n`, { flag: "wx" });
+      await testHooks?.beforeDependencyPublication?.(key, staging, preparedDirectory);
+      await publish_prepared_dependencies(staging, preparedDirectory, key, testHooks?.publishDependencyCandidate ?? rename);
+    } finally {
       await rm(staging, { recursive: true, force: true });
-      if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
     }
   }
+  await testHooks?.afterDependencyPreparation?.(preparedDirectory);
   // The prepared tree is a reusable template only.  Every verification gets
   // one writable copy.  The paired library uses that same run-owned tree so a
   // run does not spend its 1 GiB budget on two identical dependency graphs.
@@ -580,7 +644,7 @@ export async function execute_h2_verification(options: H2ExecutorOptions, reques
     metadata = Object.freeze({ hsonLiveHead: live.head, hsonDemo2Head: demo.head, hsonLiveDirty: live.dirty, hsonDemo2Dirty: demo.dirty, sourceDigest: h2_paired_manifest_digest(live, demo), snapshotTime: new Date().toISOString(), nodeVersion: process.version });
     const snapshotLive = join(workspace, "root", "hson-live"); const snapshotDemo = join(workspace, "root", "hson-demo2");
     const preparedRoot = join(tempRoot, "prepared-dependencies");
-    await prepare_dependencies(options.hsonLiveRoot, options.hsonDemo2Root, snapshotDemo, snapshotLive, preparedRoot);
+    await prepare_dependencies(options.hsonLiveRoot, options.hsonDemo2Root, snapshotDemo, snapshotLive, preparedRoot, options.testHooks);
     await scan();
     if (workspaceLimitExceeded) throw new Error("WORKSPACE_LIMIT_EXCEEDED");
     if (workspaceScanFailed) throw new Error("WORKSPACE_ACCOUNTING_FAILED");

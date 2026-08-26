@@ -146,6 +146,63 @@ try {
   const isolatedRoot = "/isolated-child/run-";
   check(isolated.status === "PASS" && isolated.cleanup === "removed" && childEvidence.live?.includes(isolatedRoot) === true && childEvidence.launchers?.includes(isolatedRoot) === true && !childEvidence.live.includes(fixture.live) && !childEvidence.launchers.includes(fixture.demo), "actual isolated child resolves hson-live and test-launchers inside its run workspace");
   check(["NODE_OPTIONS", "H2_SECRET", "GITHUB_TOKEN", "CLOUDFLARE_API_TOKEN", "AWS_SECRET_ACCESS_KEY", "TOWL_DEPLOYED_WS_URL", "VITE_SECRET_CANARY"].every((name) => childEvidence.env?.[name] === null) && ["HOME", "TMPDIR", "XDG_CACHE_HOME", "npm_config_cache", "CI", "HSON_HOSTED_VERIFICATION_DEPTH"].every((name) => typeof childEvidence.env?.[name] === "string" && childEvidence.env[name] !== ""), "actual isolated child has replacement-environment canaries and executor-owned values");
+
+  for (let repetition = 0; repetition < 3; repetition += 1) {
+    const concurrentRoot = join(root, `concurrent-dependencies-${repetition}`);
+    let publishersAtBarrier = 0;
+    let releasePublishers!: () => void;
+    const bothCandidatesReady = new Promise<void>((resolve) => { releasePublishers = resolve; });
+    const resolvedPreparedPaths: string[] = [];
+    const concurrentHooks = {
+      async beforeDependencyPublication() {
+        publishersAtBarrier += 1;
+        if (publishersAtBarrier === 2) releasePublishers();
+        await bothCandidatesReady;
+      },
+      afterDependencyPreparation(prepared: string) { resolvedPreparedPaths.push(prepared); },
+    } as const;
+    const [concurrentA, concurrentB] = await Promise.all([
+      execute_h2_verification({ hsonLiveRoot: fixture.live, hsonDemo2Root: fixture.demo, tempRoot: concurrentRoot, testHooks: concurrentHooks }, "hson-demo2:test:surface-enumeration-node"),
+      execute_h2_verification({ hsonLiveRoot: fixture.live, hsonDemo2Root: fixture.demo, tempRoot: concurrentRoot, testHooks: concurrentHooks }, "hson-demo2:test:surface-enumeration-node"),
+    ]);
+    const concurrentEntries = await readdir(join(concurrentRoot, "prepared-dependencies"));
+    const finalEntries = concurrentEntries.filter((name) => !name.includes(".staging-"));
+    check(concurrentA.status === "PASS" && concurrentB.status === "PASS" && publishersAtBarrier === 2, `concurrent same-key dependency publishers both pass after deterministic barrier ${repetition + 1}`);
+    check(resolvedPreparedPaths.length === 2 && resolvedPreparedPaths[0] === resolvedPreparedPaths[1], `concurrent callers resolve the same immutable prepared path ${repetition + 1}`);
+    check(finalEntries.length === 1 && concurrentEntries.every((name) => !name.includes(".staging-")), `concurrent publication leaves one final object and no staging debris ${repetition + 1}`);
+    const finalPrepared = join(concurrentRoot, "prepared-dependencies", finalEntries[0]!);
+    const finalMarker = JSON.parse(await readFile(join(finalPrepared, ".h2-prepared-dependencies.json"), "utf8")) as { schema?: string; key?: string };
+    check(finalMarker.schema === "hson-h2-prepared-dependencies-v1" && finalMarker.key === finalEntries[0] && (await stat(join(finalPrepared, "node_modules"))).isDirectory(), `winning prepared object validates for its exact key ${repetition + 1}`);
+  }
+
+  const invalidFinalRoot = join(root, "invalid-final-dependencies");
+  const initialInvalidFinal = await execute_h2_verification({ hsonLiveRoot: fixture.live, hsonDemo2Root: fixture.demo, tempRoot: invalidFinalRoot }, "hson-demo2:test:surface-enumeration-node");
+  check(initialInvalidFinal.status === "PASS", "valid prepared dependency fixture publishes before corruption check");
+  const invalidFinalEntries = await readdir(join(invalidFinalRoot, "prepared-dependencies"));
+  const invalidFinalDirectory = join(invalidFinalRoot, "prepared-dependencies", invalidFinalEntries.find((name) => !name.includes(".staging-"))!);
+  await writeFile(join(invalidFinalDirectory, ".h2-prepared-dependencies.json"), "{corrupt");
+  const rejectedInvalidFinal = await execute_h2_verification({ hsonLiveRoot: fixture.live, hsonDemo2Root: fixture.demo, tempRoot: invalidFinalRoot }, "hson-demo2:test:surface-enumeration-node");
+  check(rejectedInvalidFinal.status === "FAIL" && rejectedInvalidFinal.failureReason?.startsWith("H2_PREPARED_DEPENDENCIES_INVALID:") === true && rejectedInvalidFinal.process === undefined, "invalid pre-existing final dependency object rejects before build or child execution");
+
+  const incompleteFixture = await h2_fixture("incomplete-dependencies");
+  await rm(join(incompleteFixture.demo, "node_modules", ".bin", "sentinel"));
+  await writeFile(join(incompleteFixture.demo, "outside-node-modules"), "outside");
+  await symlink("../../outside-node-modules", join(incompleteFixture.demo, "node_modules", ".bin", "sentinel"));
+  const incompleteRoot = join(root, "incomplete-dependency-preparation");
+  const incompletePreparation = await execute_h2_verification({ hsonLiveRoot: incompleteFixture.live, hsonDemo2Root: incompleteFixture.demo, tempRoot: incompleteRoot }, "hson-demo2:test:surface-enumeration-node");
+  const incompleteEntries = await readdir(join(incompleteRoot, "prepared-dependencies"));
+  check(incompletePreparation.status === "FAIL" && incompletePreparation.failureReason === "DEPENDENCY_BIN_ESCAPE" && incompletePreparation.process === undefined && incompleteEntries.length === 0, "failed dependency preparation rejects and removes its incomplete staging object");
+
+  const unrelatedRenameRoot = join(root, "unrelated-rename-failure");
+  const unrelatedRename = await execute_h2_verification({
+    hsonLiveRoot: fixture.live,
+    hsonDemo2Root: fixture.demo,
+    tempRoot: unrelatedRenameRoot,
+    testHooks: { async publishDependencyCandidate() { throw Object.assign(new Error("SIMULATED_RENAME_PERMISSION_FAILURE"), { code: "EACCES" }); } },
+  }, "hson-demo2:test:surface-enumeration-node");
+  const unrelatedRenameEntries = await readdir(join(unrelatedRenameRoot, "prepared-dependencies"));
+  check(unrelatedRename.status === "FAIL" && unrelatedRename.failureReason === "SIMULATED_RENAME_PERMISSION_FAILURE" && unrelatedRename.process === undefined && unrelatedRenameEntries.length === 0, "unrelated rename failure remains fatal and removes staging debris");
+
   const dependencyRoot = join(root, "dependency-isolation");
   const runA = await execute_h2_verification({ hsonLiveRoot: fixture.live, hsonDemo2Root: fixture.demo, tempRoot: dependencyRoot, testHooks: { async beforeExecution(_workspace, snapshotDemo) { await writeFile(join(snapshotDemo, "node_modules", "run-canary"), "run-a"); await writeFile(join(snapshotDemo, "node_modules", "sentinel"), "mutated-by-run-a"); } } }, "hson-demo2:test:surface-enumeration-node");
   check(runA.status === "PASS", "dependency-isolation run A completes");
@@ -155,11 +212,13 @@ try {
   try { await stat(join(prepared, "run-canary")); } catch { preparedHasCanary = false; }
   check(!preparedHasCanary, "prepared template has no run A canary");
   check(await readFile(join(prepared, "sentinel"), "utf8") === "fixture", "prepared template bytes survive run A mutation");
-  const runB = await execute_h2_verification({ hsonLiveRoot: fixture.live, hsonDemo2Root: fixture.demo, tempRoot: dependencyRoot }, "hson-demo2:test:surface-enumeration-node");
+  let cacheHitRepublished = false;
+  const runB = await execute_h2_verification({ hsonLiveRoot: fixture.live, hsonDemo2Root: fixture.demo, tempRoot: dependencyRoot, testHooks: { beforeDependencyPublication() { cacheHitRepublished = true; } } }, "hson-demo2:test:surface-enumeration-node");
   const runBEvidenceText = runB.process?.stdout.split("\n").find((line) => line.startsWith('{"live"')) ?? "";
   const runBEvidence = JSON.parse(runBEvidenceText) as { sentinel: string; canary: boolean };
   check(runB.status === "PASS" && runBEvidence.canary === false, "run B cannot observe run A canary");
   check(runBEvidence.sentinel === "fixture", "run B observes original disposable dependency bytes");
+  check(!cacheHitRepublished, "existing valid prepared dependency object is a cache hit without republishing");
   const quarantine = h2_owned_quarantine_path(join(root, "owned-root"), join(root, "owned-root", "run-fixture"));
   check(quarantine === join(root, "owned-root", "run-fixture") && h2_owned_quarantine_path(join(root, "owned-root"), join(root, "outside", "run-fixture")) === undefined, "cleanup quarantine evidence is bounded to an owned run workspace");
 
