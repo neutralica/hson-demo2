@@ -217,7 +217,6 @@ export function make_test_lifecycle_adapter(options: Readonly<{
         name: event.name,
         subject: event.subject,
         runtime: event.runtime,
-        executableChecks: event.executableChecks,
         collections: Object.freeze([...event.collections]),
       });
       if (event.t === "external_state") {
@@ -270,8 +269,7 @@ export function make_test_lifecycle_adapter(options: Readonly<{
         emit({ t: "infrastructure_error", suiteId: event.suite, error: classifiedError });
       }
       // A completion rejected by protocol reconciliation is evidence, not a
-      // trustworthy count source. Keep the advertised declaration and surface
-      // the protocol error without constructing contradictory lifecycle counts.
+      // trustworthy count source. Counts are observed only from an accepted result.
       const completion = event.status !== "cancelled" && event.completionError === undefined ? event.completion : undefined;
       const certification = shapes.get(event.suite) === "certification-aggregate";
       const counts: TestLifecycleCounts = certification
@@ -286,14 +284,14 @@ export function make_test_lifecycle_adapter(options: Readonly<{
             cancelled: event.status === "cancelled" ? 1 : 0,
           })
         : Object.freeze({
-            declared: event.executableChecks,
-            total: event.status === "cancelled" ? event.executableChecks : completion?.executed ?? 0,
+            declared: completion?.executed ?? 0,
+            total: completion?.executed ?? 0,
             executed: completion?.executed ?? 0,
             passed: completion?.passed ?? 0,
             failed: completion?.failed ?? 0,
             skipped: 0,
             unsupported: 0,
-            cancelled: event.status === "cancelled" ? event.executableChecks : 0,
+            cancelled: 0,
           });
       terminalSuites.add(event.suite);
       suiteStatuses.set(event.suite, event.status);
@@ -360,7 +358,9 @@ export function make_test_lifecycle_adapter(options: Readonly<{
           emit({ t: "suite_finished", suiteId: suite.id, status, durationMs, counts }, suiteExecutorId);
           continue;
         }
-        const declared = suite.declaredChecks ?? 0;
+        const declared = suite.executionShape === "certification-aggregate"
+          ? suite.declaredChecks ?? 0
+          : 0;
         const status = "cancelled" as const;
         terminalSuites.add(suite.id);
         suiteStatuses.set(suite.id, status);

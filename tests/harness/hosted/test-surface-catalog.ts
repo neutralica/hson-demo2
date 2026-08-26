@@ -24,7 +24,6 @@ export type ExternalLauncherCatalogProjection = Readonly<{
   launcherId: string;
   packageScript: `test:${string}`;
   primarySubject: HsonLiveTestLauncher["subject"];
-  executableChecks: number;
   runtime: HsonLiveTestLauncher["runtime"];
   completionRequirement: typeof HSON_LIVE_TEST_COMPLETION_REQUIREMENT;
   panelVisible: boolean;
@@ -347,7 +346,6 @@ function live_launcher_entry(launcher: HsonLiveTestLauncher): TestSurfaceCatalog
     launcherId: launcher.id,
     packageScript: launcher.packageScript,
     primarySubject: launcher.subject,
-    executableChecks: launcher.executableChecks,
     runtime: launcher.runtime,
     completionRequirement: HSON_LIVE_TEST_COMPLETION_REQUIREMENT,
     panelVisible: true,
@@ -359,7 +357,7 @@ function live_launcher_entry(launcher: HsonLiveTestLauncher): TestSurfaceCatalog
     category: live_launcher_category(launcher),
     repository: "hson-live",
     path: launcher.repositoryModule,
-    behavior: `${launcher.displayName} acceptance (${launcher.executableChecks} executable checks).`,
+    behavior: `${launcher.displayName} acceptance; executed checks are reported by its terminal result.`,
     classification: launcher.runtime === "node-real-websocket"
       || launcher.runtime === "node-real-websocket-process"
       ? "real transport integration"

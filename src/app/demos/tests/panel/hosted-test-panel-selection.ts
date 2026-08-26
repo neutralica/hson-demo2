@@ -93,7 +93,7 @@ export function hosted_test_panel_selection_case_count(
 ): number {
   return without_implicit_browser_cases(canonical_for_selection(descriptors, selection), selection, suites).length
     + suites.filter((suite) => suite.executionShape !== "cases" && suite.executionShape !== "browser-journeys" && suite_matches(suite, selection))
-      .reduce((total, suite) => total + (suite.declaredChecks ?? 0), 0);
+      .length;
 }
 
 export function hosted_test_panel_selected_ids(
@@ -172,9 +172,9 @@ export function hosted_test_panel_suite_choices(
     key: `suite:${suite.id}`,
     label: suite.executionShape === "certification-aggregate"
       ? `${suite.title} (1 certification)`
-      : `${suite.title} (${suite.declaredChecks ?? 0})`,
+      : `${suite.title} (checks observed on run)`,
     selection: Object.freeze({ kind: "suite" as const, suite: suite.id }),
-    count: suite.declaredChecks ?? 0,
+    count: 1,
   }));
   const descriptorBySuite = new Map([
     ...scopedDescriptors.map((descriptor) => [descriptor.suiteId, {

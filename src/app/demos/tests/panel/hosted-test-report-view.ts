@@ -213,7 +213,7 @@ export async function serialize_hosted_run_report(
       ? [`canonical cases: ${summary.canonical.pass} passed · ${summary.canonical.fail} failed · ${summary.canonical.skip} skipped`]
       : []),
     ...(summary.launchers.total > 0
-      ? [`opaque suites: ${summary.launchers.pass}/${summary.launchers.total} passed · ${summary.launchers.fail} failed · ${summary.launchers.declaredChecks} checks`]
+      ? [`opaque suites: ${summary.launchers.pass}/${summary.launchers.total} passed · ${summary.launchers.fail} failed · ${summary.launchers.observedChecks} checks observed`]
       : []),
     ...(summary.certifications.total > 0
       ? [`certifications: ${summary.certifications.pass}/${summary.certifications.total} passed · ${summary.certifications.fail} failed`]

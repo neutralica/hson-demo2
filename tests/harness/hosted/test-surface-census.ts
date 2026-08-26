@@ -245,7 +245,7 @@ function command_census(entry: TestSurfaceCatalogEntry): TestSurfaceCensusEntry 
     executionShape: command_shape(entry),
     verificationKind: kind,
     denominator: opaque ? "opaque checks" : generated ? "dynamic/generated checks" : certification || hostedCommand ? "certification surfaces" : "none",
-    semanticCount: opaque ? entry.externalLauncher!.executableChecks : generated ? null : certification || hostedCommand ? 1 : null,
+    semanticCount: opaque || generated ? null : certification || hostedCommand ? 1 : null,
     ...(generated ? { dynamicCountPolicy: `${GENERATED_JSON_SEED_ENVIRONMENT} selects the seed; ${GENERATED_JSON_COUNT_ENVIRONMENT} selects the generated check count (default ${DEFAULT_GENERATED_JSON_CASES}).` } : {}),
     currentExecutor: browserAggregate
       ? "semantic alias for the Node Locus supervised Playwright/Chromium all-browser selection"

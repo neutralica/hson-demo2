@@ -24,10 +24,6 @@ const registry = make_local_node_locus_executor_registry();
 const availability = await resolve_external_library_launchers();
 const discovery = make_test_executor_discovery(registry, availability.targets);
 const canonicalCaseCount = registry.catalog.tests.length;
-const manifestExternalCheckCount = hson_live_test_launchers.reduce(
-  (total, launcher) => total + launcher.executableChecks,
-  0,
-);
 const manifestedLauncherIds = hson_live_test_launchers.map((launcher) => launcher.id);
 const inclusiveCatalogLaunchers = TEST_SURFACE_CATALOG.filter(
   (entry) => entry.externalLauncher?.inclusiveEligible === true,
@@ -41,11 +37,6 @@ assert.deepEqual(
   inclusiveCatalogLaunchers.map((entry) => entry.externalLauncher!.launcherId).sort(),
   [...manifestedLauncherIds].sort(),
   "inclusive catalog eligibility must name exactly the manifested launchers",
-);
-assert.equal(
-  availability.targets.reduce((total, target) => total + target.executableChecks, 0),
-  manifestExternalCheckCount,
-  "inclusive discovered external checks must equal the manifested check total",
 );
 
 const selectedIds = Object.freeze([
@@ -118,7 +109,7 @@ assert.equal(
   ].join("\n"),
 );
 assert.equal(canonicalCases, canonicalCaseCount);
-assert.equal(completedExternalIds.length, availability.targets.length);
+assert.deepEqual([...completedExternalIds].sort(), [...plannedExternalIds].sort());
 assert.deepEqual(
   [...queuedExternalIds].sort(),
   [...plannedExternalIds].sort(),
@@ -134,20 +125,21 @@ assert.ok(
   events.findIndex((event) => event.t === "external_end") < events.length - 1,
   "an external completion is reported before the combined run completes",
 );
-assert.equal(footer.find((entry) => entry.key === "tests")?.value, canonicalCaseCount + manifestExternalCheckCount);
+const observedExternalChecks = captured.suiteRuns
+  .filter((suite) => suite.executionShape === "opaque-aggregate")
+  .reduce((total, suite) => total + suite.counts.total, 0);
+assert.equal(footer.find((entry) => entry.key === "tests")?.value, canonicalCaseCount + observedExternalChecks);
 assert.equal(footer.find((entry) => entry.key === "failed")?.value, 0);
 assert.deepEqual(footer.map((entry) => entry.label), ["suites", "tests", "passed", "failed", "elapsed"]);
 assert.equal(projection.canonical.total, canonicalCaseCount);
-assert.equal(projection.launchers.total, availability.targets.length);
-assert.equal(projection.launchers.declaredChecks, manifestExternalCheckCount);
 const projectedLauncherIssues = availability.targets.flatMap((target) => {
   const projected = captured.suiteRuns.find((suite) => suite.id === target.id);
   if (projected === undefined) {
-    return [`launcher: ${target.launcherId}; declared checks: ${target.executableChecks}; projected checks: missing`];
+    return [`launcher: ${target.launcherId}; projected suite: missing`];
   }
-  return projected.declaredChecks === target.executableChecks
+  return projected.sourceRef === target.sourceRef && projected.declaredChecks === null
     ? []
-    : [`launcher: ${target.launcherId}; declared checks: ${target.executableChecks}; projected checks: ${projected.declaredChecks}`];
+    : [`launcher: ${target.launcherId}; projected identity/count authority is invalid`];
 });
 const unexpectedProjectedIds = captured.suiteRuns.filter((suite) => suite.executionShape === "opaque-aggregate").map((suite) => suite.id).filter(
   (id) => !availability.targets.some((target) => target.id === id),
@@ -155,12 +147,12 @@ const unexpectedProjectedIds = captured.suiteRuns.filter((suite) => suite.execut
 assert.deepEqual(
   [...projectedLauncherIssues, ...unexpectedProjectedIds.map((id) => `unexpected projected launcher: ${id}`)],
   [],
-  "every inclusive launcher must contribute its manifested checks exactly once",
+  "every inclusive launcher must contribute one identity-bound result without declared count authority",
 );
 assert.equal(
-  projection.launchers.declaredChecks,
-  manifestExternalCheckCount,
-  "projected external checks must equal the manifested and inclusive external total",
+  projection.launchers.observedChecks,
+  observedExternalChecks,
+  "projected external checks are derived from accepted launcher results",
 );
 assert.equal(processMetrics.activeChildren, 0);
 assert.equal(processMetrics.directLauncherStarts, availability.targets.length);
@@ -176,7 +168,7 @@ console.log(JSON.stringify({
   maximumSpecialLaneConcurrency: timing.maximumSpecialLauncherConcurrency,
   directLauncherCount: processMetrics.directLauncherStarts,
   packageScriptFallbackCount: processMetrics.packageScriptStarts,
-  totalCases: projection.canonical.total + projection.launchers.declaredChecks,
+  totalCases: projection.canonical.total + projection.launchers.observedChecks,
   passedCases: projection.canonical.pass + projection.launchers.passedChecks,
   failedCanonicalCases: projection.canonical.fail,
   failedExternalSuites: projection.launchers.fail,

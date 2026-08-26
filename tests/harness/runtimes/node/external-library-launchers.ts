@@ -179,7 +179,6 @@ function launcher_manifest_fingerprint(): string {
     launcher.repositoryModule,
     launcher.packageScript,
     launcher.runtime,
-    launcher.executableChecks,
   ].join("|")).join("\n")).digest("hex");
 }
 
@@ -237,7 +236,6 @@ function target(launcher: HsonLiveTestLauncher, order: number): ExternalLibraryL
     subject: semantic_subject(launcher),
     displayName: launcher.displayName,
     runtime: launcher.runtime,
-    executableChecks: launcher.executableChecks,
     collections: Object.freeze(launcher.id === "core.public-boundaries" ? ["dev"] as const : []),
     tags: Object.freeze([...launcher.collections]),
     requirements: launcher_requirements(launcher.runtime),
@@ -379,7 +377,7 @@ export function resolve_external_launcher_binding(
   }
   const target = matches[0]!;
   if (target.id !== descriptor.id || target.displayName !== descriptor.title
-    || target.subject !== descriptor.subject || target.executableChecks !== descriptor.declaredChecks) {
+    || target.subject !== descriptor.subject) {
     throw new Error(`HOSTED_TEST_OPAQUE_BINDING_MISMATCH: ${descriptor.id} binding disagrees with the accepted catalog descriptor.`);
   }
   return target;
@@ -530,12 +528,6 @@ export function reconcile_external_launcher_completion(
     return Object.freeze({
       completion,
       error: `External launcher completion identified "${completion.launcherId}", expected "${target.launcherId}".`,
-    });
-  }
-  if (completion.executed !== target.executableChecks) {
-    return Object.freeze({
-      completion,
-      error: `External launcher executed ${completion.executed} checks, manifest declares ${target.executableChecks}.`,
     });
   }
   return Object.freeze({ completion });

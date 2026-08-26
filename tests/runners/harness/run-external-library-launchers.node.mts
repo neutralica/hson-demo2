@@ -35,10 +35,6 @@ const all = process.argv.includes("--all");
 const availability = await resolve_external_library_launchers();
 const catalogSuites = Object.freeze(availability.targets.map(external_launcher_suite_descriptor));
 const manifestIds = hson_live_test_launchers.map((launcher) => launcher.id);
-const manifestCheckCount = hson_live_test_launchers.reduce(
-  (total, launcher) => total + launcher.executableChecks,
-  0,
-);
 assert.equal(
   new Set(manifestIds).size,
   manifestIds.length,
@@ -46,26 +42,17 @@ assert.equal(
 );
 assert.ok(availability.repositoryRoot, "linked repository root resolves from the imported subpath");
 assert.equal(await realpath(availability.repositoryRoot!), availability.repositoryRoot);
-assert.equal(
-  availability.targets.length,
-  hson_live_test_launchers.length,
-  "discovered launcher count matches the exported diagnostics manifest",
-);
 assert.deepEqual(
   availability.targets.map((target) => target.launcherId),
   manifestIds,
   "every exported diagnostics launcher resolves in manifest order",
 );
 assert.equal(availability.unavailable.length, 0, "no exported diagnostics launcher is unavailable");
-assert.equal(
-  Object.values(availability.invocations ?? {}).filter((invocation) => invocation.kind === "direct").length,
-  hson_live_test_launchers.length,
-  "all current package scripts match the audited direct invocation shape",
-);
+assert.equal(Object.values(availability.invocations ?? {}).every((invocation) => invocation.kind === "direct"), true,
+  "all current package scripts match the audited direct invocation shape");
 for (const launcher of hson_live_test_launchers) {
   const target = availability.targets.find((candidate) => candidate.launcherId === launcher.id);
   assert.ok(target, `exported launcher resolves: ${launcher.id}`);
-  assert.equal(target.executableChecks, launcher.executableChecks);
   assert.equal(target.runtime, launcher.runtime);
   assert.deepEqual(target.tags, launcher.collections);
   assert.equal(target.collections.every((collection) => collection === "unit" || collection === "dev"), true);
@@ -86,11 +73,6 @@ assert.equal(
   ).kind,
   "package-script",
   "unsupported script shapes retain package-script semantics",
-);
-assert.equal(
-  availability.targets.reduce((total, target) => total + target.executableChecks, 0),
-  manifestCheckCount,
-  "discovered declared checks agree with the diagnostics manifest",
 );
 assert.deepEqual(
   [...new Set(availability.targets.map((target) => target.runtime))].sort(),
@@ -182,19 +164,8 @@ assert.equal(
     allSelection,
     catalogSuites,
   ),
-  nodeRegistry.catalog.tests.length + manifestCheckCount,
-  "complete selection derives canonical plus each manifested external check exactly once",
-);
-assert.equal(
-  [...categoryTargets.values()].reduce(
-    (total, targets) => total + targets.reduce(
-      (categoryTotal, target) => categoryTotal + target.executableChecks,
-      0,
-    ),
-    0,
-  ),
-  manifestCheckCount,
-  "semantic subject buckets do not inflate the complete external total",
+  nodeRegistry.catalog.tests.length + availability.targets.length,
+  "complete selection counts each selectable external launcher exactly once",
 );
 const transformSelection = primary.find(
   (choice) => choice.selection.kind === "subject"
@@ -207,18 +178,14 @@ const transformCanonicalCount = nodeRegistry.catalog.tests.filter(
 const transformExternalTargets = availability.targets.filter(
   (target) => target.subject === "transform",
 );
-const transformExternalCount = transformExternalTargets.reduce(
-  (total, target) => total + target.executableChecks,
-  0,
-);
 assert.equal(
   hosted_test_panel_selection_case_count(
     nodeRegistry.catalog.tests,
     transformSelection,
     catalogSuites,
   ),
-  transformCanonicalCount + transformExternalCount,
-  "Transform total derives from canonical cases plus semantic external subjects",
+  transformCanonicalCount + transformExternalTargets.length,
+  "Transform selection total derives from canonical cases plus selectable external suites",
 );
 const jsonIngressTarget = availability.targets.find(
   (target) => target.launcherId === "transform.json-ingress",
@@ -240,12 +207,12 @@ await writeFile(join(installedRoot, "package.json"), JSON.stringify({ name: "hso
 await writeFile(join(installedRoot, "test-launchers.js"), "export {};\n");
 const installed = await resolve_external_library_launchers(new URL(`file://${join(installedRoot, "test-launchers.js")}`).href);
 assert.equal(installed.targets.length, 0, "installed package without repository launchers is cleanly unavailable");
-assert.equal(installed.unavailable.length, hson_live_test_launchers.length);
+assert.deepEqual(installed.unavailable.map((entry) => entry.launcherId), manifestIds);
 
 const authorityId = external_library_target_id("locus.authority");
 assert.deepEqual(hosted_test_panel_selected_ids([], { kind: "suite", suite: authorityId }, catalogSuites), [authorityId]);
 assert.equal(hosted_test_panel_test_choices([], authorityId, catalogSuites).length, 0);
-assert.ok(hosted_test_panel_suite_choices([], catalogSuites).find((choice) => choice.key === `suite:${authorityId}`)?.label.endsWith("(21)"));
+assert.ok(hosted_test_panel_suite_choices([], catalogSuites).find((choice) => choice.key === `suite:${authorityId}`)?.label.endsWith("(checks observed on run)"));
 
 const spawnFailure = await run_external_library_launcher(availability, authorityId, {
   command: join(installedRoot, "missing-npm"),
@@ -523,13 +490,10 @@ for (const result of results) {
   assert.equal(result.exitCode, 0);
   assert.equal(result.signal, null);
   assert.equal(result.invocationKind, "direct");
-  assert.deepEqual(result.completion, {
-    version: 1,
-    launcherId,
-    executed: result.target.executableChecks,
-    passed: result.target.executableChecks,
-    failed: 0,
-  });
+  assert.equal(result.completion?.version, 1);
+  assert.equal(result.completion?.launcherId, launcherId);
+  assert.equal(result.completion?.passed, result.completion?.executed);
+  assert.equal(result.completion?.failed, 0);
   assert.equal(result.completionError, undefined);
 }
 assert.equal(new Set(results.map((result) => result.target.id)).size, selected.length, "each selected launcher executes exactly once");
@@ -576,7 +540,7 @@ if (tsxCandidateResults !== undefined) {
 console.log(JSON.stringify({
   repositoryRoot: availability.repositoryRoot,
   targets: availability.targets.length,
-  declaredCases: availability.targets.reduce((total, target) => total + target.executableChecks, 0),
+  observedChecks: results.reduce((total, result) => total + (result.completion?.executed ?? 0), 0),
   executed: results.length,
   ...(sequentialBaselineMs === undefined ? {} : { sequentialBaselineMs }),
   ...(tsxCandidateMs === undefined ? {} : { tsxCandidateMs }),

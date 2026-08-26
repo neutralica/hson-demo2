@@ -46,7 +46,6 @@ export type TestOpaqueExecutionEvidence = Readonly<{
   name: string;
   subject: string;
   runtime: string;
-  executableChecks: number;
   collections: readonly string[];
   stdout?: string;
   stderr?: string;

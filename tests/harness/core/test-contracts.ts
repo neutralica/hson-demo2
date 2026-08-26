@@ -55,7 +55,6 @@ export type TestEvent = (
     name: string;
     subject: TestSubject;
     runtime: string;
-    executableChecks: number;
     collections: readonly string[];
     status: "queued" | "running";
   }
@@ -66,7 +65,6 @@ export type TestEvent = (
     name: string;
     subject: TestSubject;
     runtime: string;
-    executableChecks: number;
     collections: readonly string[];
     status: "pass" | "fail" | "cancelled";
     ms: number;

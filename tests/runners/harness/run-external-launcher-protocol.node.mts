@@ -17,6 +17,7 @@ const discovered = await resolve_external_library_launchers();
 const discoveredTarget = discovered.targets.find((entry) => entry.launcherId === "transform.hson-tokenizer");
 if (discoveredTarget === undefined) throw new Error("Protocol fixture requires the manifested tokenizer launcher.");
 const target: ExternalLibraryLauncherTarget = discoveredTarget;
+const FIXTURE_CHECKS = 5;
 
 function fixture_availability(
   selected: ExternalLibraryLauncherTarget,
@@ -34,7 +35,7 @@ function fixture_availability(
           fixturePath,
           scenario,
           selected.launcherId,
-          String(selected.executableChecks),
+          String(FIXTURE_CHECKS),
         ]),
         env: Object.freeze({}),
       }),
@@ -58,23 +59,27 @@ async function run(
 }
 
 const valid = await run("valid");
-assert.equal(valid.result.ok, true, "correct identity, count, and zero exit pass");
+assert.equal(valid.result.ok, true, "correct identity, internally consistent result, and zero exit pass");
 assert.deepEqual(valid.result.completion, {
   version: 1,
   launcherId: target.launcherId,
-  executed: target.executableChecks,
-  passed: target.executableChecks,
+  executed: FIXTURE_CHECKS,
+  passed: FIXTURE_CHECKS,
   failed: 0,
 });
 assert.match(valid.result.stdout, /<HSON_LIVE_TEST_COMPLETION>/, "raw stdout retains the completion control frame");
 assert.doesNotMatch(valid.result.ordinaryStdout, /<HSON_LIVE_TEST_COMPLETION>/, "ordinary stdout excludes the completion control frame");
 assert.ok(valid.result.stdoutBytes >= Buffer.byteLength(valid.result.stdout, "utf8"));
 
+for (const scenario of ["zero", "fewer", "more"] as const) {
+  const observed = await run(scenario);
+  assert.equal(observed.result.ok, true, `${scenario} valid passing inventory is accepted`);
+  assert.equal(observed.result.completionError, undefined);
+  assert.equal(observed.activeChildren, 0, `${scenario} leaves no active child`);
+}
+
 for (const [scenario, pattern] of [
   ["missing", /no completion record/],
-  ["zero", /executed 0 checks/],
-  ["fewer", /manifest declares/],
-  ["more", /manifest declares/],
   ["wrong-id", /expected "transform\.hson-tokenizer"/],
   ["malformed", /malformed completion data/],
   ["duplicate", /more than one completion record/],
@@ -89,7 +94,7 @@ const failed = await run("failed");
 assert.equal(failed.result.ok, false, "a truthful failed-check aggregate fails semantically");
 assert.equal(failed.result.completionError, undefined, "failed assertions are not protocol failures");
 assert.equal(failed.result.completion?.failed, 1);
-assert.equal(failed.result.completion?.passed, target.executableChecks - 1);
+assert.equal(failed.result.completion?.passed, FIXTURE_CHECKS - 1);
 
 const nonzero = await run("nonzero");
 assert.equal(nonzero.result.ok, false, "nonzero exit fails despite a valid completion");

@@ -9,7 +9,6 @@ export type ExternalLibraryLauncherTarget = Readonly<{
   subject: TestSubject;
   displayName: string;
   runtime: HsonLiveTestLauncher["runtime"];
-  executableChecks: number;
   collections: readonly TestCollection[];
   tags: readonly string[];
   requirements: readonly TestCapability[];
@@ -29,6 +28,5 @@ export function external_launcher_suite_descriptor(
     requirements: Object.freeze([...target.requirements]),
     executionShape: "opaque-aggregate",
     sourceRef: target.sourceRef,
-    declaredChecks: target.executableChecks,
   });
 }

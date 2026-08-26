@@ -30,8 +30,11 @@ For a new or changed acceptance/runtime-probe launcher, update the exported `hso
 - display name;
 - package script and repository module;
 - runtime classification;
-- accurate executable case count;
 - relevant collections.
+
+Executable check counts are observed from valid terminal completion records. Do not add a
+separately maintained launcher count or make current inventory cardinality a discovery,
+execution, or success requirement.
 
 The corresponding hson-demo2 integration must expose it to the internal hosted registry and generated evidence under its functional category. Do not create a separate “library verification” category when the test belongs to LiveHost, LiveMap, LiveTree, Transform, or another established subject.
 

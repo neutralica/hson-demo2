@@ -345,7 +345,6 @@ function external_state_event(
     name: target.displayName,
     subject: target.subject,
     runtime: target.runtime,
-    executableChecks: target.executableChecks,
     collections: target.collections,
     status,
   });
@@ -359,7 +358,6 @@ function external_end_event(result: ExternalLibraryLauncherResult): TestEvent {
     name: result.target.displayName,
     subject: result.target.subject,
     runtime: result.target.runtime,
-    executableChecks: result.target.executableChecks,
     collections: result.target.collections,
     status: result.cancelled ? "cancelled" : result.ok ? "pass" : "fail",
     ms: result.durationMs,
@@ -391,7 +389,6 @@ function command_state_event(
     name: target.title,
     subject: target.subject,
     runtime: "supervised-node-command",
-    executableChecks: 1,
     collections: Object.freeze(["dev"]),
     status,
   });
@@ -405,7 +402,6 @@ function command_end_event(target: NodeCommandSurfaceTarget, result: SupervisedN
     name: target.title,
     subject: target.subject,
     runtime: "supervised-node-command",
-    executableChecks: 1,
     collections: Object.freeze(["dev"]),
     status: result.cancelled ? "cancelled" : result.ok ? "pass" : "fail",
     ms: result.durationMs,

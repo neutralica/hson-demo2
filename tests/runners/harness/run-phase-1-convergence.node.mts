@@ -54,7 +54,6 @@ function suite_descriptor(
     requirements,
     executionShape: shape,
     ...(sourceRef === undefined ? {} : { sourceRef }),
-    ...(shape === "opaque-aggregate" ? { declaredChecks: 7 } : {}),
   });
 }
 
@@ -143,7 +142,7 @@ certify("taxonomy", case_descriptor(suite_descriptor("livemap/unit-proof", "live
 certify("taxonomy", test_presentation_rank("livemap", Object.freeze(["unit"])) === 2, "collection membership never displaces a first-class semantic subject");
 certify("taxonomy", test_presentation_rank("integration", Object.freeze(["unit"])) === 5 && test_presentation_rank("integration", Object.freeze(["dev"])) === 6, "collection-only suites rank after all semantic subjects");
 certify("taxonomy", transformCanonical.subject === transformOpaque.subject && transformCanonical.provenance !== transformOpaque.provenance, "provenance does not alter semantic subject classification");
-certify("taxonomy", externalAvailability.targets.every((target) => target.executableChecks > 0), "opaque launcher declared-check evidence remains aggregate metadata");
+certify("taxonomy", externalAvailability.targets.every((target) => target.sourceRef.startsWith("hson-live:")), "opaque launchers retain identity-bound source references without declared-count authority");
 certify("taxonomy", TEST_CONVERGENCE_BOUNDARIES.length === 1 && TEST_CONVERGENCE_BOUNDARIES.every((bridge) => bridge.deletionGate.length > 0), "the sole retained cross-repository bridge has an explicit deletion gate");
 
 const syntheticOpaqueSuites: readonly TestSuiteDescriptor[] = Object.freeze([transformOpaque, livemapOpaque]);
@@ -206,7 +205,7 @@ function finish_case(testCase: TestDescriptor, status: "pass" | "fail" = "pass")
 function external_event(suite: TestSuiteDescriptor, status: "running" | "pass"): TestEvent {
   const shared = {
     id: suite.id, suite: suite.id, name: suite.title, subject: suite.subject, runtime: "node",
-    executableChecks: suite.declaredChecks!, collections: suite.collections,
+    collections: suite.collections,
   };
   return status === "running"
     ? { t: "external_state", ...shared, status }
@@ -214,7 +213,7 @@ function external_event(suite: TestSuiteDescriptor, status: "running" | "pass"):
       t: "external_end", ...shared, status, ms: 1,
       stdout: `opaque output\n<HSON_LIVE_TEST_COMPLETION>{}\n`, ordinaryStdout: "opaque output\n", stderr: "",
       exitCode: 0, signal: null, timedOut: false,
-      completion: { version: 1, launcherId: suite.sourceRef ?? suite.id, executed: suite.declaredChecks!, passed: suite.declaredChecks!, failed: 0 },
+      completion: { version: 1, launcherId: suite.sourceRef ?? suite.id, executed: 7, passed: 7, failed: 0 },
     };
 }
 

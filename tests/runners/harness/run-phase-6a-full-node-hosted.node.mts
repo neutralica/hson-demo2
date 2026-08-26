@@ -31,9 +31,6 @@ try {
   const opaqueSuiteIds = discovery.catalog.suites
     .filter((suite) => suite.executionShape === "opaque-aggregate")
     .map((suite) => suite.id);
-  const opaqueChecks = discovery.catalog.suites
-    .filter((suite) => suite.executionShape === "opaque-aggregate")
-    .reduce((total, suite) => total + (suite.declaredChecks ?? 0), 0);
   const selectionIds = [...canonicalIds, ...opaqueSuiteIds];
   const run = await runtime.start_selected(selectionIds);
   await run.ready();
@@ -55,8 +52,7 @@ try {
   assert.equal(report.run.status, "passed");
   assert.equal(summary.canonical.total, canonicalIds.length);
   assert.equal(summary.canonical.pass, canonicalIds.length);
-  assert.equal(summary.launchers.declaredChecks, opaqueChecks);
-  assert.equal(summary.launchers.passedChecks, opaqueChecks);
+  assert.equal(summary.launchers.observedChecks, summary.launchers.passedChecks);
   assert.equal(summary.certifications.total, 0);
   assert.equal(summary.certifications.pass, 0);
   assert.deepEqual([...report.plan.selectionIds].sort(), [...selectionIds].sort());
@@ -78,7 +74,7 @@ try {
     canonicalSuites: report.suiteRuns.filter((suite) => suite.executionShape === "cases").length,
     canonicalCases: summary.canonical.total,
     opaqueLaunchers: summary.launchers.total,
-    opaqueChecks: summary.launchers.declaredChecks,
+    opaqueChecks: summary.launchers.observedChecks,
     commandCertifications: 0,
     dynamicGeneratedSurfaces: 0,
     failures: summary.suites.fail,

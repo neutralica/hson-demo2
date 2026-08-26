@@ -55,7 +55,7 @@ function availability_for(
       [selected.id]: Object.freeze({
         kind: "direct" as const,
         command: process.execPath,
-        args: Object.freeze([fixturePath, scenario, selected.launcherId, String(selected.executableChecks)]),
+        args: Object.freeze([fixturePath, scenario, selected.launcherId, "5"]),
         env: Object.freeze({}),
       }),
     }),
@@ -134,7 +134,7 @@ export function phase3b_process_cancellation_suite(): TestSuite {
         controller.abort();
         const result = await running;
         expect(result.completionAcceptedBeforeCancellation === true && result.cancelled !== true, "pre-fence completion control frame wins authority ordering");
-        expect(result.completion?.executed === selected.executableChecks && result.ok, "actual aggregate counts are preserved");
+        expect(result.completion?.executed === 5 && result.ok, "actual aggregate counts are preserved");
         expect(service.metrics().activeChildren === 0, "post-completion cancellation still releases the lingering process");
       }),
       test_case(suite, "queued-launchers-fenced", "queued launcher does not spawn after cancellation", async () => {
@@ -146,7 +146,7 @@ export function phase3b_process_cancellation_suite(): TestSuite {
         const invocations = Object.fromEntries(targets.map((entry) => [entry.id, Object.freeze({
           kind: "direct" as const,
           command: process.execPath,
-          args: Object.freeze([fixturePath, "graceful-timeout", entry.launcherId, String(entry.executableChecks)]),
+          args: Object.freeze([fixturePath, "graceful-timeout", entry.launcherId, "5"]),
           env: Object.freeze({}),
         })]));
         const availability: ExternalLibraryLauncherAvailability = Object.freeze({

@@ -33,7 +33,7 @@ const plan: TestRunPlan = Object.freeze({
       Object.freeze({ id: "transform/canonical::a", caseId: "a", title: "a", order: 0 }),
       Object.freeze({ id: "transform/canonical::b", caseId: "b", title: "b", order: 1 }),
     ]) }),
-    Object.freeze({ id: "transform/opaque", title: "Opaque", subject: "transform", collections: Object.freeze([]), provenance: "hson-live", order: 1, executionShape: "opaque-aggregate", sourceRef: "hson-live:opaque", declaredChecks: 5, cases: Object.freeze([]) }),
+    Object.freeze({ id: "transform/opaque", title: "Opaque", subject: "transform", collections: Object.freeze([]), provenance: "hson-live", order: 1, executionShape: "opaque-aggregate", sourceRef: "hson-live:opaque", cases: Object.freeze([]) }),
     Object.freeze({ id: "transform/cert", title: "Certification", subject: "transform", collections: Object.freeze([]), provenance: "hson-demo2", order: 2, executionShape: "certification-aggregate", sourceRef: "node-command:cert", declaredChecks: 1, cases: Object.freeze([]) }),
     Object.freeze({ id: "browser/demo", title: "Browser", subject: "livehost", collections: Object.freeze([]), provenance: "hson-demo2", order: 3, executionShape: "browser-journeys", cases: Object.freeze([
       Object.freeze({ id: "browser/demo::journey", caseId: "journey", title: "journey", order: 0 }),
@@ -42,7 +42,7 @@ const plan: TestRunPlan = Object.freeze({
 });
 const report = structuredClone(make_initial_hosted_test_report(plan, 100)) as MutableReport;
 Object.assign(report.suiteRuns[0]!.counts, { total: 2, executed: 2, passed: 1, failed: 1 });
-Object.assign(report.suiteRuns[1]!.counts, { declared: 5, executed: 5, passed: 3, failed: 2 });
+Object.assign(report.suiteRuns[1]!.counts, { declared: 5, total: 5, executed: 5, passed: 3, failed: 2 });
 Object.assign(report.suiteRuns[2]!.counts, { declared: 1, executed: 1, passed: 1 });
 Object.assign(report.suiteRuns[3]!.counts, { total: 1, executed: 1, passed: 1 });
 const summary = hosted_test_projection_summary(report);
@@ -50,7 +50,7 @@ const footer = hosted_test_projection_footer(summary, null);
 certify(summary.tests.total === 8, "presentable tests combine canonical cases, opaque checks, and browser journeys without relabeling certifications as tests");
 certify(summary.tests.passed === 5, "presentable passed tests combine canonical cases, opaque checks, and browser journeys truthfully");
 certify(summary.tests.failed === 3, "failed tests combine underlying failure counts without changing them");
-certify(summary.canonical.total === 2 && summary.launchers.declaredChecks === 5 && summary.browser.total === 1 && summary.certifications.total === 1, "underlying case/check/browser/certification counts remain distinct");
+certify(summary.canonical.total === 2 && summary.launchers.observedChecks === 5 && summary.browser.total === 1 && summary.certifications.total === 1, "underlying case/check/browser/certification counts remain distinct");
 certify(footer.map((entry) => entry.label).join("|") === "suites|tests|passed|failed|elapsed", "normal summary is five sparse values with passed and no suite-failed KPI");
 certify(footer.at(-1)?.value === "—", "queued summary makes no elapsed claim");
 

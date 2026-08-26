@@ -249,7 +249,7 @@ for (const launcher of hson_live_test_launchers) {
   );
   expect_surface(
     matches.length === 1,
-    `launcher ${launcher.id}: manifest checks ${launcher.executableChecks}, catalog entries ${matches.length}`,
+    `launcher ${launcher.id}: catalog entries ${matches.length}`,
   );
   const entry = matches[0]!;
   const catalogLauncher = entry.externalLauncher!;
@@ -260,10 +260,6 @@ for (const launcher of hson_live_test_launchers) {
   expect_surface(
     catalogLauncher.primarySubject === launcher.subject,
     `launcher ${launcher.id}: manifest subject ${launcher.subject}, catalog subject ${catalogLauncher.primarySubject}`,
-  );
-  expect_surface(
-    catalogLauncher.executableChecks === launcher.executableChecks,
-    `launcher ${launcher.id}: manifest checks ${launcher.executableChecks}, catalog checks ${catalogLauncher.executableChecks}`,
   );
   expect_surface(
     catalogLauncher.runtime === launcher.runtime,
@@ -324,7 +320,6 @@ expect_surface(
   jsonIngressManifest !== undefined
     && jsonIngress?.runner === "npm run test:json-ingress"
     && jsonIngress.externalLauncher?.primarySubject === "Transform"
-    && jsonIngress.externalLauncher.executableChecks === jsonIngressManifest?.executableChecks
     && jsonIngress.externalLauncher.panelVisible
     && jsonIngress.externalLauncher.inclusiveEligible,
   "launcher transform.json-ingress must be discoverable, selectable, and inclusive through its manifest-derived catalog entry",
@@ -402,8 +397,9 @@ expect_surface(
 );
 const semanticChecks = denominators["canonical cases"] + denominators["opaque checks"] + denominators["browser journeys"];
 expect_surface(
-  denominators["opaque checks"] === hson_live_test_launchers.reduce((total, launcher) => total + launcher.executableChecks, 0),
-  "opaque denominator must derive exactly from manifested executable checks",
+  census.filter((entry) => entry.executionShape === "opaque launcher").every((entry) => entry.semanticCount === null)
+    && denominators["opaque checks"] === 0,
+  "pre-execution census must not predict opaque launcher check inventory",
 );
 expect_surface(
   census.filter((entry) => entry.executionShape === "browser spec").reduce((total, entry) => total + (entry.semanticCount ?? 0), 0)

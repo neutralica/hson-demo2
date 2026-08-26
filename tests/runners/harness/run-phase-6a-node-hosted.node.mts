@@ -51,16 +51,20 @@ try {
   recovered.dispose();
   canonical.dispose();
 
-  const opaqueSuite = discovery.catalog.suites
-    .filter((suite) => suite.executionShape === "opaque-aggregate")
-    .sort((left, right) => (left.declaredChecks ?? 0) - (right.declaredChecks ?? 0))[0]!;
+  const opaqueSuite = discovery.catalog.suites.find(
+    (suite) => suite.id === "transform/hson-source-provenance-boundary"
+      && suite.executionShape === "opaque-aggregate",
+  );
+  assert.ok(opaqueSuite, "source-provenance launcher is available to hosted execution");
   const opaque = await runtime.start_selected([opaqueSuite.id]);
   await opaque.ready();
   assert.equal((await opaque.actionResult).ok, true);
   const opaqueReport = opaque.client.recovery.map.snap();
   assert.equal(opaqueReport.suiteRuns[0]?.executionShape, "opaque-aggregate");
+  assert.equal(opaqueReport.suiteRuns[0]?.id, "transform/hson-source-provenance-boundary");
   opaqueChecks = opaqueReport.suiteRuns[0]?.counts.passed ?? 0;
-  assert.equal(opaqueChecks, opaqueSuite.declaredChecks);
+  assert.equal(opaqueReport.suiteRuns[0]?.declaredChecks, null);
+  assert.ok(opaqueChecks > 0, "opaque check telemetry comes from the accepted completion result");
   opaque.dispose();
 
   const commandSourceIds = [

@@ -104,7 +104,7 @@ certify(canonicalFinal.executorIds.join() === "livehost-authority" && canonicalF
 // One authority accepts heterogeneous executor events while preserving RunPlan order.
 const remoteSuite = suite("livetree/remote", 0);
 const remoteCase = test_case(remoteSuite, "skips");
-const opaqueSuite = suite("livemap/opaque", 0, "opaque-aggregate", 5);
+const opaqueSuite = suite("livemap/opaque", 0, "opaque-aggregate");
 const mixedCatalog = make_test_catalog([canonicalCase, remoteCase], [opaqueSuite, remoteSuite, canonicalSuite]);
 const mixedPlan = plan_for("phase2a-heterogeneous", mixedCatalog, [canonicalCase.id, remoteCase.id, opaqueSuite.id]);
 const mixedReport = make_hosted_test_report(() => 0, undefined, { runPlan: mixedPlan });
@@ -165,7 +165,7 @@ const opaquePlan = plan_for("phase2a-opaque", make_test_catalog([], [opaqueSuite
 const opaqueReport = make_hosted_test_report(() => 50, undefined, { runPlan: opaquePlan });
 const sharedExternal = {
   id: opaqueSuite.id, suite: opaqueSuite.id, name: opaqueSuite.title, subject: opaqueSuite.subject,
-  runtime: "node", executableChecks: 5, collections: Object.freeze([]),
+  runtime: "node", collections: Object.freeze([]),
 };
 opaqueReport.reduce({ t: "external_state", ...sharedExternal, status: "running" });
 opaqueReport.reduce({
@@ -190,21 +190,20 @@ const protocolFinal = protocolReport.map.snap().suiteRuns[0]!;
 certify(protocolFinal.errors.some((error) => error.kind === "protocol" && error.executorId === "livehost-authority"), "protocol failure is classified with executor context");
 certify(protocolFinal.evidence.some((item) => item.kind === "stderr" && item.content === "raw stderr\n"), "protocol diagnostics retain stderr as normalized evidence");
 
-const mismatchedCompletionReport = make_hosted_test_report(() => 61, undefined, { runPlan: plan_for("phase2a-mismatched-completion", make_test_catalog([], [opaqueSuite]), [opaqueSuite.id]) });
-mismatchedCompletionReport.reduce({ t: "external_state", ...sharedExternal, status: "running" });
-mismatchedCompletionReport.reduce({
-  t: "external_end", ...sharedExternal, status: "fail", ms: 2, stdout: "", ordinaryStdout: "", stderr: "",
+const variableInventoryReport = make_hosted_test_report(() => 61, undefined, { runPlan: plan_for("phase2a-variable-inventory", make_test_catalog([], [opaqueSuite]), [opaqueSuite.id]) });
+variableInventoryReport.reduce({ t: "external_state", ...sharedExternal, status: "running" });
+variableInventoryReport.reduce({
+  t: "external_end", ...sharedExternal, status: "pass", ms: 2, stdout: "", ordinaryStdout: "", stderr: "",
   exitCode: 0, signal: null, timedOut: false,
   completion: { version: 1, launcherId: "opaque", executed: 6, passed: 6, failed: 0 },
-  completionError: "External launcher executed 6 checks, manifest declares 5.",
 });
-const mismatchedCompletionFinal = mismatchedCompletionReport.map.snap().suiteRuns[0]!;
+const variableInventoryFinal = variableInventoryReport.map.snap().suiteRuns[0]!;
 certify(
-  mismatchedCompletionFinal.status === "fail"
-    && mismatchedCompletionFinal.counts.declared === 5
-    && mismatchedCompletionFinal.counts.executed === 0
-    && mismatchedCompletionFinal.errors.some((error) => error.kind === "protocol"),
-  "rejected completion counts remain protocol evidence instead of crashing lifecycle reconciliation",
+  variableInventoryFinal.status === "pass"
+    && variableInventoryFinal.declaredChecks === null
+    && variableInventoryFinal.counts.total === 6
+    && variableInventoryFinal.counts.passed === 6,
+  "accepted completion inventory is observed without a separately declared count",
 );
 
 const impossiblePlan = plan_for("phase2a-impossible", canonicalCatalog, [canonicalCase.id]);

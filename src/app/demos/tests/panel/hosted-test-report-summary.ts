@@ -20,7 +20,7 @@ export type HostedTestProjectionSummary = Readonly<{
     total: number;
     pass: number;
     fail: number;
-    declaredChecks: number;
+    observedChecks: number;
     passedChecks: number;
     failedChecks: number | null;
     cancelled: number;
@@ -62,7 +62,7 @@ export function hosted_test_projection_summary(report: HostedTestReport): Hosted
     total: normalizedLaunchers.length,
     pass: normalizedLaunchers.filter((entry) => entry.status === "pass").length,
     fail: normalizedLaunchers.filter((entry) => entry.status === "fail").length,
-    declaredChecks: normalizedLaunchers.reduce((total, entry) => total + entry.counts.declared, 0),
+    observedChecks: normalizedLaunchers.reduce((total, entry) => total + entry.counts.total, 0),
     passedChecks: normalizedLaunchers.reduce((total, entry) => total + entry.counts.passed, 0),
     failedChecks: normalizedLaunchers.reduce((total, entry) => total + entry.counts.failed, 0),
     cancelled: normalizedLaunchers.filter((entry) => entry.status === "cancelled").length,
@@ -93,7 +93,7 @@ export function hosted_test_projection_summary(report: HostedTestReport): Hosted
     certifications,
     browser,
     tests: Object.freeze({
-      total: canonical.total + browser.total + launchers.declaredChecks,
+      total: canonical.total + browser.total + launchers.observedChecks,
       passed: canonical.pass + browser.pass + launchers.passedChecks,
       failed: canonical.fail + browser.fail + (launchers.failedChecks ?? launchers.fail) + certifications.fail,
     }),

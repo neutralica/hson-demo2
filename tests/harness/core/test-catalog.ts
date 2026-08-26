@@ -83,9 +83,9 @@ export function make_test_catalog(
     if (!Number.isSafeInteger(descriptor.order) || descriptor.order < 0) {
       throw new Error(`Invalid canonical suite order for ${descriptor.id}.`);
     }
-    if (descriptor.executionShape !== "cases" && descriptor.executionShape !== "browser-journeys"
+    if (descriptor.executionShape === "certification-aggregate"
       && (!Number.isSafeInteger(descriptor.declaredChecks) || (descriptor.declaredChecks ?? 0) < 1)) {
-      throw new Error(`Aggregate suite ${descriptor.id} requires a positive declaredChecks count.`);
+      throw new Error(`Certification suite ${descriptor.id} requires a positive declaredChecks count.`);
     }
     suiteById.set(descriptor.id, Object.freeze({
       ...descriptor,

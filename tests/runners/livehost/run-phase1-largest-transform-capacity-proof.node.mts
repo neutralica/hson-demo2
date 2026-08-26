@@ -38,7 +38,8 @@ async function measure_largest_transform_diagnostic(): Promise<Measured> {
   const diagnostics = events.flatMap((event) => event.t === "case_end" && event.diagnostic !== undefined
     ? [Object.freeze({ event, diagnostic: event.diagnostic, bytes: byte_size(event.diagnostic) })]
     : []);
-  expect(diagnostics.length === 361, `measurement must retain one diagnostic per Transform case, received ${diagnostics.length}`);
+  const caseInventory = suites.reduce((total, suite) => total + suite.cases.length, 0);
+  expect(diagnostics.length === caseInventory, `measurement must retain one diagnostic per Transform case, received ${diagnostics.length} for ${caseInventory} cases`);
   const largest = diagnostics.reduce((current, candidate) => candidate.bytes > current.bytes ? candidate : current);
   const suite = suites.find((candidate) => candidate.suite === largest.event.suite);
   const testCase = suite?.cases.find((candidate) => candidate.caseId === largest.event.caseId);
