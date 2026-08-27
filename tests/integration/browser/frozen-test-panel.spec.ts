@@ -71,15 +71,81 @@ test("category, suite, and case disclosures fetch and release exactly their owne
   expect(fixture.index.categories.find((entry: any) => entry.id === "transform").counts.suites).toBe(1);
 });
 
+test("every frozen final report exclusively owns the inspector viewport", async ({ page }) => {
+  const requests: string[] = []; await route_package(page, requests);
+  await page.goto("/tests/fixtures/browser/frozen-test-panel-fixture.html");
+  const panel = page.getByTestId("frozen-test-panel");
+  const browsing = page.getByTestId("frozen-test-browsing");
+  const category = page.getByTestId("frozen-category-transform");
+  await category.locator(":scope > summary").click();
+  const suite = page.locator('[data-frozen-suite="transform/frozen-client"]');
+  await suite.locator(":scope > summary").click();
+  const caseA = "transform/frozen-client::loads-index";
+  const caseB = "transform/frozen-client::releases-detail";
+  const rowA = page.locator(`[data-frozen-case="${caseA}"]`);
+  const rowB = page.locator(`[data-frozen-case="${caseB}"]`);
+  await expect(rowB).toBeVisible();
+  await browsing.evaluate((element) => {
+    element.style.height = "320px";
+    const spacer = document.createElement("div");
+    spacer.style.height = "1600px";
+    element.append(spacer);
+    element.scrollTop = 500;
+  });
+  await expect.poll(() => browsing.evaluate((element) => element.scrollTop)).toBe(500);
+
+  await page.evaluate((id) => document.querySelector<HTMLButtonElement>(`[data-frozen-case="${id}"] [data-frozen-action="view"]`)?.click(), caseA);
+  const report = page.getByTestId("hosted-case-report");
+  await expect(report).toHaveAttribute("data-case-key", caseA);
+  await expect(panel).toHaveAttribute("data-frozen-inspector-state", "open");
+  await expect(panel).toHaveCSS("overflow", "hidden");
+  const reportScroll = report.locator('[data-frozen-report-scroll="true"]');
+  await expect.poll(() => reportScroll.evaluate((element) => element.scrollTop)).toBe(0);
+  await reportScroll.evaluate((element) => { element.scrollTop = element.scrollHeight; });
+  expect(await page.evaluate(() => {
+    const reportNode = document.querySelector('[data-testid="hosted-case-report"]');
+    const bounds = reportNode?.getBoundingClientRect();
+    const point = bounds === undefined ? null : document.elementFromPoint(bounds.left + (bounds.width / 2), bounds.bottom - 8);
+    return reportNode?.contains(point) ?? false;
+  })).toBe(true);
+  expect(await browsing.evaluate((element) => element.scrollTop)).toBe(500);
+
+  await page.evaluate((id) => document.querySelector<HTMLButtonElement>(`[data-frozen-case="${id}"] [data-frozen-action="view"]`)?.click(), caseB);
+  await expect(report).toHaveAttribute("data-case-key", caseB);
+  await expect(page.getByTestId("hosted-case-report")).toHaveCount(1);
+  await expect(panel).toHaveAttribute("data-frozen-retained-row-artifacts", "1");
+  expect(requests.filter((path) => path.includes("/categories/")).length).toBe(1);
+  expect(requests.filter((path) => path.includes("/suites/")).length).toBe(1);
+  expect(requests.filter((path) => path.includes("/cases/")).length).toBe(2);
+
+  await page.getByRole("button", { name: "Close case evidence" }).click();
+  await expect(report).toHaveAttribute("data-case-key", caseA);
+  await expect(panel).toHaveAttribute("data-frozen-retained-row-artifacts", "1");
+  await page.getByRole("button", { name: "Close case evidence" }).click();
+  await expect(report).toHaveCount(0);
+  await expect(rowA).toBeVisible();
+  expect(await browsing.evaluate((element) => element.scrollTop)).toBe(500);
+  await expect(panel).toHaveAttribute("data-frozen-retained-row-artifacts", "0");
+
+  await page.getByTestId("frozen-category-certification").locator(":scope > summary").click();
+  await page.getByRole("button", { name: "Open evidence for Frozen acquisition certified" }).click();
+  await expect(page.getByTestId("frozen-row-evidence")).toBeVisible();
+  await expect(page.getByTestId("frozen-row-evidence-text")).toHaveAttribute("data-frozen-report-scroll", "true");
+  await expect(panel).toHaveCSS("overflow", "hidden");
+});
+
 test("direct suite and case URLs traverse only their owning hierarchy", async ({ page }) => {
   const requests: string[] = []; const fixture = await route_package(page, requests);
   const commit = fixture.index.deployment.hsonDeployCommit;
+  const panel = page.getByTestId("frozen-test-panel");
   await page.goto(`/tests/fixtures/browser/frozen-test-panel-fixture.html?evidence=${commit}&suite=${encodeURIComponent("verification/frozen-acquisition")}`);
   await expect(page.getByTestId("frozen-row-evidence")).toContainText("retained certification evidence");
+  await expect(panel).toHaveCSS("overflow", "hidden");
   expect(requests.map((path) => path.split("/").at(-2))).toEqual([commit, "categories", "suites"]);
   requests.length = 0;
   await page.goto(`/tests/fixtures/browser/frozen-test-panel-fixture.html?evidence=${commit}&case=${encodeURIComponent("transform/frozen-client::loads-index")}`);
   await expect(page.getByTestId("hosted-case-report")).toHaveAttribute("data-case-key", "transform/frozen-client::loads-index");
+  await expect(panel).toHaveCSS("overflow", "hidden");
   expect(requests.map((path) => path.split("/").at(-2))).toEqual([commit, "categories", "suites", "cases"]);
 });
 

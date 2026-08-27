@@ -18,27 +18,29 @@ export type FrozenTestEvidencePackageFixture = Readonly<{
 export function frozen_test_evidence_package_fixture(): FrozenTestEvidencePackageFixture {
   const artifacts = new Map<string, string>();
   const suitePlans = [
-    { categoryId: "transform", category: "semantic", id: "transform/frozen-client", title: "Frozen client semantics", shape: "cases", caseId: "loads-index", detail: false },
-    { categoryId: "browser", category: "browser", id: "livedemo/browser/frozen-panel", title: "Frozen panel browser proof", shape: "browser-journeys", caseId: "renders-inventory", detail: false },
-    { categoryId: "certification", category: "certification", id: "verification/frozen-acquisition", title: "Frozen acquisition certified", shape: "certification-aggregate", caseId: null, detail: true },
+    { categoryId: "transform", category: "semantic", id: "transform/frozen-client", title: "Frozen client semantics", shape: "cases", caseIds: ["loads-index", "releases-detail"] as const, detail: false },
+    { categoryId: "browser", category: "browser", id: "livedemo/browser/frozen-panel", title: "Frozen panel browser proof", shape: "browser-journeys", caseIds: ["renders-inventory"] as const, detail: false },
+    { categoryId: "certification", category: "certification", id: "verification/frozen-acquisition", title: "Frozen acquisition certified", shape: "certification-aggregate", caseIds: [] as const, detail: true },
   ] as const;
   const suites: Record<string, any>[] = [];
   const cases: Record<string, any>[] = [];
   for (const [order, plan] of suitePlans.entries()) {
     const caseRows: Record<string, any>[] = [];
-    if (plan.caseId !== null) {
-      const id = `${plan.id}::${plan.caseId}`;
-      const item = { id, caseId: plan.caseId, title: `case ${plan.caseId}`, order: 0, status: "pass", timing: timing(2), errors: [], evidenceRefs: [], diagnostic: {
-        type: "ordinary", runId: "run:frozen", suite: "canonical/selected", caseKey: id, caseSuite: plan.id, caseId: plan.caseId,
-        name: `case ${plan.caseId}`, status: "pass", ms: 2, error: null, assertions: [], values: [], artifacts: [], trace: [],
+    for (const [caseOrder, caseId] of plan.caseIds.entries()) {
+      const id = `${plan.id}::${caseId}`;
+      const item = { id, caseId, title: `case ${caseId}`, order: caseOrder, status: "pass", timing: timing(2), errors: [], evidenceRefs: [], diagnostic: {
+        type: "ordinary", runId: "run:frozen", suite: "canonical/selected", caseKey: id, caseSuite: plan.id, caseId,
+        name: `case ${caseId}`, status: "pass", ms: 2, error: null, assertions: [],
+        values: caseId === "loads-index" ? Array.from({ length: 80 }, (_, index) => ({ label: `retained line ${index + 1}`, value: "frozen report content" })) : [],
+        artifacts: [], trace: [],
       } };
       const caseBody = JSON.stringify({ category: plan.category, suiteId: plan.id, caseId: id, case: item, evidence: [] });
       const caseReference = reference(path("cases", id), caseBody);
       artifacts.set(caseReference.path, caseBody);
-      caseRows.push({ id, caseId: plan.caseId, title: item.title, order: 0, status: "pass", timing: item.timing, evidence: caseReference });
+      caseRows.push({ id, caseId, title: item.title, order: caseOrder, status: "pass", timing: item.timing, evidence: caseReference });
       cases.push(item);
     }
-    const count = plan.caseId === null ? 1 : caseRows.length;
+    const count = plan.caseIds.length === 0 ? 1 : caseRows.length;
     const suite = {
       categoryId: plan.categoryId, category: plan.category, id: plan.id, title: plan.title, order, status: "pass", executionShape: plan.shape,
       counts: lifecycle(count), timing: timing(order + 3), suiteEvidenceAvailable: plan.detail,

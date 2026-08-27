@@ -90,7 +90,7 @@ export function mount_frozen_generic_evidence(
   identity.create.div().text.set(id).css.setMany({ color: OKLCH_VIBRANT.cyanGlass, overflowWrap: "anywhere" });
   const close = header.create.button().attrs.setMany({ type: "button", "aria-label": "Close evidence" }).text.set("[ close ]")
     .css.setMany({ color: OKLCH_VIBRANT.cyanGlass, background: OKLCH_VIBRANT.voidInk, border: `1px solid ${OKLCH_VIBRANT.graphite}`, padding: ".35rem .6rem", cursor: "pointer" });
-  root.create.pre().attrs.set("data-testid", "frozen-row-evidence-text").text.set(serialize_frozen_row_artifact(artifact))
+  root.create.pre().attrs.setMany({ "data-testid": "frozen-row-evidence-text", "data-frozen-report-scroll": "true" }).text.set(serialize_frozen_row_artifact(artifact))
     .css.setMany({ whiteSpace: "pre-wrap", overflow: "auto", minHeight: "0", margin: "0", paddingTop: "1rem" });
   let disposed = false;
   const dispose = (): void => {

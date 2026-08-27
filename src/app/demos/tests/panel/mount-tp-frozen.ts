@@ -45,7 +45,8 @@ export type FrozenTestPanel = Readonly<{
 }>;
 
 const STYLES = Object.freeze({
-  root: { position: "relative", width: "100%", height: "100%", overflow: "auto", fontFamily: "DM Mono, monospace", fontSize: _fontSize.wee },
+  root: { position: "relative", width: "100%", height: "100%", overflow: "hidden", fontFamily: "DM Mono, monospace", fontSize: _fontSize.wee },
+  browsing: { width: "100%", height: "100%", overflow: "auto", minWidth: "0", minHeight: "0" },
   notice: { display: "grid", gridTemplateColumns: "minmax(0,1fr) auto", alignItems: "center", gap: "10px", padding: "12px 10px", color: OKLCH_VIBRANT.ghost, fontSize: ".76rem", fontWeight: "600", background: OKLCH_VIBRANT.voidInk, borderTop: `1px solid ${OKLCH_VIBRANT.graphite}`, borderBottom: `1px solid ${OKLCH_VIBRANT.cyanGlass}` },
   error: { padding: "12px 8px", color: OKLCH_VIBRANT.redSignal, border: `1px solid ${OKLCH_VIBRANT.redOxide}`, whiteSpace: "pre-wrap" },
   category: { borderBottom: `1px solid ${OKLCH_VIBRANT.graphite}` },
@@ -309,6 +310,8 @@ export function mount_frozen_test_panel(host: LiveTree, options: Readonly<{ evid
     "data-frozen-rendered-case-count": "0", "data-frozen-retained-row-artifacts": "0",
   });
   branch.css.setMany(STYLES.root);
+  const browsing = branch.create.div().classlist.set("frozen-test-browsing").attrs.set("data-testid", "frozen-test-browsing");
+  browsing.css.setMany(STYLES.browsing);
   branch.css.selector("& .frozen-test-notice").setMany(STYLES.notice);
   branch.css.selector("& .frozen-test-error").setMany(STYLES.error);
   branch.css.selector("& .frozen-test-category").setMany(STYLES.category);
@@ -341,7 +344,7 @@ export function mount_frozen_test_panel(host: LiveTree, options: Readonly<{ evid
   branch.css.selector("& .frozen-test-evidence-size").setMany(STYLES.evidenceSize);
   branch.css.selector("& .frozen-test-row-error").setMany(STYLES.rowError);
 
-  branch.create.div().classlist.set("frozen-test-notice").text.set("Loading test reports…");
+  browsing.create.div().classlist.set("frozen-test-notice").text.set("Loading test reports…");
   let state: FrozenTestPanelSnapshot["state"] = "loading";
   let index: FrozenTestEvidenceIndex | undefined;
   let disposed = false;
@@ -358,8 +361,8 @@ export function mount_frozen_test_panel(host: LiveTree, options: Readonly<{ evid
   } catch (cause) {
     state = "error";
     branch.attrs.set("data-frozen-panel-state", "error");
-    branch.empty();
-    branch.create.div().classlist.set("frozen-test-error").attrs.setMany({ role: "alert", "data-testid": "frozen-test-error" }).text.set(cause instanceof Error ? cause.message : String(cause));
+    browsing.empty();
+    browsing.create.div().classlist.set("frozen-test-error").attrs.setMany({ role: "alert", "data-testid": "frozen-test-error" }).text.set(cause instanceof Error ? cause.message : String(cause));
     return Object.freeze({
       branch,
       ready: Promise.resolve(undefined),
@@ -575,7 +578,7 @@ export function mount_frozen_test_panel(host: LiveTree, options: Readonly<{ evid
     if (disposed) return undefined;
     index = loaded;
     hierarchy = render_index(
-      branch,
+      browsing,
       loaded,
       client,
       (action, selection, row, control) => { void onAction(action, selection, row, control); },
@@ -633,8 +636,8 @@ export function mount_frozen_test_panel(host: LiveTree, options: Readonly<{ evid
     if (disposed) return undefined;
     state = "error";
     branch.attrs.set("data-frozen-panel-state", "error");
-    branch.empty();
-    branch.create.div().classlist.set("frozen-test-error").attrs.setMany({ role: "alert", "data-testid": "frozen-test-error" }).text.set(`Test reports could not be loaded.\n${cause instanceof Error ? cause.message : String(cause)}`);
+    browsing.empty();
+    browsing.create.div().classlist.set("frozen-test-error").attrs.setMany({ role: "alert", "data-testid": "frozen-test-error" }).text.set(`Test reports could not be loaded.\n${cause instanceof Error ? cause.message : String(cause)}`);
     return undefined;
   });
 

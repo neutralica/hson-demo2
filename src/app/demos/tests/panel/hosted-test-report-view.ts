@@ -107,7 +107,7 @@ export function mount_hosted_case_report(
       minHeight: "0",
       padding: "1rem",
       boxSizing: "border-box",
-      background: "rgba(8, 10, 9, 0.985)",
+      background: options.archiveNavigation === true ? "#080a09" : "rgba(8, 10, 9, 0.985)",
       color: "#e8e4d7",
       fontFamily: '"DM Mono", ui-monospace, monospace',
       pointerEvents: "auto",
@@ -136,7 +136,7 @@ export function mount_hosted_case_report(
     .attrs.setMany({ type: "button", "aria-label": options.archiveNavigation === true ? "Close case evidence" : "Close Transform report" })
     .text.set("[ close ]")
     .css.setMany({ color: "#d7ff70", border: "1px solid #49534d", padding: "0.35rem 0.6rem", cursor: "pointer" });
-  const body = root.create.div().css.setMany({ overflow: "auto", minHeight: "0", paddingTop: "1rem" });
+  const body = root.create.div().attrs.set("data-frozen-report-scroll", "true").css.setMany({ overflow: "auto", minHeight: "0", paddingTop: "1rem" });
 
   if (diagnostic.type === "transform") {
     if (diagnostic.trace.length > 0) {
