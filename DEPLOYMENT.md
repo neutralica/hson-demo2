@@ -21,16 +21,15 @@ Cloudflare, but the proxy hides the origin provider. Neither this package nor
 the parent deployment package defines a persistent Node process or a WebSocket
 upgrade route.
 
-Consequently, the checked-in deployment model requires two services:
+The default complete deployment model requires two services:
 
 1. a static host for the Vite `dist/` output; and
 2. a WebSocket-capable host running the public Node LiveHost process.
 
-The repository also contains an optional Cloudflare Workers + Durable Objects
-portability proof. See [CLOUDFLARE.md](./CLOUDFLARE.md). It is
-explicitly non-hibernating and currently exposes only the Worker-compatible
-suite subset documented there; the conventional Node service remains the
-complete hosted-test deployment.
+The repository also contains the existing Cloudflare Workers + Durable Objects
+TOWL compatibility service. See [CLOUDFLARE.md](./CLOUDFLARE.md). It is
+explicitly non-hibernating and exposes only anonymous `/session` compatibility
+and `/towl`; the Node service remains the complete future LiveHost deployment.
 
 ### TOWL client/authority compatibility gate
 
@@ -44,7 +43,7 @@ After a Worker compatibility deployment and before promoting a static bundle
 that targets it, run:
 
 ```sh
-TOWL_DEPLOYED_WS_URL=wss://<worker-host>/socket npm run diagnose:towl-deployed
+TOWL_DEPLOYED_WS_URL=wss://<worker-host>/towl npm run diagnose:towl-deployed
 ```
 
 The probe creates a fresh ephemeral TOWL room, creates a session, consumes the
@@ -53,10 +52,10 @@ any compatibility failure. A release is healthy only when it prints
 `"compatible": true`. Redeploying only the static bundle is insufficient when
 this gate reports a Worker-emitted snapshot parse failure.
 
-Cloudflare in front of the current site is not evidence that the static origin
-can execute a persistent Node process. Do not point the browser at a Worker,
-function, or static host unless that product explicitly supports this stateful,
-long-running WebSocket server.
+For the TOWL-only compatibility lane, point `VITE_LIVEHOST_WS_URL` at the
+existing Worker's secure origin. The browser derives `/towl`, and the Worker
+provides the no-cookie `/session` bootstrap required by the generic origin
+contract. `/circuit-verification` remains unavailable on that origin.
 
 The `hson-demo2` package is a parent-workspace member with its own
 `package.json` and lockfile. It resolves `hson-live` from the sibling
@@ -109,12 +108,15 @@ VITE_TEST_EVIDENCE_ROOT=/test-evidence/<exact-40-hex-hson-deploy-commit> npm run
 The frozen browser explorer uses ordinary HTTP to load its index and explicit row
 evidence artifacts; it never starts hosted tests or opens a hosted-test
 WebSocket in either development or production. Live browser applications use
-`VITE_LIVEHOST_WS_URL`, the browser-visible origin of the deployed Node/LiveHost
-service. TOWL derives `/towl` and circuit verification derives
+`VITE_LIVEHOST_WS_URL`, the browser-visible generic runtime origin. TOWL derives
+`/towl` and circuit verification derives
 `/circuit-verification` while preserving intentional query parameters and
 replacing `locus`. The value is an origin, not an application URL, and production
 requires `wss://` except for explicit localhost simulation. Missing frozen
 evidence is a visible frozen infrastructure error, never a live-test fallback.
+The Worker compatibility origin implements `/session` and `/towl` only, so a
+static build targeting it restores TOWL while leaving circuit verification
+unavailable.
 
 Generate and execute test evidence through `npm run test:cli`, `npm run pack`,
 or `npm run certify`. LiveHost remains the execution substrate for those paths;

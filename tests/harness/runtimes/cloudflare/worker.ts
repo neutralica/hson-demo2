@@ -13,7 +13,7 @@ import {
   is_websocket_upgrade,
   locus_id,
   request_error,
-  route_hosted_test_worker_request,
+  route_towl_worker_request,
   type HostedTestDurableObjectNamespace,
 } from "./worker-routing";
 
@@ -113,6 +113,6 @@ export class HostedTestDurableObject {
 
 export default {
   fetch(request: Request, env: HostedTestWorkerEnv): Promise<Response> {
-    return route_hosted_test_worker_request(request, env.HOSTED_TESTS);
+    return route_towl_worker_request(request, env.HOSTED_TESTS);
   },
 };

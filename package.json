@@ -63,6 +63,7 @@
     "test:node-application-host-entry": "node --import=tsx tests/runners/livehost/run-node-application-host-entry.node.mts",
     "test:livehost-bootstrap-integration": "node --import=tsx tests/runners/livehost/run-livehost-bootstrap-integration.node.mts",
     "test:node-production-runtime": "node --import=tsx tests/runners/livehost/run-node-production-runtime.node.mts",
+    "test:towl-worker-compatibility": "node --import=tsx tests/integration/cloudflare/run-towl-worker-compatibility.node.mts",
     "test:hosted-cloudflare": "node --import=tsx tests/integration/cloudflare/run-hosted-cloudflare.node.mts",
     "test:hosted-jsdom-runtime-node": "tsx tests/runners/livehost/run-hosted-jsdom-runtime.node.mts",
     "test:hosted-dom-collection-node": "tsx tests/runners/livehost/run-hosted-dom-collection.node.mts",

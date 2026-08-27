@@ -1,6 +1,6 @@
-# Optional Cloudflare hosted-test Worker
+# TOWL Cloudflare Worker compatibility deployment
 
-This adapter is a portability target, not the Node LiveHost architecture.
+This adapter is a compatibility target, not the Node LiveHost architecture.
 The complete Node LiveHost builds, starts, discovers, executes, cancels,
 recovers, reports, and shuts down without Wrangler, bindings, Durable Objects,
 or a Worker URL. Removing this adapter excludes only certification whose
@@ -41,25 +41,31 @@ application checkpoint surface capable of exporting and restoring coordinator
 state, report hosts, revisions/incarnations, replay history, sessions, dedupe
 outcomes, retention metadata, and any recoverable execution state.
 
-## Routing
+## Public routing
 
-The Worker accepts URLs shaped like:
+The public Worker surface accepts only:
 
 ```text
-wss://<worker-host>/<optional-path>?locus=<selector>
+GET https://<worker-host>/session
+wss://<worker-host>/towl?locus=towl:<room-id>
 ```
 
-Only WebSocket upgrades are accepted. `locus` is required and must be
-non-empty. The Worker passes the original path and query to one stable Durable
-Object selected with:
+`GET /session` is a no-cookie compatibility response for the generic browser
+bootstrap. It admits only the existing public LiveDemo origins (plus loopback
+development origins) and grants no account or service credential. `/towl`
+requires a WebSocket upgrade, an accepted browser Origin when one is present,
+and a `towl:` Locus selector. Hosted Tests and `/circuit-verification` return
+404 and do not reach the Durable Object.
+
+The Worker passes valid TOWL upgrades to one stable Durable Object selected with:
 
 ```text
 idFromName("hson-demo2-hosted-tests-v1")
 ```
 
-Inside that object, the existing hosted-test application distinguishes
-`hosted-tests` from dynamically created `hosted-report:<run-id>` Loci. The
-browser URL construction and Locus wire protocol are unchanged.
+The Durable Object retains the obsolete hosted-test implementation internally,
+but the public fetch handler no longer routes visitors to it. TOWL browser URL
+construction and the Locus wire protocol are unchanged.
 
 ## Local development
 
@@ -70,15 +76,17 @@ npm ci
 npm run cloudflare:dev
 ```
 
-Wrangler prints the local HTTP origin. Use its equivalent `ws://` URL plus the
-existing `locus` query for direct internal probes. This optional adapter is not
-the generic Node/LiveHost browser origin and does not define
-`VITE_LIVEHOST_WS_URL`.
+Wrangler prints the local HTTP origin. Use its equivalent `ws://` origin as
+`VITE_LIVEHOST_WS_URL`; the browser derives `/towl` and the existing `locus`
+query. The local compatibility `/session` response allows loopback browser
+origins.
 
 ## Checks and deployment
 
 ```sh
 npm run check:cloudflare
+npm run test:towl-worker-compatibility
+npm run test:towl-room
 npm run test:hosted-cloudflare
 npm run cloudflare:types
 npm run cloudflare:deploy
@@ -88,8 +96,7 @@ npm run cloudflare:deploy
 through the `v1` `new_sqlite_classes` migration and binds it as `HOSTED_TESTS`.
 
 Before deploying, authenticate Wrangler with `wrangler login` or provide the
-standard Cloudflare API token/account environment configuration. After the
-first deploy, internal hosted-test diagnostics can convert the generated
-`https://...workers.dev` hostname to `wss://` and pass it through their explicit
-runtime URL seam. The ordinary browser test explorer does not use this endpoint.
-A custom Worker route is optional and must support WebSocket upgrades.
+standard Cloudflare API token/account environment configuration. Convert the
+existing Worker's generated `https://...workers.dev` hostname to a `wss://`
+origin and supply it as `VITE_LIVEHOST_WS_URL` when preparing the static build.
+The ordinary browser test explorer does not use this endpoint.
