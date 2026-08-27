@@ -1,6 +1,7 @@
 import type { TestCase, TestSuite } from "../../harness/core/test-contracts";
 import {
   decode_frozen_test_evidence_index,
+  frozen_test_explorer_category_from_suite_id,
   make_frozen_test_evidence_client,
   validate_frozen_test_evidence_root,
 } from "../../../src/app/demos/tests/panel/frozen-test-evidence-client";
@@ -9,273 +10,92 @@ import { test_panel_acquisition_mode } from "../../../src/app/demos/tests/panel/
 import {
   FROZEN_TEST_EVIDENCE_COMMIT,
   FROZEN_TEST_EVIDENCE_ROOT,
-  frozen_test_evidence_fixture,
+  frozen_test_evidence_package_fixture,
 } from "../../fixtures/app/frozen-test-evidence-index";
 
 const SUITE = "unit/frozen-test-evidence-client";
-
-function expect(condition: unknown, message: string): asserts condition {
-  if (!condition) throw new Error(message);
-}
-
-function clone<T>(value: T): T {
-  return JSON.parse(JSON.stringify(value)) as T;
-}
-
+function expect(condition: unknown, message: string): asserts condition { if (!condition) throw new Error(message); }
 async function rejects(run: () => unknown | Promise<unknown>, includes: string): Promise<void> {
-  try { await run(); }
-  catch (error) {
-    expect(error instanceof Error && error.message.includes(includes), `expected rejection containing ${includes}, received ${String(error)}`);
-    return;
-  }
+  try { await run(); } catch (error) { expect(error instanceof Error && error.message.includes(includes), `expected ${includes}, received ${String(error)}`); return; }
   throw new Error(`expected rejection containing ${includes}`);
 }
-
-function response(body: string, status = 200): Pick<Response, "ok" | "status" | "text"> {
-  return { ok: status >= 200 && status < 300, status, text: async () => body };
-}
-
-function artifact_path(owner: "cases" | "suites", id: string): string {
-  return `${owner}/${Buffer.from(id, "utf8").toString("base64url")}.json`;
-}
-
-function ordinary_case_artifact(suiteId: string, id: string, caseId: string): Record<string, unknown> {
-  return {
-    category: "semantic", suiteId, caseId: id,
-    case: {
-      id, caseId, title: "retained ordinary case", status: "pass", errors: [], evidenceRefs: [],
-      diagnostic: {
-        type: "ordinary", runId: "run:frozen", suite: "canonical/selected", caseKey: id, caseSuite: suiteId, caseId,
-        name: "retained ordinary case", status: "pass", ms: 2, error: null,
-        assertions: [{ ok: true, label: "retained assertion", actual: "yes", expected: "yes" }],
-        values: [{ label: "metadata", value: "frozen" }], artifacts: [], trace: [],
-      },
-    },
-    evidence: [],
-  };
-}
-
-function configured_case_fixture(artifact: unknown): Readonly<{ index: Record<string, any>; body: string; path: string }> {
-  const index = frozen_test_evidence_fixture();
-  const item = index.suites[0].cases[0];
-  const path = artifact_path("cases", item.id);
-  const body = JSON.stringify(artifact);
-  item.evidence = { available: true, path, rawBytes: Buffer.byteLength(body), sha256: "b".repeat(64) };
-  return { index, body, path };
+function response(body: string, status = 200): Pick<Response, "ok" | "status" | "text"> { return { ok: status >= 200 && status < 300, status, text: async () => body }; }
+function fixtureClient(requests: string[] = []) {
+  const fixture = frozen_test_evidence_package_fixture();
+  const client = make_frozen_test_evidence_client({ root: FROZEN_TEST_EVIDENCE_ROOT, fetch: async (url) => {
+    requests.push(url);
+    if (url.endsWith("/index.json")) return response(JSON.stringify(fixture.index));
+    const relative = url.slice(FROZEN_TEST_EVIDENCE_ROOT.length + 1);
+    const body = fixture.artifacts.get(relative);
+    return response(body ?? "missing", body === undefined ? 404 : 200);
+  } });
+  return { fixture, client };
 }
 
 export function frozen_test_evidence_client_suite(): TestSuite {
   const cases: readonly TestCase[] = [
-    {
-      suite: SUITE, caseId: "development-production-composition-parity", name: "development and production select the same frozen acquisition path",
-      run: () => {
-        expect(test_panel_acquisition_mode(false) === "frozen", "development must select frozen evidence");
-        expect(test_panel_acquisition_mode(true) === "frozen", "production must select frozen evidence");
-      },
-    },
-    {
-      suite: SUITE, caseId: "valid-index-loads-once-and-caches", name: "valid index loads once and caches without lazy evidence fetches",
-      run: async () => {
-        const requests: string[] = [];
-        const client = make_frozen_test_evidence_client({ root: FROZEN_TEST_EVIDENCE_ROOT, fetch: async (url) => {
-          requests.push(url);
-          return response(JSON.stringify(frozen_test_evidence_fixture()));
-        } });
-        const first = await client.loadIndex();
-        const second = await client.loadIndex();
-        expect(first === second, "index should be cached by identity");
-        expect(first.categories.length === 3 && first.suites.length === 3, "complete fixture inventory should decode");
-        expect(JSON.stringify(requests) === JSON.stringify([`${FROZEN_TEST_EVIDENCE_ROOT}/index.json`]), `unexpected initial requests: ${requests.join(", ")}`);
-      },
-    },
-    {
-      suite: SUITE, caseId: "rejects-malformed-json", name: "malformed JSON rejects the whole load",
-      run: () => rejects(() => make_frozen_test_evidence_client({ root: FROZEN_TEST_EVIDENCE_ROOT, fetch: async () => response("{") }).loadIndex(), "FROZEN_EVIDENCE_JSON"),
-    },
-    {
-      suite: SUITE, caseId: "reports-missing-index-status", name: "missing index reports its HTTP status",
-      run: () => rejects(() => make_frozen_test_evidence_client({ root: FROZEN_TEST_EVIDENCE_ROOT, fetch: async () => response("missing", 404) }).loadIndex(), "HTTP 404"),
-    },
-    {
-      suite: SUITE, caseId: "reports-http-failure-status", name: "HTTP failure reports its response status",
-      run: () => rejects(() => make_frozen_test_evidence_client({ root: FROZEN_TEST_EVIDENCE_ROOT, fetch: async () => response("unavailable", 503) }).loadIndex(), "HTTP 503"),
-    },
-    {
-      suite: SUITE, caseId: "rejects-wrong-deployment-commit", name: "index deployment must match the immutable root suffix",
-      run: () => {
-        const index = frozen_test_evidence_fixture();
-        index.deployment.hsonDeployCommit = "f".repeat(40);
-        return rejects(() => decode_frozen_test_evidence_index(index, FROZEN_TEST_EVIDENCE_COMMIT), "FROZEN_INDEX_DEPLOYMENT_MISMATCH");
-      },
-    },
-    {
-      suite: SUITE, caseId: "rejects-duplicate-identities", name: "duplicate category, suite, and case identities reject",
-      run: async () => {
-        const duplicateSuite = frozen_test_evidence_fixture();
-        duplicateSuite.suites.push(clone(duplicateSuite.suites[0]));
-        await rejects(() => decode_frozen_test_evidence_index(duplicateSuite, FROZEN_TEST_EVIDENCE_COMMIT), "Duplicate suite id");
-        const duplicateCase = frozen_test_evidence_fixture();
-        duplicateCase.suites[1].cases[0].id = duplicateCase.suites[0].cases[0].id;
-        await rejects(() => decode_frozen_test_evidence_index(duplicateCase, FROZEN_TEST_EVIDENCE_COMMIT), "Duplicate case id");
-      },
-    },
-    {
-      suite: SUITE, caseId: "rejects-invalid-suite-case-relationship", name: "case identity must remain owned by its indexed suite",
-      run: () => {
-        const index = frozen_test_evidence_fixture();
-        index.suites[0].cases[0].id = "another/suite::loads-index";
-        return rejects(() => decode_frozen_test_evidence_index(index, FROZEN_TEST_EVIDENCE_COMMIT), "FROZEN_INDEX_RELATIONSHIP");
-      },
-    },
-    {
-      suite: SUITE, caseId: "rejects-invalid-and-traversing-evidence-paths", name: "evidence paths are package-relative and cannot traverse",
-      run: async () => {
-        for (const path of ["/cases/absolute.json", "cases/../outside.json", "cases\\outside.json", "cases/%2e%2e/outside.json"]) {
-          const index = frozen_test_evidence_fixture();
-          index.suites[0].cases[0].evidence.path = path;
-          await rejects(() => decode_frozen_test_evidence_index(index, FROZEN_TEST_EVIDENCE_COMMIT), "FROZEN_INDEX_EVIDENCE_PATH");
-        }
-      },
-    },
-    {
-      suite: SUITE, caseId: "rejects-malformed-evidence-metadata", name: "available evidence requires exact bytes and valid optional digest",
-      run: async () => {
-        const missingBytes = frozen_test_evidence_fixture();
-        delete missingBytes.suites[0].cases[0].evidence.rawBytes;
-        await rejects(() => decode_frozen_test_evidence_index(missingBytes, FROZEN_TEST_EVIDENCE_COMMIT), "rawBytes");
-        const badDigest = frozen_test_evidence_fixture();
-        badDigest.suites[0].cases[0].evidence.sha256 = "mutable";
-        await rejects(() => decode_frozen_test_evidence_index(badDigest, FROZEN_TEST_EVIDENCE_COMMIT), "sha256");
-      },
-    },
-    {
-      suite: SUITE, caseId: "rejects-invalid-roots-before-fetch", name: "missing, mutable, decorated, traversing, and malformed roots fail before fetch",
-      run: async () => {
-        for (const root of [undefined, "", "test-evidence/" + FROZEN_TEST_EVIDENCE_COMMIT, "/test-evidence/latest", "/test-evidence/../" + FROZEN_TEST_EVIDENCE_COMMIT, FROZEN_TEST_EVIDENCE_ROOT + "?deployment=x", FROZEN_TEST_EVIDENCE_ROOT + "#x", "/test-evidence/abc"]) {
-          await rejects(() => validate_frozen_test_evidence_root(root), "FROZEN_EVIDENCE_ROOT");
-        }
-      },
-    },
-    {
-      suite: SUITE, caseId: "row-artifact-validates-and-releases-current-detail", name: "row artifact validation deduplicates only the explicitly owned current detail",
-      run: async () => {
-        const suiteId = "transform/frozen-client";
-        const id = `${suiteId}::loads-index`;
-        const fixture = configured_case_fixture(ordinary_case_artifact(suiteId, id, "loads-index"));
-        const requests: string[] = [];
-        const client = make_frozen_test_evidence_client({ root: FROZEN_TEST_EVIDENCE_ROOT, fetch: async (url) => {
-          requests.push(url);
-          return url.endsWith("index.json") ? response(JSON.stringify(fixture.index)) : response(fixture.body);
-        } });
-        const index = await client.loadIndex();
-        const suite = index.suites[0]!;
-        const testCase = suite.cases[0]!;
-        const selection = { category: suite.category, suite, testCase, reference: testCase.evidence! } as const;
-        const [first, second] = await Promise.all([client.loadRowEvidence(selection), client.loadRowEvidence(selection)]);
-        const third = await client.loadRowEvidence(selection);
-        expect(first.owner === "case" && first.diagnostic?.caseKey === id && second.owner === "case" && third.owner === "case", "validated case diagnostic should be retained");
-        expect(client.snapshot().rowEvidenceRequests === 1 && requests.length === 2, "one artifact GET should serve concurrent and repeated row actions");
-        expect(client.snapshot().retainedRowArtifacts === 1, "the current detail should be the only retained row artifact");
-        client.releaseRowEvidence(fixture.path);
-        expect(client.snapshot().retainedRowArtifacts === 0, "closing the current detail should release application ownership");
-        await client.loadRowEvidence(selection);
-        expect(client.snapshot().rowEvidenceRequests === 2 && Number(requests.length) === 3, "released detail should be fetched again when reopened");
-        client.releaseRowEvidence();
-        expect(client.snapshot().retainedRowArtifacts === 0, "unconditional release should clear the current detail");
-      },
-    },
-    {
-      suite: SUITE, caseId: "row-artifact-rejects-identity-and-size-mismatches", name: "row artifacts reject wrapper, nested case, diagnostic, path, and raw-byte mismatches",
-      run: async () => {
-        const suiteId = "transform/frozen-client";
-        const id = `${suiteId}::loads-index`;
-        for (const mutation of ["wrapper", "case", "diagnostic", "size", "path"] as const) {
-          const artifact = ordinary_case_artifact(suiteId, id, "loads-index") as any;
-          if (mutation === "wrapper") artifact.suiteId = "wrong/suite";
-          if (mutation === "case") artifact.case.id = "wrong::case";
-          if (mutation === "diagnostic") artifact.case.diagnostic.caseKey = "wrong::diagnostic";
-          const fixture = configured_case_fixture(artifact);
-          if (mutation === "size") fixture.index.suites[0].cases[0].evidence.rawBytes += 1;
-          if (mutation === "path") fixture.index.suites[0].cases[0].evidence.path = "cases/not-the-selected-row.json";
-          const client = make_frozen_test_evidence_client({ root: FROZEN_TEST_EVIDENCE_ROOT, fetch: async (url) => url.endsWith("index.json") ? response(JSON.stringify(fixture.index)) : response(fixture.body) });
-          const index = await client.loadIndex();
-          const suite = index.suites[0]!;
-          const testCase = suite.cases[0]!;
-          await rejects(() => client.loadRowEvidence({ category: suite.category, suite, testCase, reference: testCase.evidence! }), "FROZEN_ROW_EVIDENCE_");
-        }
-      },
-    },
-    {
-      suite: SUITE, caseId: "row-artifact-replacement-owns-only-latest-detail", name: "opening another row releases ownership of the previous detailed artifact",
-      run: async () => {
-        const suiteId = "transform/frozen-client";
-        const firstId = `${suiteId}::loads-index`;
-        const secondId = `${suiteId}::replacement`;
-        const firstArtifact = ordinary_case_artifact(suiteId, firstId, "loads-index");
-        const secondArtifact = ordinary_case_artifact(suiteId, secondId, "replacement");
-        const fixture = configured_case_fixture(firstArtifact);
-        const suiteRecord = fixture.index.suites[0];
-        const secondBody = JSON.stringify(secondArtifact);
-        const secondPath = artifact_path("cases", secondId);
-        suiteRecord.cases.push({
-          ...suiteRecord.cases[0], id: secondId, caseId: "replacement", title: "replacement detail", order: 1,
-          evidence: { available: true, path: secondPath, rawBytes: Buffer.byteLength(secondBody), sha256: "b".repeat(64) },
-        });
-        suiteRecord.counts = { ...suiteRecord.counts, declared: 2, total: 2, executed: 2, passed: 2 };
-        fixture.index.categories[0].caseCounts = { total: 2, pass: 2, fail: 0, skip: 0 };
-        const bodies = new Map([[fixture.path, fixture.body], [secondPath, secondBody]]);
-        const client = make_frozen_test_evidence_client({ root: FROZEN_TEST_EVIDENCE_ROOT, fetch: async (url) => {
-          if (url.endsWith("index.json")) return response(JSON.stringify(fixture.index));
-          return response(bodies.get(url.slice(FROZEN_TEST_EVIDENCE_ROOT.length + 1)) ?? "missing", bodies.has(url.slice(FROZEN_TEST_EVIDENCE_ROOT.length + 1)) ? 200 : 404);
-        } });
-        const index = await client.loadIndex();
-        const suite = index.suites[0]!;
-        const first = suite.cases[0]!;
-        const second = suite.cases[1]!;
-        await client.loadRowEvidence({ category: suite.category, suite, testCase: first, reference: first.evidence! });
-        await client.loadRowEvidence({ category: suite.category, suite, testCase: second, reference: second.evidence! });
-        expect(client.snapshot().retainedRowArtifacts === 1, "replacement must retain at most the latest detailed artifact");
-        client.releaseRowEvidence(first.evidence!.path);
-        expect(client.snapshot().retainedRowArtifacts === 1, "releasing the replaced path must not clear the current detail");
-        client.releaseRowEvidence(second.evidence!.path);
-        expect(client.snapshot().retainedRowArtifacts === 0, "releasing the current replacement must clear application ownership");
-      },
-    },
-    {
-      suite: SUITE, caseId: "row-artifact-reports-http-and-json-failures", name: "row artifact 404 and malformed JSON remain isolated evidence errors",
-      run: async () => {
-        const suiteId = "transform/frozen-client";
-        const id = `${suiteId}::loads-index`;
-        const artifact = ordinary_case_artifact(suiteId, id, "loads-index");
-        for (const artifactResponse of [response("missing", 404), response("{")] as const) {
-          const fixture = configured_case_fixture(artifact);
-          const client = make_frozen_test_evidence_client({ root: FROZEN_TEST_EVIDENCE_ROOT, fetch: async (url) => url.endsWith("index.json") ? response(JSON.stringify(fixture.index)) : artifactResponse });
-          const index = await client.loadIndex();
-          const suite = index.suites[0]!;
-          const testCase = suite.cases[0]!;
-          await rejects(() => client.loadRowEvidence({ category: suite.category, suite, testCase, reference: testCase.evidence! }), "FROZEN_EVIDENCE_");
-          expect(client.snapshot().indexRequests === 1, "row failure must not invalidate the loaded index");
-        }
-      },
-    },
-    {
-      suite: SUITE, caseId: "formats-raw-byte-sizes", name: "frozen evidence sizes use raw decimal bytes, kB, and MB",
-      run: () => {
-        expect(format_frozen_evidence_size(999) === "999 B", "byte formatting");
-        expect(format_frozen_evidence_size(3_400) === "3.4 kB", "kilobyte formatting");
-        expect(format_frozen_evidence_size(2_500_000) === "2.5 MB", "megabyte formatting");
-      },
-    },
-    {
-      suite: SUITE, caseId: "copy-reports-is-index-only", name: "frozen Copy Reports serializes complete inventory from the loaded index without artifact requests",
-      run: async () => {
-        const client = make_frozen_test_evidence_client({ root: FROZEN_TEST_EVIDENCE_ROOT, fetch: async () => response(JSON.stringify(frozen_test_evidence_fixture())) });
-        const index = await client.loadIndex();
-        const copied = serialize_frozen_index_summary(index);
-        expect(copied.includes("Test reports") && copied.includes("transform/frozen-client::loads-index") && copied.includes("CERTIFICATION"), "summary should include category, suite, and case inventory");
-        expect(client.snapshot().rowEvidenceRequests === 0, "Copy Reports must not fetch row or full-report evidence");
-      },
-    },
+    { suite: SUITE, caseId: "development-production-composition-parity", name: "development and production select the same frozen acquisition path", run: () => {
+      expect(test_panel_acquisition_mode(false) === "frozen" && test_panel_acquisition_mode(true) === "frozen", "both compositions must use frozen evidence");
+    } },
+    { suite: SUITE, caseId: "root-loads-once-without-descendant-fetch", name: "root loads once and contains only category summaries", run: async () => {
+      const requests: string[] = []; const { client } = fixtureClient(requests);
+      const first = await client.loadIndex(); const second = await client.loadIndex();
+      expect(first === second, "root should be cached by identity");
+      expect(first.categories.length === 9 && first.overall.suites === 3, "root category and aggregate inventory should decode");
+      expect(requests.length === 1 && requests[0]?.endsWith("/index.json"), "root open must not fetch descendants");
+      expect(client.snapshot().categoryRequests === 0 && client.snapshot().suiteRequests === 0 && client.snapshot().rowEvidenceRequests === 0, "descendant request counters must remain zero");
+    } },
+    { suite: SUITE, caseId: "category-suite-case-fetch-chain", name: "category, suite, and case artifacts load only when requested", run: async () => {
+      const requests: string[] = []; const { client } = fixtureClient(requests); const root = await client.loadIndex();
+      const category = root.categories.find((entry) => entry.id === "transform")!;
+      const listing = await client.loadCategory(category); const suite = listing.suites[0]!;
+      const suiteListing = await client.loadSuite(suite); const item = suiteListing.cases[0]!;
+      expect(client.snapshot().categoryRequests === 1 && client.snapshot().suiteRequests === 1 && client.snapshot().rowEvidenceRequests === 0, "listing fetches should remain distinct from detail fetches");
+      const artifact = await client.loadRowEvidence({ category: suite.category, suite, testCase: item, reference: item.evidence! });
+      expect(artifact.owner === "case" && artifact.caseId === item.id, "case artifact should validate against suite listing identity");
+      expect(requests.length === 4, "exact root-category-suite-case path should use four requests");
+      client.releaseRowEvidence(); expect(client.snapshot().retainedRowArtifacts === 0, "case close should release current detail");
+    } },
+    { suite: SUITE, caseId: "suite-detail-is-owned-by-suite-envelope", name: "suite-owned evidence arrives in the already loaded suite envelope", run: async () => {
+      const { client } = fixtureClient(); const root = await client.loadIndex();
+      const category = await client.loadCategory(root.categories.find((entry) => entry.id === "certification")!);
+      const listing = await client.loadSuite(category.suites[0]!);
+      expect(listing.detail?.owner === "suite" && listing.detail.evidence[0]?.content.includes("certification") === true, "suite detail should be embedded in its listing envelope");
+      expect(client.snapshot().rowEvidenceRequests === 0, "suite detail must not cause another request");
+    } },
+    { suite: SUITE, caseId: "rejects-size-and-identity-mismatch", name: "category and suite bytes and identities reject locally", run: async () => {
+      const fixture = frozen_test_evidence_package_fixture(); const root = decode_frozen_test_evidence_index(fixture.index, FROZEN_TEST_EVIDENCE_COMMIT);
+      const category = root.categories.find((entry) => entry.id === "transform")!;
+      const client = make_frozen_test_evidence_client({ root: FROZEN_TEST_EVIDENCE_ROOT, fetch: async (url) => url.endsWith("index.json")
+        ? response(JSON.stringify(fixture.index)) : response("{}") });
+      await client.loadIndex();
+      await rejects(() => client.loadCategory(category), "SIZE_MISMATCH");
+      const wrong = JSON.parse(fixture.artifacts.get(category.listing.path!)!); wrong.categoryId = "unit";
+      const body = JSON.stringify(wrong); fixture.index.categories.find((entry: any) => entry.id === "transform").listing.rawBytes = Buffer.byteLength(body);
+      const identityClient = make_frozen_test_evidence_client({ root: FROZEN_TEST_EVIDENCE_ROOT, fetch: async (url) => url.endsWith("index.json") ? response(JSON.stringify(fixture.index)) : response(body) });
+      const decoded = await identityClient.loadIndex();
+      await rejects(() => identityClient.loadCategory(decoded.categories.find((entry) => entry.id === "transform")!), "RELATIONSHIP");
+    } },
+    { suite: SUITE, caseId: "routing-invariant", name: "suite ids route deterministically without a root lookup table", run: async () => {
+      const routes = [["transform/a", "transform"], ["livehost/locus/a", "locus"], ["livetree-browser", "livetree"], ["livedemo/browser/a", "browser"], ["verification/a", "certification"], ["integration/public-boundaries", "unit"]] as const;
+      for (const [id, expected] of routes) expect(frozen_test_explorer_category_from_suite_id(id) === expected, `${id} should route to ${expected}`);
+      await rejects(() => frozen_test_explorer_category_from_suite_id("transform/a::case"), "PRESENTATION_CATEGORY");
+      await rejects(() => frozen_test_explorer_category_from_suite_id("integration/anything-else"), "PRESENTATION_CATEGORY");
+    } },
+    { suite: SUITE, caseId: "copy-reports-root-summary-only", name: "Copy Reports serializes root and category summaries without hidden inventory", run: async () => {
+      const { client } = fixtureClient(); const root = await client.loadIndex(); const copied = serialize_frozen_index_summary(root);
+      expect(copied.includes("TRANSFORM") && copied.includes("CERTIFICATION") && !copied.includes("transform/frozen-client"), "copy should expose category summaries but no hidden suite names");
+      expect(client.snapshot().categoryRequests === 0 && client.snapshot().suiteRequests === 0, "copy must not fan out");
+    } },
+    { suite: SUITE, caseId: "rejects-invalid-roots-and-index", name: "immutable roots, deployment binding, and JSON remain strict", run: async () => {
+      for (const root of [undefined, "", `/test-evidence/latest`, `/test-evidence/../${FROZEN_TEST_EVIDENCE_COMMIT}`, "/test-evidence/abc"]) await rejects(() => validate_frozen_test_evidence_root(root), "FROZEN_EVIDENCE_ROOT");
+      const fixture = frozen_test_evidence_package_fixture().index; fixture.deployment.hsonDeployCommit = "f".repeat(40);
+      await rejects(() => decode_frozen_test_evidence_index(fixture, FROZEN_TEST_EVIDENCE_COMMIT), "DEPLOYMENT_MISMATCH");
+      await rejects(() => make_frozen_test_evidence_client({ root: FROZEN_TEST_EVIDENCE_ROOT, fetch: async () => response("{") }).loadIndex(), "FROZEN_EVIDENCE_JSON");
+    } },
+    { suite: SUITE, caseId: "formats-raw-byte-sizes", name: "frozen evidence sizes use raw decimal units", run: () => {
+      expect(format_frozen_evidence_size(999) === "999 B" && format_frozen_evidence_size(3_400) === "3.4 kB" && format_frozen_evidence_size(2_500_000) === "2.5 MB", "raw-byte formatting");
+    } },
   ];
   return Object.freeze({ suite: SUITE, cases });
 }

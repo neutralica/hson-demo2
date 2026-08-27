@@ -4,14 +4,14 @@ export const FROZEN_TEST_CATEGORIES = Object.freeze(["semantic", "browser", "cer
 
 /** Browser-only projection order. Capture categories intentionally remain above. */
 export const FROZEN_TEST_EXPLORER_CATEGORIES = Object.freeze([
-  "transform", "livetree", "livemap", "locus", "livehost", "reflect", "unit", "browser", "certification", "dev",
+  "transform", "livetree", "livemap", "locus", "livehost", "reflect", "unit", "browser", "certification",
 ] as const);
 
 export type FrozenTestExplorerCategoryId = typeof FROZEN_TEST_EXPLORER_CATEGORIES[number];
 
 export type FrozenTestCategoryId = typeof FROZEN_TEST_CATEGORIES[number];
 export type FrozenTestStatus = "pass" | "fail" | "skip";
-export type FrozenTestRunStatus = "passed" | "failed" | "cancelled";
+export type FrozenTestRunStatus = FrozenTestStatus | "unexecuted";
 
 export type FrozenEvidenceReference = Readonly<{
   available: boolean;
@@ -43,6 +43,7 @@ export type FrozenTestCase = Readonly<{
 }>;
 
 export type FrozenTestSuite = Readonly<{
+  categoryId: FrozenTestExplorerCategoryId;
   category: FrozenTestCategoryId;
   id: string;
   title: string;
@@ -60,27 +61,36 @@ export type FrozenTestSuite = Readonly<{
     cancelled: number;
   }>;
   timing: FrozenTestTiming;
-  evidence?: FrozenEvidenceReference;
-  cases: readonly FrozenTestCase[];
+  listing: FrozenEvidenceReference;
+  suiteEvidenceAvailable: boolean;
 }>;
 
 export type FrozenTestCategory = Readonly<{
-  id: FrozenTestCategoryId;
+  id: FrozenTestExplorerCategoryId;
+  title: string;
+  order: number;
   status: FrozenTestRunStatus;
-  suiteCounts: FrozenStatusCounts;
-  caseCounts: FrozenStatusCounts;
-  summary: Readonly<Record<string, number>>;
+  counts: FrozenTestExplorerTotals;
   timing: FrozenTestTiming;
-  evidenceAvailable: boolean;
+  listing: FrozenEvidenceReference;
 }>;
 
 export type FrozenTestEvidenceIndex = Readonly<{
   deployment: Readonly<{ hsonDeployCommit: string }> & Readonly<Record<string, unknown>>;
   capture?: Readonly<Record<string, unknown>>;
-  selectionCategories: readonly FrozenTestCategoryId[];
+  overall: FrozenTestExplorerTotals;
   categories: readonly FrozenTestCategory[];
-  suites: readonly FrozenTestSuite[];
   accounting: Readonly<Record<string, unknown>>;
+}>;
+
+export type FrozenTestCategoryListing = Readonly<{ categoryId: FrozenTestExplorerCategoryId; suites: readonly FrozenTestSuite[] }>;
+
+export type FrozenTestSuiteListing = Readonly<{
+  categoryId: FrozenTestExplorerCategoryId;
+  category: FrozenTestCategoryId;
+  suiteId: string;
+  cases: readonly FrozenTestCase[];
+  detail?: FrozenSuiteArtifact;
 }>;
 
 export type FrozenTestExplorerTotals = Readonly<{
@@ -110,24 +120,28 @@ export type FrozenRowEvidenceSelection = Readonly<{
  * identifier is the presentation metadata available to the report explorer.
  */
 export function frozen_test_explorer_category_candidates(suite: FrozenTestSuite): readonly FrozenTestExplorerCategoryId[] {
-  if (suite.category === "browser" || suite.category === "certification") return Object.freeze([suite.category]);
-  const categories: FrozenTestExplorerCategoryId[] = [];
-  if (suite.id.startsWith("transform/")) categories.push("transform");
-  if (suite.id.startsWith("livetree/") || suite.id.startsWith("livetree-")) categories.push("livetree");
-  if (suite.id.startsWith("livemap/") || suite.id.startsWith("livemap-")) categories.push("livemap");
-  if (suite.id.startsWith("livehost/locus/") || suite.id.startsWith("locus/")) categories.push("locus");
-  if (suite.id.startsWith("livehost/") && !suite.id.startsWith("livehost/locus/")) categories.push("livehost");
-  if (suite.id.startsWith("reflect/")) categories.push("reflect");
-  if (suite.id.startsWith("unit/")) categories.push("unit");
-  if (suite.id.startsWith("dev/") || suite.id.startsWith("integration/")) categories.push("dev");
-  return Object.freeze(categories);
+  try { return Object.freeze([frozen_test_explorer_category_from_suite_id(suite.id)]); }
+  catch { return Object.freeze([]); }
 }
 
 export function frozen_test_explorer_category(suite: FrozenTestSuite): FrozenTestExplorerCategoryId {
-  const candidates = frozen_test_explorer_category_candidates(suite);
-  if (candidates.length === 1) return candidates[0]!;
-  const reason = candidates.length === 0 ? "has no" : `has multiple (${candidates.join(", ")})`;
-  throw new FrozenTestEvidenceError("FROZEN_INDEX_PRESENTATION_CATEGORY", `Suite ${suite.id} ${reason} report-explorer domain.`);
+  const category = frozen_test_explorer_category_from_suite_id(suite.id);
+  if (category !== suite.categoryId) throw new FrozenTestEvidenceError("FROZEN_INDEX_PRESENTATION_CATEGORY", `Suite ${suite.id} does not match category ${suite.categoryId}.`);
+  return category;
+}
+
+export function frozen_test_explorer_category_from_suite_id(id: string): FrozenTestExplorerCategoryId {
+  if (typeof id !== "string" || id.length === 0 || id.includes("::")) fail("FROZEN_INDEX_PRESENTATION_CATEGORY", `Suite id ${String(id)} is not routable.`);
+  if (id === "livetree/browser-raster-fidelity" || id.startsWith("livedemo/browser/")) return "browser";
+  if (id.startsWith("verification/")) return "certification";
+  if (id.startsWith("livehost/locus/") || id.startsWith("locus/")) return "locus";
+  if (id.startsWith("transform/")) return "transform";
+  if (id.startsWith("livetree/") || id.startsWith("livetree-")) return "livetree";
+  if (id.startsWith("livemap/") || id.startsWith("livemap-")) return "livemap";
+  if (id.startsWith("livehost/")) return "livehost";
+  if (id.startsWith("reflect/")) return "reflect";
+  if (id.startsWith("unit/") || id === "integration/public-boundaries") return "unit";
+  fail("FROZEN_INDEX_PRESENTATION_CATEGORY", `Suite ${id} has no report-explorer domain.`);
 }
 
 function empty_explorer_totals(): Record<keyof FrozenTestExplorerTotals, number> {
@@ -139,27 +153,9 @@ function empty_explorer_totals(): Record<keyof FrozenTestExplorerTotals, number>
  * presentation detail and are deliberately not added a second time.
  */
 export function project_frozen_test_explorer(index: FrozenTestEvidenceIndex): FrozenTestExplorerProjection {
-  const mutable = Object.fromEntries(FROZEN_TEST_EXPLORER_CATEGORIES.map((id) => [id, empty_explorer_totals()])) as
-    Record<FrozenTestExplorerCategoryId, Record<keyof FrozenTestExplorerTotals, number>>;
-
-  for (const suite of index.suites) {
-    const totals = mutable[frozen_test_explorer_category(suite)];
-    totals.suites += 1;
-    totals.cases += suite.counts.total;
-    totals.pass += suite.counts.passed;
-    totals.fail += suite.counts.failed;
-    totals.skip += suite.counts.skipped;
-    totals.unsupported += suite.counts.unsupported;
-    totals.cancelled += suite.counts.cancelled;
-  }
-
-  const categories = Object.fromEntries(FROZEN_TEST_EXPLORER_CATEGORIES.map((id) => [id, Object.freeze({ ...mutable[id] })])) as
+  const categories = Object.fromEntries(index.categories.map((category) => [category.id, category.counts])) as
     Record<FrozenTestExplorerCategoryId, FrozenTestExplorerTotals>;
-  const overall = empty_explorer_totals();
-  for (const totals of Object.values(categories)) {
-    for (const key of Object.keys(overall) as (keyof FrozenTestExplorerTotals)[]) overall[key] += totals[key];
-  }
-  return Object.freeze({ categories: Object.freeze(categories), overall: Object.freeze(overall) });
+  return Object.freeze({ categories: Object.freeze(categories), overall: index.overall });
 }
 
 export type FrozenRetainedEvidence = Readonly<{
@@ -211,9 +207,11 @@ export type FrozenTestEvidenceClient = Readonly<{
   root: string;
   deploymentCommit: string;
   loadIndex(): Promise<FrozenTestEvidenceIndex>;
+  loadCategory(category: FrozenTestCategory): Promise<FrozenTestCategoryListing>;
+  loadSuite(suite: FrozenTestSuite): Promise<FrozenTestSuiteListing>;
   loadRowEvidence(selection: FrozenRowEvidenceSelection): Promise<FrozenRowArtifact>;
   releaseRowEvidence(path?: string): void;
-  snapshot(): Readonly<{ indexRequests: number; rowEvidenceRequests: number; retainedRowArtifacts: number }>;
+  snapshot(): Readonly<{ indexRequests: number; categoryRequests: number; suiteRequests: number; rowEvidenceRequests: number; retainedRowArtifacts: number }>;
 }>;
 
 function fail(code: string, message: string): never {
@@ -268,8 +266,13 @@ function status(value: unknown, at: string): FrozenTestStatus {
 }
 
 function run_status(value: unknown, at: string): FrozenTestRunStatus {
-  if (value !== "passed" && value !== "failed" && value !== "cancelled") fail("FROZEN_INDEX_MALFORMED", `${at} has an invalid terminal run status.`);
+  if (value !== "pass" && value !== "fail" && value !== "skip" && value !== "unexecuted") fail("FROZEN_INDEX_MALFORMED", `${at} has an invalid terminal run status.`);
   return value;
+}
+
+function explorer_category_id(value: unknown, at: string): FrozenTestExplorerCategoryId {
+  if (!FROZEN_TEST_EXPLORER_CATEGORIES.includes(value as FrozenTestExplorerCategoryId)) fail("FROZEN_INDEX_MALFORMED", `${at} has an unknown explorer category.`);
+  return value as FrozenTestExplorerCategoryId;
 }
 
 function category_id(value: unknown, at: string): FrozenTestCategoryId {
@@ -317,11 +320,12 @@ function artifact_string(value: unknown, at: string, nullable = false): string |
   return value;
 }
 
-function expected_artifact_path(owner: "case" | "suite", id: string): string {
+function expected_artifact_path(owner: "case" | "suite" | "category", id: string): string {
   const bytes = new TextEncoder().encode(id);
   let binary = "";
   for (const byte of bytes) binary += String.fromCharCode(byte);
-  return `${owner === "case" ? "cases" : "suites"}/${btoa(binary).replaceAll("+", "-").replaceAll("/", "_").replace(/=+$/, "")}.json`;
+  const directory = owner === "case" ? "cases" : owner === "suite" ? "suites" : "categories";
+  return `${directory}/${btoa(binary).replaceAll("+", "-").replaceAll("/", "_").replace(/=+$/, "")}.json`;
 }
 
 function validate_retained_evidence(value: unknown, at: string): FrozenRetainedEvidence {
@@ -461,18 +465,6 @@ function evidence(value: unknown, at: string): FrozenEvidenceReference | undefin
   return Object.freeze({ available: true, path, rawBytes, ...(sha256 === undefined ? {} : { sha256 }) });
 }
 
-function status_counts(value: unknown, at: string): FrozenStatusCounts {
-  const source = record(value, at);
-  const counts = {
-    total: nonnegative(source.total, `${at}.total`, true),
-    pass: nonnegative(source.pass, `${at}.pass`, true),
-    fail: nonnegative(source.fail, `${at}.fail`, true),
-    skip: nonnegative(source.skip, `${at}.skip`, true),
-  };
-  if (counts.pass + counts.fail + counts.skip !== counts.total) fail("FROZEN_INDEX_MALFORMED", `${at} totals do not balance.`);
-  return Object.freeze(counts);
-}
-
 function lifecycle_counts(value: unknown, at: string): FrozenTestSuite["counts"] {
   const source = record(value, at);
   const decoded = Object.fromEntries([
@@ -484,11 +476,46 @@ function lifecycle_counts(value: unknown, at: string): FrozenTestSuite["counts"]
   return Object.freeze(decoded);
 }
 
-function numeric_summary(value: unknown, at: string): Readonly<Record<string, number>> {
+function explorer_totals(value: unknown, at: string): FrozenTestExplorerTotals {
   const source = record(value, at);
-  const decoded: Record<string, number> = {};
-  for (const [key, item] of Object.entries(source)) decoded[key] = nonnegative(item, `${at}.${key}`, true);
+  const decoded = Object.fromEntries(["suites", "cases", "pass", "fail", "skip", "unsupported", "cancelled"]
+    .map((key) => [key, nonnegative(source[key], `${at}.${key}`, true)])) as FrozenTestExplorerTotals;
+  if (decoded.pass + decoded.fail + decoded.skip + decoded.unsupported + decoded.cancelled !== decoded.cases) fail("FROZEN_INDEX_MALFORMED", `${at} case totals do not balance.`);
   return Object.freeze(decoded);
+}
+
+function required_reference(value: unknown, at: string, owner: "category" | "suite", id: string): FrozenEvidenceReference {
+  const reference = evidence(value, at);
+  if (reference?.available !== true || reference.path !== expected_artifact_path(owner, id) || reference.rawBytes === undefined || reference.sha256 === undefined) {
+    fail("FROZEN_INDEX_EVIDENCE_METADATA", `${at} must be the deterministic ${owner} artifact for ${id}.`);
+  }
+  return reference;
+}
+
+function decode_suite_summary(value: unknown, at: string, expectedCategory: FrozenTestExplorerCategoryId): FrozenTestSuite {
+  const entry = record(value, at);
+  const id = string(entry.id, `${at}.id`);
+  const categoryId = explorer_category_id(entry.categoryId, `${at}.categoryId`);
+  if (categoryId !== expectedCategory || frozen_test_explorer_category_from_suite_id(id) !== categoryId) fail("FROZEN_INDEX_RELATIONSHIP", `Suite ${id} is in the wrong explorer category.`);
+  const category = category_id(entry.category, `${at}.category`);
+  if ((categoryId === "browser" && category !== "browser") || (categoryId === "certification" && category !== "certification")
+    || (categoryId !== "browser" && categoryId !== "certification" && category !== "semantic")) fail("FROZEN_INDEX_RELATIONSHIP", `Suite ${id} has the wrong capture category.`);
+  const shape = entry.executionShape;
+  if (shape !== "cases" && shape !== "browser-journeys" && shape !== "opaque-aggregate" && shape !== "certification-aggregate") fail("FROZEN_INDEX_MALFORMED", `${at}.executionShape is invalid.`);
+  if (typeof entry.suiteEvidenceAvailable !== "boolean") fail("FROZEN_INDEX_MALFORMED", `${at}.suiteEvidenceAvailable must be boolean.`);
+  return Object.freeze({
+    categoryId,
+    category,
+    id,
+    title: string(entry.title, `${at}.title`),
+    order: nonnegative(entry.order, `${at}.order`, true),
+    status: status(entry.status, `${at}.status`),
+    executionShape: shape,
+    counts: lifecycle_counts(entry.counts, `${at}.counts`),
+    timing: timing(entry.timing, `${at}.timing`),
+    listing: required_reference(entry.listing, `${at}.listing`, "suite", id),
+    suiteEvidenceAvailable: entry.suiteEvidenceAvailable,
+  });
 }
 
 export function decode_frozen_test_evidence_index(value: unknown, expectedCommit: string): FrozenTestEvidenceIndex {
@@ -500,103 +527,99 @@ export function decode_frozen_test_evidence_index(value: unknown, expectedCommit
     fail("FROZEN_INDEX_DEPLOYMENT_MISMATCH", `Index commit ${deploymentCommit} does not match evidence root commit ${expectedCommit}.`);
   }
 
-  const selectionCategories = array(source.selectionCategories, "index.selectionCategories").map((item, index) => category_id(item, `index.selectionCategories[${index}]`));
-  if (selectionCategories.length !== FROZEN_TEST_CATEGORIES.length
-    || selectionCategories.some((item, index) => item !== FROZEN_TEST_CATEGORIES[index])) {
-    fail("FROZEN_INDEX_MALFORMED", "index.selectionCategories must be semantic, browser, certification in canonical order.");
-  }
-
   const categoryIds = new Set<string>();
   const categories = array(source.categories, "index.categories").map((item, index): FrozenTestCategory => {
     const at = `index.categories[${index}]`;
     const entry = record(item, at);
-    const id = category_id(entry.id, `${at}.id`);
+    const id = explorer_category_id(entry.id, `${at}.id`);
     if (categoryIds.has(id)) fail("FROZEN_INDEX_DUPLICATE_ID", `Duplicate category id ${id}.`);
     categoryIds.add(id);
-    if (typeof entry.evidenceAvailable !== "boolean") fail("FROZEN_INDEX_MALFORMED", `${at}.evidenceAvailable must be boolean.`);
+    if (id !== FROZEN_TEST_EXPLORER_CATEGORIES[index]) fail("FROZEN_INDEX_RELATIONSHIP", `Category ${id} is out of canonical order.`);
     return Object.freeze({
-      id,
-      status: run_status(entry.status, `${at}.status`),
-      suiteCounts: status_counts(entry.suiteCounts, `${at}.suiteCounts`),
-      caseCounts: status_counts(entry.caseCounts, `${at}.caseCounts`),
-      summary: numeric_summary(entry.summary, `${at}.summary`),
-      timing: timing(entry.timing, `${at}.timing`),
-      evidenceAvailable: entry.evidenceAvailable,
-    });
-  });
-  if (categories.length !== FROZEN_TEST_CATEGORIES.length || FROZEN_TEST_CATEGORIES.some((id) => !categoryIds.has(id))) {
-    fail("FROZEN_INDEX_MALFORMED", "index must contain exactly the three expected categories.");
-  }
-
-  const suiteIds = new Set<string>();
-  const caseIds = new Set<string>();
-  const suites = array(source.suites, "index.suites").map((item, suiteIndex): FrozenTestSuite => {
-    const at = `index.suites[${suiteIndex}]`;
-    const entry = record(item, at);
-    const id = string(entry.id, `${at}.id`);
-    if (suiteIds.has(id)) fail("FROZEN_INDEX_DUPLICATE_ID", `Duplicate suite id ${id}.`);
-    suiteIds.add(id);
-    const category = category_id(entry.category, `${at}.category`);
-    if (!categoryIds.has(category)) fail("FROZEN_INDEX_RELATIONSHIP", `Suite ${id} refers to missing category ${category}.`);
-    const shape = entry.executionShape;
-    if (shape !== "cases" && shape !== "browser-journeys" && shape !== "opaque-aggregate" && shape !== "certification-aggregate") {
-      fail("FROZEN_INDEX_MALFORMED", `${at}.executionShape is invalid.`);
-    }
-    const cases = array(entry.cases, `${at}.cases`).map((caseValue, caseIndex): FrozenTestCase => {
-      const caseAt = `${at}.cases[${caseIndex}]`;
-      const caseEntry = record(caseValue, caseAt);
-      const caseId = string(caseEntry.caseId, `${caseAt}.caseId`);
-      const caseKey = string(caseEntry.id, `${caseAt}.id`);
-      if (caseIds.has(caseKey)) fail("FROZEN_INDEX_DUPLICATE_ID", `Duplicate case id ${caseKey}.`);
-      caseIds.add(caseKey);
-      if (caseKey !== `${id}::${caseId}`) fail("FROZEN_INDEX_RELATIONSHIP", `Case ${caseKey} is not owned by suite ${id}.`);
-      const caseEvidence = evidence(caseEntry.evidence, `${caseAt}.evidence`);
-      return Object.freeze({
-        id: caseKey,
-        caseId,
-        title: string(caseEntry.title, `${caseAt}.title`),
-        order: nonnegative(caseEntry.order, `${caseAt}.order`, true),
-        status: status(caseEntry.status, `${caseAt}.status`),
-        timing: timing(caseEntry.timing, `${caseAt}.timing`),
-        ...(caseEvidence === undefined ? {} : { evidence: caseEvidence }),
-      });
-    });
-    const suiteEvidence = evidence(entry.evidence, `${at}.evidence`);
-    return Object.freeze({
-      category,
       id,
       title: string(entry.title, `${at}.title`),
       order: nonnegative(entry.order, `${at}.order`, true),
-      status: status(entry.status, `${at}.status`),
-      executionShape: shape,
-      counts: lifecycle_counts(entry.counts, `${at}.counts`),
+      status: run_status(entry.status, `${at}.status`),
+      counts: explorer_totals(entry.counts, `${at}.counts`),
       timing: timing(entry.timing, `${at}.timing`),
-      ...(suiteEvidence === undefined ? {} : { evidence: suiteEvidence }),
-      cases: Object.freeze(cases),
+      listing: required_reference(entry.listing, `${at}.listing`, "category", id),
     });
   });
-
-  for (const category of categories) {
-    const ownedSuites = suites.filter((suite) => suite.category === category.id);
-    const ownedCases = ownedSuites.flatMap((suite) => suite.cases);
-    const actualSuites = { total: ownedSuites.length, pass: 0, fail: 0, skip: 0 };
-    const actualCases = { total: ownedCases.length, pass: 0, fail: 0, skip: 0 };
-    for (const suite of ownedSuites) actualSuites[suite.status] += 1;
-    for (const item of ownedCases) actualCases[item.status] += 1;
-    if (JSON.stringify(actualSuites) !== JSON.stringify(category.suiteCounts)
-      || JSON.stringify(actualCases) !== JSON.stringify(category.caseCounts)) {
-      fail("FROZEN_INDEX_RELATIONSHIP", `Category ${category.id} accounting does not match its suites and cases.`);
-    }
+  if (categories.length !== FROZEN_TEST_EXPLORER_CATEGORIES.length) {
+    fail("FROZEN_INDEX_MALFORMED", "index must contain exactly the nine explorer categories.");
   }
+  const overall = explorer_totals(source.overall, "index.overall");
+  const sum = categories.reduce((total, category) => {
+    for (const key of Object.keys(total) as (keyof FrozenTestExplorerTotals)[]) total[key] += category.counts[key];
+    return total;
+  }, empty_explorer_totals());
+  if (JSON.stringify(sum) !== JSON.stringify(overall)) fail("FROZEN_INDEX_RELATIONSHIP", "index.overall does not match category totals.");
 
   return Object.freeze({
     deployment: Object.freeze({ ...deploymentSource, hsonDeployCommit: deploymentCommit }),
     ...(source.capture === undefined ? {} : { capture: Object.freeze({ ...record(source.capture, "index.capture") }) }),
-    selectionCategories: Object.freeze(selectionCategories),
+    overall,
     categories: Object.freeze(categories),
-    suites: Object.freeze(suites),
     accounting: Object.freeze({ ...record(source.accounting, "index.accounting") }),
   });
+}
+
+export function decode_frozen_test_category_listing(value: unknown, category: FrozenTestCategory): FrozenTestCategoryListing {
+  const source = record(value, "category");
+  const categoryId = explorer_category_id(source.categoryId, "category.categoryId");
+  if (categoryId !== category.id) fail("FROZEN_INDEX_RELATIONSHIP", `Category artifact does not match ${category.id}.`);
+  const ids = new Set<string>();
+  const suites = array(source.suites, "category.suites").map((item, index) => {
+    const suite = decode_suite_summary(item, `category.suites[${index}]`, categoryId);
+    if (ids.has(suite.id)) fail("FROZEN_INDEX_DUPLICATE_ID", `Duplicate suite id ${suite.id}.`);
+    ids.add(suite.id);
+    return suite;
+  });
+  if (suites.some((suite, index) => index > 0 && (suite.order < suites[index - 1]!.order || (suite.order === suites[index - 1]!.order && suite.id.localeCompare(suites[index - 1]!.id) < 0)))) fail("FROZEN_INDEX_RELATIONSHIP", `Category ${category.id} suite order is not canonical.`);
+  if (suites.length !== category.counts.suites) fail("FROZEN_INDEX_RELATIONSHIP", `Category ${category.id} suite count does not match its artifact.`);
+  const totals = suites.reduce((total, suite) => {
+    total.suites += 1; total.cases += suite.counts.total; total.pass += suite.counts.passed; total.fail += suite.counts.failed;
+    total.skip += suite.counts.skipped; total.unsupported += suite.counts.unsupported; total.cancelled += suite.counts.cancelled;
+    return total;
+  }, empty_explorer_totals());
+  if (JSON.stringify(totals) !== JSON.stringify(category.counts)) fail("FROZEN_INDEX_RELATIONSHIP", `Category ${category.id} totals do not match its suites.`);
+  return Object.freeze({ categoryId, suites: Object.freeze(suites) });
+}
+
+export function decode_frozen_test_suite_listing(value: unknown, suite: FrozenTestSuite): FrozenTestSuiteListing {
+  const source = record(value, "suite");
+  const categoryId = explorer_category_id(source.categoryId, "suite.categoryId");
+  const category = category_id(source.category, "suite.category");
+  if (categoryId !== suite.categoryId || category !== suite.category || source.suiteId !== suite.id) fail("FROZEN_INDEX_RELATIONSHIP", `Suite artifact does not match ${suite.id}.`);
+  const ids = new Set<string>();
+  const cases = array(source.cases, "suite.cases").map((item, index): FrozenTestCase => {
+    const at = `suite.cases[${index}]`;
+    const entry = record(item, at);
+    const caseId = string(entry.caseId, `${at}.caseId`);
+    const id = string(entry.id, `${at}.id`);
+    if (caseId.includes("::") || id !== `${suite.id}::${caseId}` || ids.has(id)) fail("FROZEN_INDEX_RELATIONSHIP", `Case ${id} is not uniquely owned by suite ${suite.id}.`);
+    ids.add(id);
+    const reference = evidence(entry.evidence, `${at}.evidence`);
+    if (reference?.available === true && (reference.path !== expected_artifact_path("case", id) || reference.rawBytes === undefined || reference.sha256 === undefined)) fail("FROZEN_INDEX_EVIDENCE_METADATA", `${at}.evidence is not deterministic and complete.`);
+    return Object.freeze({ id, caseId, title: string(entry.title, `${at}.title`), order: nonnegative(entry.order, `${at}.order`, true), status: status(entry.status, `${at}.status`), timing: timing(entry.timing, `${at}.timing`), ...(reference === undefined ? {} : { evidence: reference }) });
+  });
+  if (cases.some((item, index) => index > 0 && (item.order < cases[index - 1]!.order || (item.order === cases[index - 1]!.order && item.id.localeCompare(cases[index - 1]!.id) < 0)))) fail("FROZEN_INDEX_RELATIONSHIP", `Suite ${suite.id} case order is not canonical.`);
+  const caseShaped = suite.executionShape === "cases" || suite.executionShape === "browser-journeys";
+  if (cases.length !== (caseShaped ? suite.counts.total : 0)) fail("FROZEN_INDEX_RELATIONSHIP", `Suite ${suite.id} case inventory does not match its execution shape.`);
+  if (caseShaped && (cases.filter((item) => item.status === "pass").length !== suite.counts.passed
+    || cases.filter((item) => item.status === "fail").length !== suite.counts.failed
+    || cases.filter((item) => item.status === "skip").length !== suite.counts.skipped)) fail("FROZEN_INDEX_RELATIONSHIP", `Suite ${suite.id} case statuses do not match its counts.`);
+  let detail: FrozenSuiteArtifact | undefined;
+  if (suite.suiteEvidenceAvailable) {
+    const nested = artifact_record(source.suite, "suite.suite");
+    if (nested.id !== suite.id || nested.status !== suite.status) fail("FROZEN_ROW_EVIDENCE_ID_MISMATCH", `Nested suite does not match ${suite.id}.`);
+    const retained = Object.freeze(artifact_array(source.evidence, "suite.evidence").map((item, index) => validate_retained_evidence(item, `suite.evidence[${index}]`)));
+    validate_evidence_refs(source.evidenceRefs, retained, "suite.evidenceRefs");
+    const errors = validate_errors(nested.errors, "suite.suite.errors");
+    if (errors.length === 0 && retained.length === 0) fail("FROZEN_ROW_EVIDENCE_MALFORMED", "Suite artifact contains no retained evidence.");
+    detail = Object.freeze({ owner: "suite", category, suiteId: suite.id, suite: Object.freeze({ ...nested }), errors, evidence: retained });
+  } else if (source.suite !== undefined || source.evidence !== undefined || source.evidenceRefs !== undefined) fail("FROZEN_INDEX_RELATIONSHIP", `Suite ${suite.id} invents suite-owned evidence.`);
+  return Object.freeze({ categoryId, category, suiteId: suite.id, cases: Object.freeze(cases), ...(detail === undefined ? {} : { detail }) });
 }
 
 export function make_frozen_test_evidence_client(options: Readonly<{
@@ -612,10 +635,14 @@ export function make_frozen_test_evidence_client(options: Readonly<{
     request: Promise<Readonly<{ value: unknown; rawBytes: number }>>;
   }> | undefined;
   let indexRequests = 0;
+  let categoryRequests = 0;
+  let suiteRequests = 0;
   let rowEvidenceRequests = 0;
 
-  async function fetch_json(path: string, kind: "index" | "row"): Promise<Readonly<{ value: unknown; rawBytes: number }>> {
+  async function fetch_json(path: string, kind: "index" | "category" | "suite" | "row"): Promise<Readonly<{ value: unknown; rawBytes: number }>> {
     if (kind === "index") indexRequests += 1;
+    else if (kind === "category") categoryRequests += 1;
+    else if (kind === "suite") suiteRequests += 1;
     else rowEvidenceRequests += 1;
     let response: Awaited<ReturnType<FetchLike>>;
     try {
@@ -641,6 +668,20 @@ export function make_frozen_test_evidence_client(options: Readonly<{
       }).finally(() => { pending = undefined; });
       return pending;
     },
+    async loadCategory(category) {
+      const reference = category.listing;
+      if (reference.path === undefined || reference.rawBytes === undefined) fail("FROZEN_EVIDENCE_UNAVAILABLE", `Category ${category.id} has no frozen listing artifact.`);
+      const loaded = await fetch_json(reference.path, "category");
+      if (loaded.rawBytes !== reference.rawBytes) fail("FROZEN_ROW_EVIDENCE_SIZE_MISMATCH", `Artifact ${reference.path} expected ${reference.rawBytes} bytes but received ${loaded.rawBytes}.`);
+      return decode_frozen_test_category_listing(loaded.value, category);
+    },
+    async loadSuite(suite) {
+      const reference = suite.listing;
+      if (reference.path === undefined || reference.rawBytes === undefined) fail("FROZEN_EVIDENCE_UNAVAILABLE", `Suite ${suite.id} has no frozen listing artifact.`);
+      const loaded = await fetch_json(reference.path, "suite");
+      if (loaded.rawBytes !== reference.rawBytes) fail("FROZEN_ROW_EVIDENCE_SIZE_MISMATCH", `Artifact ${reference.path} expected ${reference.rawBytes} bytes but received ${loaded.rawBytes}.`);
+      return decode_frozen_test_suite_listing(loaded.value, suite);
+    },
     async loadRowEvidence(selection) {
       const reference = selection.reference;
       if (reference.available !== true || reference.path === undefined) fail("FROZEN_EVIDENCE_UNAVAILABLE", "This row has no frozen evidence artifact.");
@@ -659,7 +700,7 @@ export function make_frozen_test_evidence_client(options: Readonly<{
     releaseRowEvidence(path) {
       if (path === undefined || currentRowArtifact?.path === path) currentRowArtifact = undefined;
     },
-    snapshot: () => Object.freeze({ indexRequests, rowEvidenceRequests, retainedRowArtifacts: currentRowArtifact === undefined ? 0 : 1 }),
+    snapshot: () => Object.freeze({ indexRequests, categoryRequests, suiteRequests, rowEvidenceRequests, retainedRowArtifacts: currentRowArtifact === undefined ? 0 : 1 }),
   });
   return client;
 }

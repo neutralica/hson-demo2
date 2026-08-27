@@ -1,7 +1,7 @@
 import type { LiveTree } from "hson-live/livetree";
 import { OKLCH_VIBRANT } from "../../../core/consts/oklch.consts";
 import { serialize_hosted_case_diagnostic } from "./hosted-test-report-view";
-import { FROZEN_TEST_EXPLORER_CATEGORIES, frozen_test_explorer_category, project_frozen_test_explorer } from "./frozen-test-evidence-client";
+import { FROZEN_TEST_EXPLORER_CATEGORIES, project_frozen_test_explorer } from "./frozen-test-evidence-client";
 import type {
   FrozenRowArtifact,
   FrozenTestEvidenceIndex,
@@ -60,17 +60,8 @@ export function serialize_frozen_index_summary(index: FrozenTestEvidenceIndex): 
   ];
   for (const categoryId of FROZEN_TEST_EXPLORER_CATEGORIES) {
     const totals = projection.categories[categoryId];
-    const suites = index.suites.filter((suite) => frozen_test_explorer_category(suite) === categoryId).sort((a, b) => a.order - b.order || a.id.localeCompare(b.id));
-    const unexecuted = suites.length === 0 && index.categories.find((category) => category.id === categoryId)?.status === "cancelled";
-    const status = unexecuted ? "UNEXECUTED" : suites.some((suite) => suite.status === "fail") ? "FAIL" : suites.some((suite) => suite.status === "skip") ? "SKIP" : "PASS";
-    const durationMs = suites.reduce((total, suite) => total + (suite.timing.ms ?? suite.timing.durationMs ?? 0), 0);
-    lines.push("", `${categoryId.toUpperCase()} · ${status} · ${totals.suites} suites · ${totals.cases} cases · ${totals.pass} pass · ${totals.fail} fail · ${unexecuted ? "—" : format_frozen_test_duration({ ms: durationMs })}`);
-    for (const suite of suites) {
-      lines.push(`${suite.status.toUpperCase().padEnd(5)} ${format_frozen_test_duration(suite.timing).padStart(10)} ${suite.id} — ${suite.title} — ${suite.counts.passed} pass · ${suite.counts.failed} fail · ${suite.counts.skipped} skip`);
-      for (const item of [...suite.cases].sort((a, b) => a.order - b.order || a.id.localeCompare(b.id))) {
-        lines.push(`  ${item.status.toUpperCase().padEnd(5)} ${format_frozen_test_duration(item.timing).padStart(10)} ${item.id} — ${item.title}`);
-      }
-    }
+    const category = index.categories.find((entry) => entry.id === categoryId)!;
+    lines.push("", `${category.title} · ${category.status.toUpperCase()} · ${totals.suites} suites · ${totals.cases} cases · ${totals.pass} pass · ${totals.fail} fail · ${category.status === "unexecuted" ? "—" : format_frozen_test_duration(category.timing)}`);
   }
   return lines.join("\n");
 }
