@@ -5,12 +5,14 @@ export type MountedTestPanels = Readonly<{
   root: LiveTree;
   testSurface: LiveTree;
   ready: Promise<void>;
+  activate(): void;
+  deactivate(): void;
   dispose(): void;
 }>;
 
 export type TestPanelAcquisitionMode = "frozen";
 
-type MountedPanel = Readonly<{ branch: LiveTree; dispose(): void; ready?: Promise<unknown> }>;
+type MountedPanel = Readonly<{ branch: LiveTree; deactivate?(): void; dispose(): void; ready?: Promise<unknown> }>;
 
 export type TestPanelLoader = (root: LiveTree) => Promise<MountedPanel>;
 
@@ -29,6 +31,7 @@ export function mount_test_panels_with_mode(
     .attrs.setMany({ "data-testid": "test-panel-loading", "data-test-acquisition": mode })
     .text.set("loading frozen test evidence…");
   let disposed = false;
+  let active = true;
   let mounted: MountedPanel | undefined;
   const ready = load(root).then(async (panel) => {
     if (disposed) {
@@ -38,6 +41,7 @@ export function mount_test_panels_with_mode(
     mounted = panel;
     loading.remove();
     await panel.ready;
+    if (!active) panel.deactivate?.();
   }).catch((cause: unknown) => {
     if (disposed) return;
     loading.attrs.setMany({ "data-testid": "test-panel-composition-error", role: "alert" });
@@ -47,6 +51,13 @@ export function mount_test_panels_with_mode(
     root,
     testSurface: loading,
     ready,
+    activate() {
+      active = true;
+    },
+    deactivate() {
+      active = false;
+      mounted?.deactivate?.();
+    },
     dispose() {
       if (disposed) return;
       disposed = true;

@@ -157,7 +157,7 @@ export function frozen_test_evidence_client_suite(): TestSuite {
       },
     },
     {
-      suite: SUITE, caseId: "row-artifact-validates-and-deduplicates", name: "row artifact validation checks retained identity and deduplicates in-flight and completed requests",
+      suite: SUITE, caseId: "row-artifact-validates-and-releases-current-detail", name: "row artifact validation deduplicates only the explicitly owned current detail",
       run: async () => {
         const suiteId = "transform/frozen-client";
         const id = `${suiteId}::loads-index`;
@@ -175,6 +175,13 @@ export function frozen_test_evidence_client_suite(): TestSuite {
         const third = await client.loadRowEvidence(selection);
         expect(first.owner === "case" && first.diagnostic?.caseKey === id && second.owner === "case" && third.owner === "case", "validated case diagnostic should be retained");
         expect(client.snapshot().rowEvidenceRequests === 1 && requests.length === 2, "one artifact GET should serve concurrent and repeated row actions");
+        expect(client.snapshot().retainedRowArtifacts === 1, "the current detail should be the only retained row artifact");
+        client.releaseRowEvidence(fixture.path);
+        expect(client.snapshot().retainedRowArtifacts === 0, "closing the current detail should release application ownership");
+        await client.loadRowEvidence(selection);
+        expect(client.snapshot().rowEvidenceRequests === 2 && Number(requests.length) === 3, "released detail should be fetched again when reopened");
+        client.releaseRowEvidence();
+        expect(client.snapshot().retainedRowArtifacts === 0, "unconditional release should clear the current detail");
       },
     },
     {
@@ -196,6 +203,42 @@ export function frozen_test_evidence_client_suite(): TestSuite {
           const testCase = suite.cases[0]!;
           await rejects(() => client.loadRowEvidence({ category: suite.category, suite, testCase, reference: testCase.evidence! }), "FROZEN_ROW_EVIDENCE_");
         }
+      },
+    },
+    {
+      suite: SUITE, caseId: "row-artifact-replacement-owns-only-latest-detail", name: "opening another row releases ownership of the previous detailed artifact",
+      run: async () => {
+        const suiteId = "transform/frozen-client";
+        const firstId = `${suiteId}::loads-index`;
+        const secondId = `${suiteId}::replacement`;
+        const firstArtifact = ordinary_case_artifact(suiteId, firstId, "loads-index");
+        const secondArtifact = ordinary_case_artifact(suiteId, secondId, "replacement");
+        const fixture = configured_case_fixture(firstArtifact);
+        const suiteRecord = fixture.index.suites[0];
+        const secondBody = JSON.stringify(secondArtifact);
+        const secondPath = artifact_path("cases", secondId);
+        suiteRecord.cases.push({
+          ...suiteRecord.cases[0], id: secondId, caseId: "replacement", title: "replacement detail", order: 1,
+          evidence: { available: true, path: secondPath, rawBytes: Buffer.byteLength(secondBody), sha256: "b".repeat(64) },
+        });
+        suiteRecord.counts = { ...suiteRecord.counts, declared: 2, total: 2, executed: 2, passed: 2 };
+        fixture.index.categories[0].caseCounts = { total: 2, pass: 2, fail: 0, skip: 0 };
+        const bodies = new Map([[fixture.path, fixture.body], [secondPath, secondBody]]);
+        const client = make_frozen_test_evidence_client({ root: FROZEN_TEST_EVIDENCE_ROOT, fetch: async (url) => {
+          if (url.endsWith("index.json")) return response(JSON.stringify(fixture.index));
+          return response(bodies.get(url.slice(FROZEN_TEST_EVIDENCE_ROOT.length + 1)) ?? "missing", bodies.has(url.slice(FROZEN_TEST_EVIDENCE_ROOT.length + 1)) ? 200 : 404);
+        } });
+        const index = await client.loadIndex();
+        const suite = index.suites[0]!;
+        const first = suite.cases[0]!;
+        const second = suite.cases[1]!;
+        await client.loadRowEvidence({ category: suite.category, suite, testCase: first, reference: first.evidence! });
+        await client.loadRowEvidence({ category: suite.category, suite, testCase: second, reference: second.evidence! });
+        expect(client.snapshot().retainedRowArtifacts === 1, "replacement must retain at most the latest detailed artifact");
+        client.releaseRowEvidence(first.evidence!.path);
+        expect(client.snapshot().retainedRowArtifacts === 1, "releasing the replaced path must not clear the current detail");
+        client.releaseRowEvidence(second.evidence!.path);
+        expect(client.snapshot().retainedRowArtifacts === 0, "releasing the current replacement must clear application ownership");
       },
     },
     {

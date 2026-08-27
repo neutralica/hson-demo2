@@ -88,8 +88,9 @@ async function expand_category(page: Page, categoryId: string): Promise<void> {
 
 async function reveal_case(page: Page, caseId: string): Promise<void> {
   const row = page.locator(`[data-frozen-case="${caseId}"]`);
-  const suite = row.locator("xpath=ancestor::details[@data-frozen-suite]");
-  const category = row.locator("xpath=ancestor::details[@data-frozen-category]");
+  const suiteId = caseId.slice(0, caseId.lastIndexOf("::"));
+  const suite = page.locator(`[data-frozen-suite="${suiteId}"]`);
+  const category = suite.locator("xpath=ancestor::details[@data-frozen-category]");
   if (await category.getAttribute("open") === null) await category.locator(":scope > summary").click();
   if (await suite.getAttribute("open") === null) await suite.locator(":scope > summary").click();
   await expect(row).toBeVisible();
@@ -102,7 +103,6 @@ test("localhost application mount loads one immutable frozen index without brows
   const fixture = large_frozen_test_evidence_inventory_fixture();
   const decoded = decode_frozen_test_evidence_index(fixture, fixture.deployment.hsonDeployCommit);
   const projection = project_frozen_test_explorer(decoded);
-  const literalCaseCount = decoded.suites.flatMap((suite) => suite.cases).length;
   await page.addInitScript(() => {
     const NativeWebSocket = window.WebSocket;
     Object.defineProperty(window, "WebSocket", { value: class CountingWebSocket extends NativeWebSocket {
@@ -142,10 +142,9 @@ test("localhost application mount loads one immutable frozen index without brows
     await expect(page.getByTestId(`frozen-category-${categoryId}`)).toContainText(`${totals.suites} suites · ${totals.cases} cases · ${totals.pass} pass · ${totals.fail} fail`);
   }
   await expect(page.getByTestId("frozen-suite-row")).toHaveCount(projection.overall.suites);
-  await expect(page.getByTestId("frozen-case-row")).toHaveCount(literalCaseCount);
+  await expect(page.getByTestId("frozen-case-row")).toHaveCount(0);
+  await expect(panel).toHaveAttribute("data-frozen-rendered-case-count", "0");
   await expect(page.locator('[data-frozen-suite="transform/suite-000"]')).toContainText("transform representative suite 0");
-  await expect(page.locator('[data-frozen-case="transform/suite-000::case-000"]')).toContainText("PASS");
-  await expect(page.locator('[data-frozen-case="browser/suite-000::case-000"]')).toContainText("0.50 ms");
   for (const categoryId of EXPLORER_CATEGORIES) {
     await expect(page.getByTestId(`frozen-category-${categoryId}`)).not.toHaveAttribute("open", "");
   }
@@ -156,16 +155,24 @@ test("localhost application mount loads one immutable frozen index without brows
   await expect(firstSuite.locator(":scope > summary")).toHaveCount(1);
   await expect(firstDisclosure).toHaveCount(1);
   await expect(firstSuite).not.toHaveAttribute("open", "");
-  await expect(firstCase).toBeHidden();
+  await expect(firstCase).toHaveCount(0);
   await page.getByTestId("frozen-category-transform").locator(":scope > summary").click();
   await expect(firstSuite.getByTestId("frozen-suite-row")).toBeVisible();
-  await expect(firstCase).toBeHidden();
+  await expect(firstCase).toHaveCount(0);
   const closedTransform = await firstDisclosure.evaluate((node) => getComputedStyle(node).transform);
   await firstSuite.getByTestId("frozen-suite-row").focus();
   await firstSuite.getByTestId("frozen-suite-row").press("Enter");
   await expect(firstSuite).toHaveAttribute("open", "");
   await expect(firstCase).toBeVisible();
+  await expect(firstCase).toContainText("PASS");
+  const firstSuiteCaseCount = decoded.suites.find((suite) => suite.id === "transform/suite-000")!.cases.length;
+  await expect(panel).toHaveAttribute("data-frozen-rendered-case-count", String(firstSuiteCaseCount));
   await expect.poll(() => firstDisclosure.evaluate((node) => getComputedStyle(node).transform)).not.toBe(closedTransform);
+  await firstSuite.getByTestId("frozen-suite-row").press("Enter");
+  await expect(firstSuite).not.toHaveAttribute("open", "");
+  await expect(firstCase).toHaveCount(0);
+  await expect(panel).toHaveAttribute("data-frozen-rendered-case-count", "0");
+  await expect(page.getByTestId("frozen-case-row")).toHaveCount(0);
   const nonExpandableSuite = page.locator('[data-frozen-suite="certification/suite-000"]');
   await expand_category(page, "certification");
   await expect(nonExpandableSuite).toHaveAttribute("data-frozen-expandable", "false");
@@ -281,6 +288,7 @@ test("frozen case inspector URL supports Back, Forward, refresh, and direct reop
   expect(ordinaryInspectorUrl.searchParams.get("evidence")).toBe(fixture.index.deployment.hsonDeployCommit);
   expect(ordinaryInspectorUrl.searchParams.get("case")).toBe(fixture.ordinary.id);
   expect(requests.filter((path) => path.includes("/cases/"))).toHaveLength(1);
+  await expect(page.getByTestId("frozen-test-panel")).toHaveAttribute("data-frozen-retained-row-artifacts", "1");
 
   await transformerRow.getByRole("button", { name: /Open evidence/ }).evaluate((button: HTMLButtonElement) => button.click());
   await expect(page.getByTestId("hosted-case-report")).toHaveCount(1);
@@ -288,12 +296,14 @@ test("frozen case inspector URL supports Back, Forward, refresh, and direct reop
   await expect(page.getByTestId("hosted-case-report")).not.toContainText("ordinary retained assertion");
   const transformerInspectorUrl = new URL(page.url());
   expect(transformerInspectorUrl.searchParams.get("case")).toBe(fixture.transformer.id);
+  await expect(page.getByTestId("frozen-test-panel")).toHaveAttribute("data-frozen-retained-row-artifacts", "1");
 
   await page.goBack();
   await expect(page.getByTestId("hosted-case-report")).toHaveCount(1);
   await expect(page.getByTestId("hosted-case-report")).toHaveAttribute("data-case-key", fixture.ordinary.id);
   await page.goBack();
   await expect(page.getByTestId("hosted-case-report")).toHaveCount(0);
+  await expect(page.getByTestId("frozen-test-panel")).toHaveAttribute("data-frozen-retained-row-artifacts", "0");
   expect(page.url()).toBe(explorerUrl);
   await expect(ordinaryRow).toBeVisible();
 
@@ -302,18 +312,23 @@ test("frozen case inspector URL supports Back, Forward, refresh, and direct reop
   await page.goForward();
   await expect(page.getByTestId("hosted-case-report")).toHaveCount(1);
   await expect(page.getByTestId("hosted-case-report")).toHaveAttribute("data-case-key", fixture.transformer.id);
-  expect(requests.filter((path) => path.includes("/cases/"))).toHaveLength(2);
+  expect(requests.filter((path) => path.includes("/cases/"))).toHaveLength(5);
 
   await page.reload();
   await expect(page.getByTestId("hosted-case-report")).toHaveCount(1);
   await expect(page.getByTestId("hosted-case-report")).toHaveAttribute("data-case-key", fixture.transformer.id);
-  expect(requests.filter((path) => path.includes("/cases/"))).toHaveLength(3);
+  expect(requests.filter((path) => path.includes("/cases/"))).toHaveLength(6);
 
   await page.goto(`/${transformerInspectorUrl.search}`);
   await expect(page.locator("#stage")).toHaveAttribute("data-app-phase", "demo-ready");
   await expect(page.locator("#screen")).toHaveAttribute("data-shell-current-main", "test");
   await expect(page.getByTestId("hosted-case-report")).toHaveCount(1);
   await expect(page.getByTestId("hosted-case-report")).toHaveAttribute("data-case-key", fixture.transformer.id);
+  await page.locator("#parse-button").click();
+  await expect(page.locator("#screen")).toHaveAttribute("data-shell-current-main", "parse");
+  await expect(page.getByTestId("hosted-case-report")).toHaveCount(0);
+  await expect(page.getByTestId("frozen-test-panel")).toHaveAttribute("data-frozen-retained-row-artifacts", "0");
+  expect(new URL(page.url()).searchParams.has("case")).toBe(false);
 });
 
 test("frozen row clickable names, Copy, and Copy Reports use validated lazy artifacts and truthful controls", async ({ page, context }) => {
@@ -341,9 +356,11 @@ test("frozen row clickable names, Copy, and Copy Reports use validated lazy arti
   expect(requests.filter((path) => path.includes("/cases/"))).toHaveLength(1);
   await page.getByRole("button", { name: "Close case evidence" }).click();
   await expect(page.getByTestId("hosted-case-report")).toHaveCount(0);
+  await expect(panel).toHaveAttribute("data-frozen-retained-row-artifacts", "0");
   await ordinaryRow.getByRole("button", { name: /Copy evidence/ }).click();
   await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toContain("ordinary retained assertion");
-  expect(requests.filter((path) => path.includes("/cases/"))).toHaveLength(1);
+  expect(requests.filter((path) => path.includes("/cases/"))).toHaveLength(2);
+  await expect(panel).toHaveAttribute("data-frozen-retained-row-artifacts", "0");
 
   const transformerRow = page.locator(`[data-frozen-case="${fixture.transformer.id}"]`);
   await reveal_case(page, fixture.transformer.id);

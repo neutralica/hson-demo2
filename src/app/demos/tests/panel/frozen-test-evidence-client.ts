@@ -212,7 +212,8 @@ export type FrozenTestEvidenceClient = Readonly<{
   deploymentCommit: string;
   loadIndex(): Promise<FrozenTestEvidenceIndex>;
   loadRowEvidence(selection: FrozenRowEvidenceSelection): Promise<FrozenRowArtifact>;
-  snapshot(): Readonly<{ indexRequests: number; rowEvidenceRequests: number; cachedRowArtifacts: number }>;
+  releaseRowEvidence(path?: string): void;
+  snapshot(): Readonly<{ indexRequests: number; rowEvidenceRequests: number; retainedRowArtifacts: number }>;
 }>;
 
 function fail(code: string, message: string): never {
@@ -606,7 +607,10 @@ export function make_frozen_test_evidence_client(options: Readonly<{
   const fetcher = options.fetch ?? globalThis.fetch.bind(globalThis);
   let cached: FrozenTestEvidenceIndex | undefined;
   let pending: Promise<FrozenTestEvidenceIndex> | undefined;
-  const rowArtifacts = new Map<string, Promise<Readonly<{ value: unknown; rawBytes: number }>>>();
+  let currentRowArtifact: Readonly<{
+    path: string;
+    request: Promise<Readonly<{ value: unknown; rawBytes: number }>>;
+  }> | undefined;
   let indexRequests = 0;
   let rowEvidenceRequests = 0;
 
@@ -641,17 +645,21 @@ export function make_frozen_test_evidence_client(options: Readonly<{
       const reference = selection.reference;
       if (reference.available !== true || reference.path === undefined) fail("FROZEN_EVIDENCE_UNAVAILABLE", "This row has no frozen evidence artifact.");
       const path = evidence_path(reference.path, "row evidence path");
-      let artifact = rowArtifacts.get(path);
+      let artifact = currentRowArtifact?.path === path ? currentRowArtifact.request : undefined;
       if (artifact === undefined) {
         artifact = fetch_json(path, "row");
-        rowArtifacts.set(path, artifact);
-        artifact.catch(() => { if (rowArtifacts.get(path) === artifact) rowArtifacts.delete(path); });
+        const owned = Object.freeze({ path, request: artifact });
+        currentRowArtifact = owned;
+        artifact.catch(() => { if (currentRowArtifact === owned) currentRowArtifact = undefined; });
       }
       const loaded = await artifact;
       if (reference.rawBytes !== loaded.rawBytes) fail("FROZEN_ROW_EVIDENCE_SIZE_MISMATCH", `Artifact ${path} expected ${reference.rawBytes} bytes but received ${loaded.rawBytes}.`);
       return validate_frozen_row_artifact(loaded.value, selection);
     },
-    snapshot: () => Object.freeze({ indexRequests, rowEvidenceRequests, cachedRowArtifacts: rowArtifacts.size }),
+    releaseRowEvidence(path) {
+      if (path === undefined || currentRowArtifact?.path === path) currentRowArtifact = undefined;
+    },
+    snapshot: () => Object.freeze({ indexRequests, rowEvidenceRequests, retainedRowArtifacts: currentRowArtifact === undefined ? 0 : 1 }),
   });
   return client;
 }

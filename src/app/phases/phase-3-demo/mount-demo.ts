@@ -270,11 +270,22 @@ function create_demo_wordmark(menuContainer: LiveTree): void {
   subhead.create.span().classlist.set("livedemo-label").text.set("liveDemo");
 }
 
-function host_controller(host: LiveTree, cleanup: () => void = () => undefined): SurfaceController {
+function host_controller(
+  host: LiveTree,
+  cleanup: () => void = () => undefined,
+  onDeactivate: () => void = () => undefined,
+  onActivate: () => void = () => undefined,
+): SurfaceController {
   let disposed = false;
   return Object.freeze({
-    activate: () => _unhide(host),
-    deactivate: () => _hide(host),
+    activate: () => {
+      onActivate();
+      _unhide(host);
+    },
+    deactivate: () => {
+      onDeactivate();
+      _hide(host);
+    },
     dispose: () => {
       if (disposed) return;
       disposed = true;
@@ -313,10 +324,11 @@ function make_main_registrations(
     },
     [$TEST]: {
       retention: "retain",
-      mount: () => mount($TEST, (host) => {
+      mount: () => {
+        const host = main_host(shell.uiRoot, $TEST);
         const panels = mount_test_panels(host);
-        return panels.dispose;
-      }),
+        return host_controller(host, panels.dispose, panels.deactivate, panels.activate);
+      },
     },
     [$PARSE]: {
       retention: "recreate",

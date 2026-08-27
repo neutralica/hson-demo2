@@ -27,12 +27,15 @@ export type FrozenTestPanelSnapshot = Readonly<{
   suites: number;
   cases: number;
   evidenceRequests: number;
+  renderedCases: number;
+  retainedRowArtifacts: number;
 }>;
 
 export type FrozenTestPanel = Readonly<{
   branch: LiveTree;
   ready: Promise<FrozenTestEvidenceIndex | undefined>;
   snapshot(): FrozenTestPanelSnapshot;
+  deactivate(): void;
   dispose(): void;
 }>;
 
@@ -91,11 +94,45 @@ function append_actions(row: LiveTree, label: string, selection: FrozenRowEviden
   copy.listen.stopProp().onClick(() => onAction("copy", selection, row, copy));
 }
 
+function mount_case_rows(
+  suiteGroup: LiveTree,
+  suite: FrozenTestSuite,
+  onAction: (action: RowAction, selection: FrozenRowEvidenceSelection, row: LiveTree, control: LiveTree) => void,
+): LiveTree {
+  const rows = suiteGroup.create.div().classlist.set("frozen-test-case-rows").attrs.setMany({
+    "data-testid": "frozen-suite-case-rows",
+    "data-frozen-suite-case-rows": suite.id,
+  });
+  for (const item of [...suite.cases].sort((a, b) => a.order - b.order || a.id.localeCompare(b.id))) {
+    const caseRow = rows.create.div().classlist.set("frozen-test-case-row").attrs.setMany({
+      "data-testid": "frozen-case-row", "data-frozen-case": item.id, "data-frozen-suite-id": suite.id,
+      "data-frozen-status": item.status, "data-frozen-evidence": item.evidence?.available === true ? "available" : "absent",
+    });
+    const caseSelection = item.evidence?.available === true ? row_selection(suite, item) : undefined;
+    if (caseSelection !== undefined) append_actions(caseRow, item.title, caseSelection, onAction);
+    else caseRow.classlist.add("has-no-evidence");
+    const identity = caseRow.create.span().classlist.set("frozen-test-case-identity");
+    const title = caseSelection === undefined
+      ? identity.create.span().text.set(item.title)
+      : identity.create.button().attrs.setMany({ type: "button", "data-frozen-action": "view", "aria-label": `Open evidence for ${item.title}` }).text.set(item.title);
+    if (caseSelection !== undefined) {
+      title.classlist.add("frozen-test-evidence-name");
+      title.listen.stopProp().onClick(() => onAction("view", caseSelection, caseRow, title));
+    }
+    identity.create.span().css.setMany({ color: OKLCH_VIBRANT.graphite, fontSize: ".66rem" }).text.set(item.caseId);
+    const caseSummary = caseRow.create.span().classlist.set("frozen-test-case-summary");
+    caseSummary.create.span().classlist.set(`frozen-test-status frozen-test-case-status-cell is-${item.status}`).text.set(item.status.toUpperCase());
+    caseSummary.create.span().classlist.set("frozen-test-duration").text.set(format_frozen_test_duration(item.timing));
+  }
+  return rows;
+}
+
 function render_index(
   branch: LiveTree,
   index: FrozenTestEvidenceIndex,
   onAction: (action: RowAction, selection: FrozenRowEvidenceSelection, row: LiveTree, control: LiveTree) => void,
   onCopyReports: (control: LiveTree) => void,
+  onRenderedCases: (delta: number) => void,
 ): void {
   branch.empty();
   const projection = project_frozen_test_explorer(index);
@@ -147,33 +184,29 @@ function render_index(
       suiteSummary.create.span().classlist.set("frozen-test-suite-summary frozen-test-metric").text.set(`${suite.counts.failed} fail`);
       suiteSummary.create.span().classlist.set("frozen-test-suite-summary frozen-test-metric").text.set(`${suite.counts.skipped} skip`);
       suiteSummary.create.span().classlist.set("frozen-test-duration").text.set(format_frozen_test_duration(suite.timing));
-      for (const item of [...suite.cases].sort((a, b) => a.order - b.order || a.id.localeCompare(b.id))) {
-        const caseRow = suiteGroup.create.div().classlist.set("frozen-test-case-row").attrs.setMany({
-          "data-testid": "frozen-case-row", "data-frozen-case": item.id, "data-frozen-suite-id": suite.id,
-          "data-frozen-status": item.status, "data-frozen-evidence": item.evidence?.available === true ? "available" : "absent",
+      if (expandable) {
+        let caseRows: LiveTree | undefined;
+        suiteGroup.listen.on("toggle", (event: Event) => {
+          const open = event.currentTarget instanceof HTMLDetailsElement && event.currentTarget.open;
+          if (open && caseRows === undefined) {
+            caseRows = mount_case_rows(suiteGroup, suite, onAction);
+            onRenderedCases(suite.cases.length);
+          } else if (!open && caseRows !== undefined) {
+            caseRows.remove();
+            caseRows = undefined;
+            onRenderedCases(-suite.cases.length);
+          }
         });
-        const caseSelection = item.evidence?.available === true ? row_selection(suite, item) : undefined;
-        if (caseSelection !== undefined) append_actions(caseRow, item.title, caseSelection, onAction);
-        else caseRow.classlist.add("has-no-evidence");
-        const identity = caseRow.create.span().classlist.set("frozen-test-case-identity");
-        const title = caseSelection === undefined
-          ? identity.create.span().text.set(item.title)
-          : identity.create.button().attrs.setMany({ type: "button", "data-frozen-action": "view", "aria-label": `Open evidence for ${item.title}` }).text.set(item.title);
-        if (caseSelection !== undefined) {
-          title.classlist.add("frozen-test-evidence-name");
-          title.listen.stopProp().onClick(() => onAction("view", caseSelection, caseRow, title));
-        }
-        identity.create.span().css.setMany({ color: OKLCH_VIBRANT.graphite, fontSize: ".66rem" }).text.set(item.caseId);
-        const caseSummary = caseRow.create.span().classlist.set("frozen-test-case-summary");
-        caseSummary.create.span().classlist.set(`frozen-test-status frozen-test-case-status-cell is-${item.status}`).text.set(item.status.toUpperCase());
-        caseSummary.create.span().classlist.set("frozen-test-duration").text.set(format_frozen_test_duration(item.timing));
       }
     }
   }
 }
 
 export function mount_frozen_test_panel(host: LiveTree, options: Readonly<{ evidenceRoot?: string; client?: FrozenTestEvidenceClient }> = {}): FrozenTestPanel {
-  const branch = host.create.div().id.set("test-panel-branch").attrs.setMany({ "data-testid": "frozen-test-panel", "data-test-acquisition": "frozen", "data-frozen-panel-state": "loading", "data-hosted-execution-count": "0" });
+  const branch = host.create.div().id.set("test-panel-branch").attrs.setMany({
+    "data-testid": "frozen-test-panel", "data-test-acquisition": "frozen", "data-frozen-panel-state": "loading", "data-hosted-execution-count": "0",
+    "data-frozen-rendered-case-count": "0", "data-frozen-retained-row-artifacts": "0",
+  });
   branch.css.setMany(STYLES.root);
   branch.css.selector("& .frozen-test-notice").setMany(STYLES.notice);
   branch.css.selector("& .frozen-test-error").setMany(STYLES.error);
@@ -215,6 +248,7 @@ export function mount_frozen_test_panel(host: LiveTree, options: Readonly<{ evid
   let activeInspectorKey: string | undefined;
   let pendingInspectorKey: string | undefined;
   let navigationRevision = 0;
+  let renderedCases = 0;
   let client: FrozenTestEvidenceClient;
   try {
     client = options.client ?? make_frozen_test_evidence_client({ ...(options.evidenceRoot === undefined ? {} : { root: options.evidenceRoot }) });
@@ -223,8 +257,22 @@ export function mount_frozen_test_panel(host: LiveTree, options: Readonly<{ evid
     branch.attrs.set("data-frozen-panel-state", "error");
     branch.empty();
     branch.create.div().classlist.set("frozen-test-error").attrs.setMany({ role: "alert", "data-testid": "frozen-test-error" }).text.set(cause instanceof Error ? cause.message : String(cause));
-    return Object.freeze({ branch, ready: Promise.resolve(undefined), snapshot: () => Object.freeze({ state, categories: 0, suites: 0, cases: 0, evidenceRequests: 0 }), dispose: () => { if (!disposed) { disposed = true; branch.remove(); } } });
+    return Object.freeze({
+      branch,
+      ready: Promise.resolve(undefined),
+      snapshot: () => Object.freeze({ state, categories: 0, suites: 0, cases: 0, evidenceRequests: 0, renderedCases: 0, retainedRowArtifacts: 0 }),
+      deactivate: () => undefined,
+      dispose: () => { if (!disposed) { disposed = true; branch.remove(); } },
+    });
   }
+
+  const sync_client_state = (): void => {
+    const snapshot = client.snapshot();
+    branch.attrs.setMany({
+      "data-frozen-row-evidence-requests": String(snapshot.rowEvidenceRequests),
+      "data-frozen-retained-row-artifacts": String(snapshot.retainedRowArtifacts),
+    });
+  };
 
   const show_row_error = (row: LiveTree, cause: unknown): void => {
     row.attrs.set("data-frozen-row-state", "error");
@@ -266,10 +314,12 @@ export function mount_frozen_test_panel(host: LiveTree, options: Readonly<{ evid
     navigationRevision += 1;
     surface?.dispose();
     surface = undefined;
+    client.releaseRowEvidence();
     activeInspectorKey = undefined;
     pendingInspectorKey = undefined;
     branch.attrs.set("data-frozen-inspector-state", "closed");
     branch.attrs.drop("data-frozen-inspector-key");
+    sync_client_state();
   };
   const close_from_control = (): void => {
     const state = history.state as Readonly<Record<string, unknown>> | null;
@@ -296,6 +346,7 @@ export function mount_frozen_test_panel(host: LiveTree, options: Readonly<{ evid
     const key = selection_key(selection);
     surface?.dispose();
     surface = undefined;
+    client.releaseRowEvidence();
     activeInspectorKey = undefined;
     pendingInspectorKey = key;
     branch.attrs.setMany({ "data-frozen-inspector-state": "loading", "data-frozen-inspector-key": key });
@@ -311,13 +362,14 @@ export function mount_frozen_test_panel(host: LiveTree, options: Readonly<{ evid
       row?.attrs.set("data-frozen-row-state", "ready");
     } catch (cause) {
       if (!disposed && revision === navigationRevision) {
+        client.releaseRowEvidence(selection.reference.path);
         pendingInspectorKey = undefined;
         branch.attrs.set("data-frozen-inspector-state", "error");
         if (row !== undefined) show_row_error(row, cause);
       }
     } finally {
       if (!disposed) {
-        branch.attrs.set("data-frozen-row-evidence-requests", String(client.snapshot().rowEvidenceRequests));
+        sync_client_state();
         control?.flags.clear("disabled");
       }
     }
@@ -359,8 +411,9 @@ export function mount_frozen_test_panel(host: LiveTree, options: Readonly<{ evid
     } catch (cause) {
       if (!disposed) show_row_error(row, cause);
     } finally {
+      if (action === "copy") client.releaseRowEvidence(selection.reference.path);
       if (!disposed) {
-        branch.attrs.set("data-frozen-row-evidence-requests", String(client.snapshot().rowEvidenceRequests));
+        sync_client_state();
         control.flags.clear("disabled");
       }
     }
@@ -381,7 +434,16 @@ export function mount_frozen_test_panel(host: LiveTree, options: Readonly<{ evid
   const ready = client.loadIndex().then((loaded) => {
     if (disposed) return undefined;
     index = loaded;
-    render_index(branch, loaded, (action, selection, row, control) => { void onAction(action, selection, row, control); }, (control) => { void onCopyReports(control); });
+    render_index(
+      branch,
+      loaded,
+      (action, selection, row, control) => { void onAction(action, selection, row, control); },
+      (control) => { void onCopyReports(control); },
+      (delta) => {
+        renderedCases += delta;
+        branch.attrs.set("data-frozen-rendered-case-count", String(renderedCases));
+      },
+    );
     state = "ready";
     const requests = client.snapshot();
     const projection = project_frozen_test_explorer(loaded);
@@ -404,12 +466,25 @@ export function mount_frozen_test_panel(host: LiveTree, options: Readonly<{ evid
   return Object.freeze({
     branch,
     ready,
-    snapshot: () => Object.freeze({ state, categories: index?.categories.length ?? 0, suites: index?.suites.length ?? 0, cases: index === undefined ? 0 : project_frozen_test_explorer(index).overall.cases, evidenceRequests: client.snapshot().rowEvidenceRequests }),
+    snapshot: () => Object.freeze({
+      state,
+      categories: index?.categories.length ?? 0,
+      suites: index?.suites.length ?? 0,
+      cases: index === undefined ? 0 : project_frozen_test_explorer(index).overall.cases,
+      evidenceRequests: client.snapshot().rowEvidenceRequests,
+      renderedCases,
+      retainedRowArtifacts: client.snapshot().retainedRowArtifacts,
+    }),
+    deactivate() {
+      if (disposed) return;
+      if (index !== undefined) history.replaceState(history.state, "", inspector_url(index));
+      close_surface();
+    },
     dispose() {
       if (disposed) return;
       disposed = true;
       window.removeEventListener("popstate", popstateListener);
-      surface?.dispose();
+      close_surface();
       branch.remove();
     },
   });
