@@ -18,6 +18,7 @@ function child_exit(child: ReturnType<typeof spawn>): Promise<Readonly<{ code: n
 const artifact = new URL("../../../dist-node/livehost-server.mjs", import.meta.url);
 const source = await readFile(artifact, "utf8");
 assert.equal(source.includes("../hson-live/src"), false);
+assert.equal(source.includes("hosted-tests"), false);
 assert.equal(/from\s+["'][^"']+\.tsx?["']/.test(source), false);
 assert.equal(/import\s+["']tsx["']/.test(source), false);
 assert.match(source, /from "hson-live\/livehost\/node"|function start_node_application_host/);
@@ -59,7 +60,7 @@ child.stderr.on("data", (chunk: string) => stderr += chunk);
 const started = await new Promise<boolean>((resolve, reject) => {
   const timer = setTimeout(() => reject(new Error(`Production server startup timed out.\n${stdout}\n${stderr}`)), 10_000);
   const inspect = (): void => {
-    if (!stdout.includes("Hosted-test server listening")) return;
+    if (!stdout.includes("Public LiveHost server listening")) return;
     clearTimeout(timer);
     resolve(true);
   };
@@ -76,26 +77,32 @@ assert.equal(health.status, 200);
 assert.deepEqual(await health.json(), {
   ready: true,
   applications: [
-    { name: "hosted-tests", ready: true },
+    { name: "session", ready: true },
     { name: "towl", ready: true },
     { name: "circuit-verification", ready: true },
   ],
 });
 
-const websocket = new WebSocket(
-  `ws://127.0.0.1:${port}/hosted-tests?locus=hosted-tests`,
-  {
-    headers: {
-      Origin: "https://public.example",
-      Cookie: "locus_auth=production-smoke-secret",
-    },
-  },
-);
-await new Promise<void>((resolve, reject) => {
-  websocket.once("open", resolve);
-  websocket.once("error", reject);
+const session = await fetch(`http://127.0.0.1:${port}/session`, {
+  headers: { Origin: "https://public.example" },
 });
-websocket.close();
+assert.equal(session.status, 204);
+assert.equal(session.headers.get("access-control-allow-origin"), "https://public.example");
+assert.equal(session.headers.get("access-control-allow-credentials"), "true");
+assert.equal(session.headers.get("vary"), "Origin");
+assert.equal(session.headers.get("cache-control"), "no-store");
+const cookie = session.headers.get("set-cookie") ?? "";
+assert.match(cookie, /locus_auth=production-smoke-secret; HttpOnly; Secure; SameSite=Strict; Path=\//);
+assert.equal(cookie.includes("Domain="), false);
+
+const rejectedSession = await fetch(`http://127.0.0.1:${port}/session`, {
+  headers: { Origin: "https://untrusted.example" },
+});
+assert.equal(rejectedSession.status, 403);
+assert.equal(rejectedSession.headers.get("set-cookie"), null);
+
+const unavailableHostedTests = await fetch(`http://127.0.0.1:${port}/hosted-tests`);
+assert.equal(unavailableHostedTests.status, 404);
 
 const towl = new WebSocket(
   `ws://127.0.0.1:${port}/towl?locus=towl:smoke-room`,
@@ -111,6 +118,16 @@ await new Promise<void>((resolve, reject) => {
   towl.once("error", reject);
 });
 towl.close();
+
+const circuit = new WebSocket(
+  `ws://127.0.0.1:${port}/circuit-verification?locus=circuit-verifier`,
+  { headers: { Origin: "https://public.example", Cookie: "locus_auth=production-smoke-secret" } },
+);
+await new Promise<void>((resolve, reject) => {
+  circuit.once("open", resolve);
+  circuit.once("error", reject);
+});
+circuit.close();
 
 const exitPromise = child_exit(child);
 child.kill("SIGTERM");

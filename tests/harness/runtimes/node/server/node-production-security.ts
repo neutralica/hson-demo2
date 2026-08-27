@@ -32,7 +32,7 @@ function cookie_value(header: string | undefined, name: string): string | undefi
 
 export function create_node_production_security(
   options: NodeProductionSecurityOptions,
-): Readonly<{ applicationSecurity: NodeApplicationSecurity; deployment: NodeHostDeployment }> {
+): Readonly<{ applicationSecurity: NodeApplicationSecurity; deployment: NodeHostDeployment; cookieName: string }> {
   if (options.allowedOrigins.length === 0) {
     throw new Error("Production LiveHost requires at least one exact allowed origin.");
   }
@@ -86,5 +86,19 @@ export function create_node_production_security(
           trustImmediatePeer: (peerAddress: string) => trusted.has(peerAddress),
         }),
       });
-  return Object.freeze({ applicationSecurity, deployment });
+  return Object.freeze({ applicationSecurity, deployment, cookieName });
+}
+
+/** Origin-gated anonymous admission used only by the public /session route. */
+export function create_node_session_security(
+  allowedOrigins: readonly string[],
+): NodeApplicationSecurity {
+  const origin = create_node_exact_origin_policy({ allowedOrigins, allowMissing: false, allowNull: false });
+  return Object.freeze({
+    origin,
+    authenticate() {
+      return { ok: true, value: Object.freeze({ id: "anonymous-browser", anonymous: true }) };
+    },
+    authorize() { return { ok: true, value: undefined }; },
+  });
 }

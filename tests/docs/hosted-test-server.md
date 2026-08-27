@@ -25,12 +25,14 @@ coordinator remains process-lifetime. Eviction never disconnects active work.
 Room and report state are ephemeral across process restart. The Node transport
 host owns neither registry.
 
-The browser defaults to `ws://127.0.0.1:8787`. Override it with Vite's
-`VITE_HOSTED_TEST_WS_URL` environment variable.
+Development browser clients default to `ws://127.0.0.1:8787`. The shared
+production browser configuration is `VITE_LIVEHOST_WS_URL`, the origin of the
+Node/LiveHost service. Internal hosted-test clients derive `/hosted-tests` from
+that origin; TOWL and circuit verification derive their own paths.
 
-There is no silent in-browser fallback. Static public deployment therefore
-requires a separately deployed persistent Node-compatible hosted-test service
-and an appropriate `VITE_HOSTED_TEST_WS_URL` value.
+Production has no silent loopback fallback. The public Tests explorer remains
+frozen and never opens `/hosted-tests`; the generic origin exists for live
+applications and internal hosted execution, not visitor-triggered testing.
 
 See [DEPLOYMENT.md](../../DEPLOYMENT.md) for production build, proxy, TLS, package
 boundary, and provider-dashboard requirements.

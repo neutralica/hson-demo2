@@ -24,8 +24,7 @@ upgrade route.
 Consequently, the checked-in deployment model requires two services:
 
 1. a static host for the Vite `dist/` output; and
-2. a WebSocket-capable host running either the complete hosted-test Node
-   process or the bounded Cloudflare Durable Object adapter.
+2. a WebSocket-capable host running the public Node LiveHost process.
 
 The repository also contains an optional Cloudflare Workers + Durable Objects
 portability proof. See [CLOUDFLARE.md](./CLOUDFLARE.md). It is
@@ -109,12 +108,13 @@ VITE_TEST_EVIDENCE_ROOT=/test-evidence/<exact-40-hex-hson-deploy-commit> npm run
 
 The frozen browser explorer uses ordinary HTTP to load its index and explicit row
 evidence artifacts; it never starts hosted tests or opens a hosted-test
-WebSocket in either development or production. `VITE_HOSTED_TEST_WS_URL` remains configuration for the
-internal test runner and, when explicit overrides are absent, the existing
-TOWL and circuit-verification clients. Their optional `VITE_TOWL_WS_URL` and
-`VITE_CIRCUIT_VERIFICATION_WS_URL` overrides remain available for split-service
-or compatibility testing. Missing frozen evidence is a visible frozen
-infrastructure error, never a live-test fallback.
+WebSocket in either development or production. Live browser applications use
+`VITE_LIVEHOST_WS_URL`, the browser-visible origin of the deployed Node/LiveHost
+service. TOWL derives `/towl` and circuit verification derives
+`/circuit-verification` while preserving intentional query parameters and
+replacing `locus`. The value is an origin, not an application URL, and production
+requires `wss://` except for explicit localhost simulation. Missing frozen
+evidence is a visible frozen infrastructure error, never a live-test fallback.
 
 Generate and execute test evidence through `npm run test:cli`, `npm run pack`,
 or `npm run certify`. LiveHost remains the execution substrate for those paths;
@@ -135,10 +135,9 @@ directories, their installed runtime packages, and these build artifacts:
   `file:../hson-live` dependency.
 
 The production server artifact is bundled from application source, so TypeScript
-source files are not required after build. It intentionally retains runtime
-package imports: `hson-live`, `ws`, `jsdom`, `dompurify`, `domhandler`, and
-`htmlparser2` must remain installed. Install and validate from that sibling
-layout; do not copy individual artifacts into a different package boundary.
+source files are not required after build. It retains only its public runtime
+imports: `hson-live` and `ws`. Install and validate from that sibling layout;
+do not copy individual artifacts into a different package boundary.
 
 ```sh
 cd ..
@@ -175,23 +174,32 @@ credentials, runtime, or numeric configuration are invalid. It runs
 | --- | --- |
 | `LOCUS_DEPLOYMENT` | Optional; production entry defaults it to `production`. Set only to `production` for this service. |
 | `LOCUS_ALLOWED_ORIGINS` | Required; comma-separated exact browser origins. |
-| `LOCUS_BEARER_TOKEN` | Required secret; at least 16 characters. Clients use it as a Bearer token or through the configured cookie. |
+| `LOCUS_BEARER_TOKEN` | Required high-entropy deployment secret (use at least 32 random bytes encoded without cookie delimiters). Operational clients may use it as a Bearer token. |
 | `HOST` | Optional bind address; defaults to `127.0.0.1`. Production providers normally use `0.0.0.0`. |
 | `PORT` | Optional integer from 1 through 65535; defaults to `8787`. |
 | `SHUTDOWN_TIMEOUT_MS` | Optional positive integer; defaults to `5000`. |
 | `LOCUS_AUTH_COOKIE_NAME` | Optional cookie name; defaults to `locus_auth`. |
 | `LOCUS_TRUSTED_PROXY_PEERS` | Optional comma-separated immediate proxy peer addresses. Leave unset for direct mode. |
 | `LOCUS_FORWARDED_FOR_HOP` | Optional only with trusted peers; `first` or `last`. |
-| `LOCUS_MAX_TOWL_ROOMS`, `LOCUS_TOWL_IDLE_MS`, `LOCUS_MAX_HOSTED_REPORTS`, `LOCUS_HOSTED_REPORT_RETENTION_MS`, `LOCUS_AUTHORITY_SWEEP_INTERVAL_MS` | Optional positive-integer lifecycle limits. Defaults are described below; the idle and sweep relationships are validated before listening. |
+| `LOCUS_MAX_TOWL_ROOMS`, `LOCUS_TOWL_IDLE_MS`, `LOCUS_AUTHORITY_SWEEP_INTERVAL_MS` | Optional positive-integer TOWL lifecycle limits. The idle and sweep relationships are validated before listening. |
 | `VITE_TEST_EVIDENCE_ROOT` | Required immutable public frozen-test evidence root: `/test-evidence/<exact-40-hex-hson-deploy-commit>`. |
-| `VITE_HOSTED_TEST_WS_URL` | Live/internal hosted-test endpoint. Existing TOWL and circuit clients inherit it only when their explicit endpoint overrides are absent; frozen public test exploration does not use it. |
+| `VITE_LIVEHOST_WS_URL` | Required browser-visible WebSocket origin of the deployed Node/LiveHost service. It contains no application path; TOWL and circuit verification derive their routes and bootstrap anonymous service admission at `/session`. |
 | `CLOUDFLARE_API_TOKEN`, `TOWL_DEPLOYED_WS_URL` | Worker compatibility deployment/probe only; not required by the Node authority. |
 
 The local readiness endpoint is unauthenticated `GET /healthz`. It returns 200
-with `{ "ready": true }` only after every hosted application is ready, and 503
+with `{ "ready": true }` only after every public application is ready, and 503
 otherwise. A provider should check this endpoint locally through its proxy;
 the repository does not provision that proxy, TLS, DNS, process supervisor, or
 public endpoint.
+
+The public process registers exactly `GET /session`, `/towl`, and
+`/circuit-verification`; `/healthz` is owned by LiveHost. `GET /session` is
+anonymous service admission, not a login: an exact allowed browser Origin
+receives a host-only, browser-session `HttpOnly; Secure; SameSite=Strict;
+Path=/` cookie and exact-origin credentialed CORS headers. Missing, `null`, and
+unlisted Origins receive no cookie. TOWL's room/seat credentials remain a
+separate protocol concern. `/hosted-tests` is intentionally absent from this
+public runtime; public Tests are frozen static evidence.
 
 ## Authority lifetime and restart contract
 
@@ -264,9 +272,10 @@ restarted by the platform if it exits.
 
 Provider dashboard work remains intentionally provider-specific: create the
 persistent Node service, set its build context and start command, attach a
-public TLS hostname, and enable WebSocket forwarding for live features. Build
-the public frozen test site with its accepted immutable evidence root; it has no
-visitor-triggered hosted-test endpoint requirement.
+public TLS hostname, and enable WebSocket forwarding for live features. Supply
+that service origin as `VITE_LIVEHOST_WS_URL` when preparing the static artifact.
+Build the public frozen test site with its accepted immutable evidence root; it
+has no visitor-triggered hosted-test endpoint requirement.
 
 ## Hosted-test timing boundaries
 

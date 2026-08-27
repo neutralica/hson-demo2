@@ -328,7 +328,7 @@ function canonical_census(): readonly TestSurfaceCensusEntry[] {
       artifactEvidenceRequirements: Object.freeze(["normalized case lifecycle", "normalized report", "failure diagnostics"]),
       hostabilityClass: "hosted-local-now",
       reasonNotCurrentlyDeployed: workerCapable
-        ? "The Worker executor and deployment configuration exist, but no concrete deployed endpoint or frontend VITE_HOSTED_TEST_WS_URL is recorded in repository authority."
+        ? "The Worker executor and deployment configuration exist, but no concrete deployed endpoint or frontend VITE_LIVEHOST_WS_URL is recorded in repository authority."
         : "The Worker executor does not provide this suite's Node/synthetic environment requirements.",
       exactMissingCapability: workerCapable
         ? "deploy the Worker executor and configure the deployed frontend endpoint"

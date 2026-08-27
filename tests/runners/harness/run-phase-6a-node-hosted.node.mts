@@ -10,9 +10,9 @@ import { create_external_library_launcher_service } from "../../harness/runtimes
 import { LOCAL_NODE_LOCUS_EXECUTOR, NODE_LIVEHOST_HOSTED_TEST_EXECUTOR } from "../../harness/runtimes/node/livehost-node-executor";
 import { start_hosted_test_server } from "../../harness/runtimes/node/server/hosted-test-server";
 
-const originalWorkerEndpoint = process.env.VITE_HOSTED_TEST_WS_URL;
+const originalLiveHostEndpoint = process.env.VITE_LIVEHOST_WS_URL;
 const originalCloudflareAccount = process.env.CLOUDFLARE_ACCOUNT_ID;
-process.env.VITE_HOSTED_TEST_WS_URL = "wss://must-not-be-consulted.invalid/socket";
+process.env.VITE_LIVEHOST_WS_URL = "wss://must-not-be-consulted.invalid/socket";
 process.env.CLOUDFLARE_ACCOUNT_ID = "must-not-be-consulted";
 
 const server = await start_hosted_test_server({ port: 0 });
@@ -95,8 +95,8 @@ try {
 } finally {
   runtime.dispose();
   await server.stop();
-  if (originalWorkerEndpoint === undefined) delete process.env.VITE_HOSTED_TEST_WS_URL;
-  else process.env.VITE_HOSTED_TEST_WS_URL = originalWorkerEndpoint;
+  if (originalLiveHostEndpoint === undefined) delete process.env.VITE_LIVEHOST_WS_URL;
+  else process.env.VITE_LIVEHOST_WS_URL = originalLiveHostEndpoint;
   if (originalCloudflareAccount === undefined) delete process.env.CLOUDFLARE_ACCOUNT_ID;
   else process.env.CLOUDFLARE_ACCOUNT_ID = originalCloudflareAccount;
 }

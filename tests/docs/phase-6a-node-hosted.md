@@ -152,7 +152,7 @@ a fixed case/check inventory.
 | Entry command | `npm run start:production` (`node dist-node/livehost-server.mjs`). |
 | Runtime | Node `>=22.12.0 <25`; build context includes sibling `hson-live`; ordinary package dependencies include `ws`, jsdom, TSX loader support for supervised source certificates, and test dependencies needed by selected commands. |
 | Network | HTTP listener plus WebSocket upgrade, `HOST`/`PORT`, full path/query preservation, and long-lived connections. `GET /healthz` is the process canary. |
-| Browser endpoint | Build the static UI with an explicit public `wss://` `VITE_HOSTED_TEST_WS_URL`. |
+| Browser endpoint | Build the static UI with `VITE_LIVEHOST_WS_URL` set to the public `wss://` origin of the Node/LiveHost service. Live applications derive their paths; the frozen public Tests explorer does not connect to `/hosted-tests`. |
 | Security | TLS terminates at the provider/proxy; configure exact `LIVEHOST_ALLOWED_ORIGINS`, bearer/cookie authentication, and trusted-proxy settings only when applicable. |
 | Lifecycle | Persistent single-process ownership, provider restart on exit, bounded heartbeat, `SHUTDOWN_TIMEOUT_MS`, signal-driven close, and no orphan supervised children. |
 | State | Coordinator/catalog are process-lifetime; TOWL rooms and terminal reports are bounded and ephemeral. Restart changes authority incarnations; no durable report reconstruction is claimed. |

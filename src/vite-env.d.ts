@@ -4,6 +4,7 @@
 
 interface ImportMetaEnv {
   readonly VITE_TEST_EVIDENCE_ROOT?: string;
+  readonly VITE_LIVEHOST_WS_URL?: string;
 }
 
 interface ImportMeta {

@@ -42,6 +42,13 @@ import {
   TOWL_TRACK_CSS,
   TOWL_SHARE_STATUS_CSS,
 } from "./towl.css";
+import {
+  current_livehost_build_environment,
+  bootstrap_livehost_browser_session,
+  derive_livehost_application_websocket_url,
+  resolve_livehost_websocket_base_url,
+  type LiveHostBuildEnvironment,
+} from "../../livehost/browser-livehost-websocket";
 
 type TowlActionName = "join" | "ready" | "pull" | "reset";
 
@@ -78,12 +85,19 @@ type TowlView = Readonly<{
   reset: LiveTree;
 }>;
 
+export function resolve_towl_websocket_url(
+  roomId: string,
+  environment: LiveHostBuildEnvironment,
+): string {
+  return derive_livehost_application_websocket_url(
+    resolve_livehost_websocket_base_url(environment),
+    "/towl",
+    towl_host_id_for_room(roomId),
+  );
+}
+
 function configured_url(roomId: string): string {
-  const base = import.meta.env.VITE_TOWL_WS_URL ?? import.meta.env.VITE_HOSTED_TEST_WS_URL ?? "ws://127.0.0.1:8787";
-  const url = new URL(base);
-  url.pathname = "/towl";
-  url.searchParams.set("locus", towl_host_id_for_room(roomId));
-  return url.toString();
+  return resolve_towl_websocket_url(roomId, current_livehost_build_environment());
 }
 
 function remembered_credential(roomId: string): LocusSessionCredential | undefined {
@@ -372,7 +386,10 @@ export function mount_towl_panel(host: LiveTree, options: TowlPanelOptions): Tow
     disable_game_actions();
     connection = create_towl_connection_controller({
       logicalMapId: towl_host_id_for_room(roomId),
-      openTransport: () => create_browser_locus_socket(configured_url(roomId)),
+      async openTransport() {
+        await bootstrap_livehost_browser_session(current_livehost_build_environment());
+        return create_browser_locus_socket(configured_url(roomId));
+      },
       readCredential: () => remembered_credential(roomId),
       writeCredential: (credential) => remember_credential(roomId, credential),
       onState: render_state,

@@ -85,7 +85,7 @@ export type TowlConnectionController = Readonly<{
 
 export type TowlConnectionOptions = Readonly<{
   logicalMapId: string;
-  openTransport(): TowlConnectionTransport;
+  openTransport(): TowlConnectionTransport | Promise<TowlConnectionTransport>;
   readCredential(): LocusSessionCredential | undefined;
   writeCredential(credential: LocusSessionCredential | undefined): void;
   onState(state: TowlState): void;
@@ -285,7 +285,7 @@ export function create_towl_connection_controller(
     let sessionRestored = false;
     try {
       transportAttempts += 1;
-      nextTransport = options.openTransport();
+      nextTransport = await options.openTransport();
       openingTransport = nextTransport;
       stopNextClose = nextTransport.socket.onClose(() => {
         if (!installed) {

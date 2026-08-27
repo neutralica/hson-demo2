@@ -19,6 +19,13 @@ import {
   type BrowserLocusSocket as HostedTestBrowserSocket,
 } from "hson-live/locus";
 import { observe_hosted_test_timeline, type HostedTestTimelineObserver } from "../../../../shared/hosted-tests/hosted-test-timeline";
+import {
+  current_livehost_build_environment,
+  derive_livehost_application_websocket_url,
+  LiveHostWebSocketConfigurationError,
+  resolve_livehost_websocket_base_url,
+  type LiveHostBuildEnvironment,
+} from "../../../livehost/browser-livehost-websocket";
 
 type HostedTestReportActions = Readonly<{
   "tests.inspect": Readonly<{ runId: string; caseKey: string }>;
@@ -81,18 +88,10 @@ export type HostedTestPanelRuntimeOptions = Readonly<{
   timeline?: HostedTestTimelineObserver;
 }>;
 
-export type HostedTestBuildEnvironment = Readonly<{
-  DEV?: boolean;
-  PROD?: boolean;
-  VITE_HOSTED_TEST_WS_URL?: string;
-}>;
+export type HostedTestBuildEnvironment = LiveHostBuildEnvironment;
 
 export const HOSTED_TEST_WS_CONFIGURATION_ERROR =
-  "Hosted tests are unavailable because VITE_HOSTED_TEST_WS_URL was not configured for this deployment.";
-
-function is_local_websocket_origin(url: URL): boolean {
-  return url.hostname === "localhost" || url.hostname === "127.0.0.1" || url.hostname === "[::1]";
-}
+  "Hosted tests are unavailable because VITE_LIVEHOST_WS_URL was not configured for this production build.";
 
 let fallbackClientId = 0;
 
@@ -103,49 +102,21 @@ function make_browser_client_id(): string {
   return `hosted-panel-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}-${fallbackClientId.toString(36)}`;
 }
 
-function current_build_environment(): HostedTestBuildEnvironment {
-  const environment = (import.meta as ImportMeta & {
-    readonly env?: Readonly<{
-      DEV?: boolean;
-      PROD?: boolean;
-      VITE_HOSTED_TEST_WS_URL?: string;
-    }>;
-  }).env;
-  return Object.freeze({
-    DEV: environment?.DEV ?? false,
-    PROD: environment?.PROD ?? false,
-    ...(environment?.VITE_HOSTED_TEST_WS_URL === undefined
-      ? {}
-      : { VITE_HOSTED_TEST_WS_URL: environment.VITE_HOSTED_TEST_WS_URL }),
-  });
-}
-
 export function resolve_hosted_test_websocket_url(
   environment: HostedTestBuildEnvironment,
   explicitUrl?: string,
 ): string {
-  const configured = explicitUrl ?? environment.VITE_HOSTED_TEST_WS_URL;
-  if (configured === undefined || configured.trim() === "") {
-    if (environment.PROD === true) throw new Error(HOSTED_TEST_WS_CONFIGURATION_ERROR);
-    return "ws://127.0.0.1:8787";
+  try { return resolve_livehost_websocket_base_url(environment, explicitUrl); }
+  catch (error) {
+    if (error instanceof LiveHostWebSocketConfigurationError && error.code === "LIVEHOST_WS_NOT_CONFIGURED") {
+      throw new Error(HOSTED_TEST_WS_CONFIGURATION_ERROR);
+    }
+    throw error;
   }
-  let url: URL;
-  try { url = new URL(configured); }
-  catch { throw new Error("Hosted-test WebSocket URL is invalid."); }
-  if (url.protocol !== "ws:" && url.protocol !== "wss:") {
-    throw new Error(`Hosted-test WebSocket URL must use ws:// or wss://, received ${url.protocol}`);
-  }
-  if (environment.PROD === true && url.protocol !== "wss:" && !is_local_websocket_origin(url)) {
-    throw new Error("Hosted-test WebSocket URL must use wss:// in a production build.");
-  }
-  return url.toString();
 }
 
 export function hosted_test_host_url(base: string, hostId: string): string {
-  const url = new URL(base);
-  url.pathname = "/hosted-tests";
-  url.searchParams.set("locus", hostId);
-  return url.toString();
+  return derive_livehost_application_websocket_url(base, "/hosted-tests", hostId);
 }
 
 function redact_hosted_test_diagnostic_text(value: string, maxLength: number): string {
@@ -223,7 +194,7 @@ function report_matches_accepted_plan(
 }
 
 export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeOptions = {}): HostedTestPanelRuntime {
-  const environment = options.environment ?? current_build_environment();
+  const environment = options.environment ?? current_livehost_build_environment();
   let baseUrl: string | undefined;
   const configured_base_url = (): string => baseUrl ??= resolve_hosted_test_websocket_url(environment, options.url);
   const reconnectDelays = Object.freeze([...(options.reconnectDelaysMs ?? [0, 50, 200])]);

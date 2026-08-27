@@ -8,6 +8,12 @@ import {
   resolve_hosted_test_websocket_url,
 } from "../../../src/app/demos/tests/panel/hosted-test-panel-runtime";
 import { resolve_parsing_verification_websocket_url } from "../../../src/app/demos/parse/circuit-verification-browser-transport";
+import { resolve_towl_websocket_url } from "../../../src/app/demos/towl/mount-towl";
+import {
+  LiveHostWebSocketConfigurationError,
+  resolve_livehost_websocket_base_url,
+  type LiveHostBuildEnvironment,
+} from "../../../src/app/livehost/browser-livehost-websocket";
 import { HOSTED_TEST_COORDINATOR_HOST_ID } from "../../../src/shared/hosted-tests/hosted-test-application.types";
 import { make_test_executor_registry } from "../../harness/core/test-executor";
 import { run_selected_test_ids } from "../../harness/core/run-selected-test-suites";
@@ -35,28 +41,101 @@ expect_deployment(
 );
 expect_deployment(
   resolve_hosted_test_websocket_url(
-    { ...production, VITE_HOSTED_TEST_WS_URL: "wss://example.test/socket" },
-  ) === "wss://example.test/socket",
+    { ...production, VITE_LIVEHOST_WS_URL: "wss://example.test" },
+  ) === "wss://example.test/",
   "production accepts an explicit secure public endpoint",
 );
 expect_deployment(
   resolve_hosted_test_websocket_url(
-    { ...production, VITE_HOSTED_TEST_WS_URL: "wss://environment.invalid/socket" },
+    { ...production, VITE_LIVEHOST_WS_URL: "wss://environment.invalid" },
     "wss://override.test/socket",
   ) === "wss://override.test/socket",
   "an explicit runtime URL overrides build configuration",
 );
+
+for (const endpoint of [
+  "ws://localhost:4191",
+  "ws://127.0.0.1:4191",
+  "ws://[::1]:4191",
+] as const) {
+  expect_deployment(
+    resolve_livehost_websocket_base_url({ ...production, VITE_LIVEHOST_WS_URL: endpoint }) === `${endpoint}/`,
+    `local production simulation accepts ${endpoint}`,
+  );
+}
+
+function captured_configuration_error(run: () => unknown): LiveHostWebSocketConfigurationError | undefined {
+  try { run(); }
+  catch (error) { return error instanceof LiveHostWebSocketConfigurationError ? error : undefined; }
+  return undefined;
+}
+
 expect_deployment(
-  resolve_hosted_test_websocket_url(
-    { ...production, VITE_HOSTED_TEST_WS_URL: "ws://127.0.0.1:4191" },
-  ) === "ws://127.0.0.1:4191/",
-  "local production simulation accepts an explicit loopback ws endpoint",
+  captured_configuration_error(() => resolve_livehost_websocket_base_url(production))?.code === "LIVEHOST_WS_NOT_CONFIGURED",
+  "production requires the generic LiveHost origin",
 );
 expect_deployment(
-  resolve_parsing_verification_websocket_url(
-    { ...production, VITE_HOSTED_TEST_WS_URL: "ws://127.0.0.1:4191/base?preserved=yes" },
-  ) === "ws://127.0.0.1:4191/base?preserved=yes&locus=circuit-verifier",
-  "circuit verification falls back to the hosted endpoint and retains its query",
+  captured_configuration_error(() => resolve_livehost_websocket_base_url({ ...production, VITE_LIVEHOST_WS_URL: "not a URL" }))?.code === "LIVEHOST_WS_URL_INVALID",
+  "production rejects a malformed LiveHost origin",
+);
+expect_deployment(
+  captured_configuration_error(() => resolve_livehost_websocket_base_url({ ...production, VITE_LIVEHOST_WS_URL: "wss://runtime.example/towl" }))?.code === "LIVEHOST_WS_URL_INVALID",
+  "the generic LiveHost configuration rejects application-specific paths",
+);
+expect_deployment(
+  captured_configuration_error(() => resolve_livehost_websocket_base_url({ ...production, VITE_LIVEHOST_WS_URL: "ws://public.example" }))?.code === "LIVEHOST_WS_URL_INSECURE",
+  "production rejects insecure public LiveHost origins",
+);
+expect_deployment(
+  resolve_livehost_websocket_base_url({ ...production, VITE_LIVEHOST_WS_URL: "wss://public.example" }) === "wss://public.example/",
+  "production accepts a secure public LiveHost origin",
+);
+expect_deployment(
+  captured_configuration_error(() => resolve_livehost_websocket_base_url({
+    ...production,
+    VITE_HOSTED_TEST_WS_URL: "wss://legacy.invalid",
+  } as LiveHostBuildEnvironment))?.code === "LIVEHOST_WS_NOT_CONFIGURED",
+  "the old hosted-test variable is not a generic fallback",
+);
+
+const sharedEnvironment = Object.freeze({
+  ...production,
+  VITE_LIVEHOST_WS_URL: "wss://runtime.example?preserved=yes&locus=old",
+});
+expect_deployment(
+  new URL(resolve_towl_websocket_url("development-room", development)).origin === "ws://127.0.0.1:8787",
+  "TOWL retains its development loopback fallback",
+);
+expect_deployment(
+  captured_configuration_error(() => resolve_towl_websocket_url("missing-production-room", production))?.code === "LIVEHOST_WS_NOT_CONFIGURED",
+  "TOWL cannot silently select loopback in production",
+);
+const towlUrl = new URL(resolve_towl_websocket_url("shared-room", sharedEnvironment));
+expect_deployment(
+  towlUrl.origin === "wss://runtime.example"
+    && towlUrl.pathname === "/towl"
+    && towlUrl.searchParams.get("preserved") === "yes"
+    && towlUrl.searchParams.getAll("locus").join(",") === "towl:shared-room",
+  "TOWL derives its path from the generic origin while preserving query and replacing locus",
+);
+const circuitUrl = new URL(resolve_parsing_verification_websocket_url(sharedEnvironment));
+expect_deployment(
+  circuitUrl.origin === "wss://runtime.example"
+    && circuitUrl.pathname === "/circuit-verification"
+    && circuitUrl.searchParams.get("preserved") === "yes"
+    && circuitUrl.searchParams.getAll("locus").join(",") === "circuit-verifier",
+  "circuit verification derives its path from the generic origin while preserving query and replacing locus",
+);
+const circuitOverride = new URL(resolve_parsing_verification_websocket_url(
+  sharedEnvironment,
+  "wss://split.example/custom?split=yes&locus=old",
+));
+expect_deployment(
+  circuitOverride.origin === "wss://split.example"
+    && circuitOverride.pathname === "/circuit-verification"
+    && circuitOverride.searchParams.get("split") === "yes"
+    && circuitOverride.searchParams.getAll("locus").join(",") === "circuit-verifier",
+  "the explicit circuit runtime override remains supported without an application-specific environment variable",
 );
 
 const routed = hosted_test_host_url("wss://example.test/socket?token=public&locus=old", "host:new");

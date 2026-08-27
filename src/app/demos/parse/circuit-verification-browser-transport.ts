@@ -17,21 +17,19 @@ import {
   type CircuitVerificationResult,
 } from "../../../shared/circuit-verification-contract";
 import type { ParsingVerificationTransport } from "./parsing-verification-coordinator";
+import {
+  current_livehost_build_environment,
+  bootstrap_livehost_browser_session,
+  derive_livehost_application_websocket_url,
+  LiveHostWebSocketConfigurationError,
+  resolve_livehost_websocket_base_url,
+  type LiveHostBuildEnvironment,
+} from "../../livehost/browser-livehost-websocket";
 
 export const PARSING_VERIFICATION_CONFIGURATION_ERROR =
   "Parsing verification is unavailable because no Locus circuit verifier URL was configured.";
 
-function is_local_websocket_origin(url: URL): boolean {
-  return url.hostname === "localhost" || url.hostname === "127.0.0.1" || url.hostname === "[::1]";
-}
-
-export type ParsingVerificationBuildEnvironment = Readonly<{
-  DEV?: boolean;
-  PROD?: boolean;
-  VITE_CIRCUIT_VERIFICATION_WS_URL?: string;
-  VITE_TOWL_WS_URL?: string;
-  VITE_HOSTED_TEST_WS_URL?: string;
-}>;
+export type ParsingVerificationBuildEnvironment = LiveHostBuildEnvironment;
 
 export type BrowserCircuitVerificationTransportOptions = Readonly<{
   url?: string;
@@ -49,58 +47,35 @@ export class BrowserCircuitVerificationTransportError extends Error {
   }
 }
 
-function current_environment(): ParsingVerificationBuildEnvironment {
-  const environment = (import.meta as ImportMeta & { readonly env?: ParsingVerificationBuildEnvironment }).env;
-  return Object.freeze({
-    DEV: environment?.DEV ?? false,
-    PROD: environment?.PROD ?? false,
-    ...(environment?.VITE_CIRCUIT_VERIFICATION_WS_URL === undefined
-      ? {}
-      : { VITE_CIRCUIT_VERIFICATION_WS_URL: environment.VITE_CIRCUIT_VERIFICATION_WS_URL }),
-    ...(environment?.VITE_TOWL_WS_URL === undefined ? {} : { VITE_TOWL_WS_URL: environment.VITE_TOWL_WS_URL }),
-    ...(environment?.VITE_HOSTED_TEST_WS_URL === undefined
-      ? {}
-      : { VITE_HOSTED_TEST_WS_URL: environment.VITE_HOSTED_TEST_WS_URL }),
-  });
-}
-
 export function resolve_parsing_verification_websocket_url(
   environment: ParsingVerificationBuildEnvironment,
   explicitUrl?: string,
 ): string {
-  const configured = explicitUrl
-    ?? environment.VITE_CIRCUIT_VERIFICATION_WS_URL
-    ?? environment.VITE_TOWL_WS_URL
-    ?? environment.VITE_HOSTED_TEST_WS_URL;
-  if (configured === undefined || configured.trim() === "") {
-    if (environment.PROD === true) throw new BrowserCircuitVerificationTransportError(
-      "CIRCUIT_VERIFICATION_NOT_CONFIGURED",
-      PARSING_VERIFICATION_CONFIGURATION_ERROR,
+  try {
+    return derive_livehost_application_websocket_url(
+      resolve_livehost_websocket_base_url(environment, explicitUrl),
+      "/circuit-verification",
+      CIRCUIT_VERIFICATION_HOST_ID,
     );
-    return "ws://127.0.0.1:8787";
-  }
-  let url: URL;
-  try { url = new URL(configured); }
-  catch {
+  } catch (error) {
+    if (!(error instanceof LiveHostWebSocketConfigurationError)) throw error;
+    if (error.code === "LIVEHOST_WS_NOT_CONFIGURED") {
+      throw new BrowserCircuitVerificationTransportError(
+        "CIRCUIT_VERIFICATION_NOT_CONFIGURED",
+        PARSING_VERIFICATION_CONFIGURATION_ERROR,
+      );
+    }
+    if (error.code === "LIVEHOST_WS_URL_INSECURE") {
+      throw new BrowserCircuitVerificationTransportError(
+        "CIRCUIT_VERIFICATION_URL_INSECURE",
+        "Production parsing verification requires wss://.",
+      );
+    }
     throw new BrowserCircuitVerificationTransportError(
       "CIRCUIT_VERIFICATION_URL_INVALID",
       "Parsing verification Locus URL is invalid.",
     );
   }
-  if (url.protocol !== "ws:" && url.protocol !== "wss:") {
-    throw new BrowserCircuitVerificationTransportError(
-      "CIRCUIT_VERIFICATION_URL_INVALID",
-      "Parsing verification Locus URL must use ws:// or wss://.",
-    );
-  }
-  if (environment.PROD === true && url.protocol !== "wss:" && !is_local_websocket_origin(url)) {
-    throw new BrowserCircuitVerificationTransportError(
-      "CIRCUIT_VERIFICATION_URL_INSECURE",
-      "Production parsing verification requires wss://.",
-    );
-  }
-  url.searchParams.set("locus", CIRCUIT_VERIFICATION_HOST_ID);
-  return url.toString();
 }
 
 export function create_browser_circuit_verification_transport(
@@ -119,10 +94,13 @@ export function create_browser_circuit_verification_transport(
     if (client !== undefined) return client;
     if (opening !== undefined) return opening;
     opening = (async () => {
-      const url = new URL(resolve_parsing_verification_websocket_url(options.environment ?? current_environment(), options.url));
-      url.pathname = "/circuit-verification";
-      url.searchParams.set("locus", CIRCUIT_VERIFICATION_HOST_ID);
-      const nextTransport = create_browser_locus_socket(url.toString(), options.WebSocketConstructor);
+      const environment = options.environment ?? current_livehost_build_environment();
+      await bootstrap_livehost_browser_session(environment, options.url);
+      const url = resolve_parsing_verification_websocket_url(
+        environment,
+        options.url,
+      );
+      const nextTransport = create_browser_locus_socket(url, options.WebSocketConstructor);
       try {
         await nextTransport.ready;
         if (disposed) throw new BrowserCircuitVerificationTransportError(
