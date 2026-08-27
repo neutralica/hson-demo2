@@ -93,12 +93,27 @@ export function create_node_production_security(
 export function create_node_session_security(
   allowedOrigins: readonly string[],
 ): NodeApplicationSecurity {
-  const origin = create_node_exact_origin_policy({ allowedOrigins, allowMissing: false, allowNull: false });
-  return Object.freeze({
+  const origin = create_node_exact_origin_policy({
+    allowedOrigins,
+    allowMissing: false,
+    allowNull: false,
+  });
+
+  const policy: NodeApplicationSecurity = {
     origin,
     authenticate() {
-      return { ok: true, value: Object.freeze({ id: "anonymous-browser", anonymous: true }) };
+      return {
+        ok: true,
+        value: Object.freeze({
+          id: "anonymous-browser",
+          anonymous: true,
+        }),
+      };
     },
-    authorize() { return { ok: true, value: undefined }; },
-  });
+    authorize() {
+      return { ok: true, value: undefined };
+    },
+  };
+
+  return Object.freeze(policy);
 }
