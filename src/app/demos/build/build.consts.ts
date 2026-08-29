@@ -5,11 +5,11 @@ export const BUILD_STRINGhson = `
 <div id="build-demo" style="background: #02070d; border-left: 1px solid rgba(120,180,255,0.28); border-right: 1px solid rgba(120,180,255,0.12); box-sizing: border-box; color: white; display: grid; grid-template-rows: auto auto 1fr auto auto; height: 100%; padding: 28px 34px 26px 34px; width: 100%"
   <div style="align-items: flex-start; display: flex; justify-content: space-between"
     <div style="background: rgba(160,220,255,0.35); height: 1px; margin-top: 22px; width: 120px"/>
-    <h1 id="build-heading" style="color: rgba(175,220,255,0.96); font-family: monospace; font-size: 1.95rem; font-weight: 700; letter-spacing: 0.16em; margin: 0; text-align: center" "HSON BUILD DEMO"/>
+    <h1 id="build-heading" style="color: rgba(175,220,255,0.96); font-family: monospace; font-size: 1.95rem; font-weight: 700; letter-spacing: 0.16em; margin: 0; text-align: center" "Hson BUILD DEMO"/>
     <div style="background: rgba(160,220,255,0.35); height: 1px; margin-top: 22px; width: 120px"/>
   />
   <div style="display: flex; justify-content: center; margin-top: 10px"
-    <div style="color: rgba(255,180,40,0.96); font-family: monospace; font-size: 1rem; letter-spacing: 0.08em; text-align: center" "<- edit the HSON string"/>
+    <div style="color: rgba(255,180,40,0.96); font-family: monospace; font-size: 1rem; letter-spacing: 0.08em; text-align: center" "<- edit the Hson string"/>
   />
   <div style="display: grid; padding: 30px 0 24px 0; place-items: center"
     <div style="align-items: center; column-gap: 26px; display: grid; grid-template-columns: 1fr auto 1fr; max-width: 980px; width: 100%"

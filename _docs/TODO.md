@@ -12,7 +12,7 @@ LiveDemo TODO
 	"000"
 	"test:colon"
 	"test...elps"
-* test HSON more extensively
+* test Hson more extensively
 	<test+plus  "">
 	<test:colon  "">
 	<test...elps "">
@@ -145,7 +145,7 @@ Not tested:
 	•	dataset + refind + clone
 
 4) Serialization / projection integrity
-	•	HSON ↔ DOM ↔ LiveTree roundtrips
+	•	Hson ↔ DOM ↔ LiveTree roundtrips
 	•	partial hydration edge cases
 
 

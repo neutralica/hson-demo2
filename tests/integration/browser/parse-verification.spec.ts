@@ -14,11 +14,11 @@ async function expect_verified(page: Page, origin: "hson" | "json" | "html"): Pr
   await expect(page.getByTestId(`parse-${origin}-status`)).toHaveText("Verified");
 }
 
-test("authored HSON reaches the Locus worker and browser certificate", async ({ page }) => {
+test("authored Hson reaches the Locus worker and browser certificate", async ({ page }) => {
   const assertNoErrors = monitor_application_errors(page);
   await open_parsing_panels(page);
-  await page.getByTestId("parse-hson-editor").fill('<article id="phase-3" "HSON verified"/>');
-  await expect(page.getByTestId("parse-html-editor")).toHaveValue(/HSON verified/);
+  await page.getByTestId("parse-hson-editor").fill('<article id="phase-3" "Hson verified"/>');
+  await expect(page.getByTestId("parse-html-editor")).toHaveValue(/Hson verified/);
   await expect_verified(page, "hson");
   await expect(page.getByTestId("parse-root")).toHaveAttribute("data-circuit-serializations", "24");
   await expect(page.getByTestId("parse-root")).toHaveAttribute("data-circuit-parses", "25");

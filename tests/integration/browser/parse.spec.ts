@@ -59,7 +59,7 @@ test("Parse transforms valid-invalid-valid input without duplicate surfaces", as
   assertNoErrors();
 });
 
-test("HSON bare primitives preserve Demo and Transform semantic identity", async ({ page }) => {
+test("Hson bare primitives preserve Demo and Transform semantic identity", async ({ page }) => {
   const assertNoErrors = monitor_application_errors(page);
   await reach_demo(page);
   await open_demo(page, "parse");
@@ -138,7 +138,7 @@ test("browser object parsing and serialization use one stable angle pair per obj
   assertNoErrors();
 });
 
-test("browser HSON parsing enforces authored names, duplicates, and escape grammars", async ({ page }) => {
+test("browser Hson parsing enforces authored names, duplicates, and escape grammars", async ({ page }) => {
   const assertNoErrors = monitor_application_errors(page);
   await reach_demo(page);
   await open_demo(page, "parse");

@@ -64,21 +64,21 @@ export function livemap_suites_api(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        caseId: "api-livemap-fromjson-string-creates-projected-map", name: "api liveMap fromJson string creates projected map",
+        caseId: "api-livemap-fromjson-string-creates-data map", name: "api liveMap fromJson string creates data map",
         input: {},
         act: () => hson.liveMap.fromJson('{"user":{"name":"Ada"}}').snap(),
         expected: { user: { name: "Ada" } },
       }),
       read_case({
         suite: SUITE,
-        caseId: "api-livemap-fromjson-value-creates-projected-map", name: "api liveMap fromJson value creates projected map",
+        caseId: "api-livemap-fromjson-value-creates-data map", name: "api liveMap fromJson value creates data map",
         input: {},
         act: () => hson.liveMap.fromJson({ user: { name: "Ada" } }).snap(),
         expected: { user: { name: "Ada" } },
       }),
       read_case({
         suite: SUITE,
-        caseId: "api-livemap-fromhson-creates-projected-map", name: "api liveMap fromHson creates projected map",
+        caseId: "api-livemap-fromhson-creates-data map", name: "api liveMap fromHson creates data map",
         input: {},
         act: () => {
           const map = hson.liveMap.fromHson('<user <name "Ada">>');
@@ -91,7 +91,7 @@ export function livemap_suites_api(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        caseId: "api-livemap-fromnode-creates-projected-map", name: "api liveMap fromNode creates projected map",
+        caseId: "api-livemap-fromnode-creates-data map", name: "api liveMap fromNode creates data map",
         input: {},
         act: () => {
           const node = hson.fromJson({ user: { name: "Ada" } }).toNode();

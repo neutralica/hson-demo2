@@ -2,13 +2,13 @@ import { hson } from "hson-live";
 
 function fixed_hex(source: string): Uint8Array {
   const hex = source.replaceAll(/\s/g, "");
-  if (!/^(?:[0-9a-fA-F]{2})*$/.test(hex)) throw new Error("invalid literal Binary HSON hex fixture");
+  if (!/^(?:[0-9a-fA-F]{2})*$/.test(hex)) throw new Error("invalid literal Binary Hson hex fixture");
   return Uint8Array.from(hex.match(/../g)?.map((pair) => Number.parseInt(pair, 16)) ?? []);
 }
 
 function assert_bytes(actual: Uint8Array, expected: Uint8Array, label: string): void {
   if (actual.length !== expected.length || actual.some((byte, index) => byte !== expected[index])) {
-    throw new Error(`${label}: Binary HSON bytes differ from the independently authored literal vector.`);
+    throw new Error(`${label}: Binary Hson bytes differ from the independently authored literal vector.`);
   }
 }
 
@@ -93,7 +93,7 @@ export async function verify_browser_binary_sha256(): Promise<void> {
 export async function verify_browser_textual_sha256(): Promise<void> {
   const source = hson.fromJson({ note: "café" });
   const representations = [
-    { label: "HSON", value: source.toHson(), exact: `<note "café">` },
+    { label: "Hson", value: source.toHson(), exact: `<note "café">` },
     { label: "JSON", value: source.toJson(), exact: `{\n  "note": "café"\n}` },
     { label: "HTML", value: source.toHtml(), exact: `<_hson_obj>\n<note><_hson_obj>\n<_hson_str>&quot;caf\\u00e9&quot;</_hson_str>\n</_hson_obj></note>\n</_hson_obj>` },
   ] as const;

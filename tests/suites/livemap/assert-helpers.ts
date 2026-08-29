@@ -43,7 +43,7 @@ export function ordered_keys_row(
   };
 }
 
-/** Own-property SameValue assertion for prototype-sensitive projected keys. */
+/** Own-property SameValue assertion for prototype-sensitive data keys. */
 export function own_value_row(
   label: string,
   actual: object,

@@ -62,7 +62,7 @@ export function run_sanitizer_metadata_fixture() {
         `<main hson:quid="000000001" hson:quid="000000002"/>`,
       ),
       caseEquivalentDuplicateQuid: compare(
-        `<main HSON:QUID="000000001" hson:quid="000000002"/>`,
+        `<main Hson:QUID="000000001" hson:quid="000000002"/>`,
       ),
       duplicateIndex: compare(
         `<_hson_arr><_hson_ii hson:index="0" hson:index="1"/></_hson_arr>`,

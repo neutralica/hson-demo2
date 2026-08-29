@@ -89,7 +89,7 @@ try {
 
     const json = inspector.serialize("json", ["nested"]);
     expect(JSON.parse(json).enabled === true, "JSON serialization delegates to the transform pipeline");
-    expect(typeof inspector.serialize("hson") === "string", "HSON serialization is available on demand");
+    expect(typeof inspector.serialize("hson") === "string", "Hson serialization is available on demand");
     expectCode(() => inspector.serialize("html"), LIVE_INSPECTOR_UNREPRESENTABLE_CONVERSION_ERROR_CODE, "plain JSON to HTML conversion");
     expect(inspector.diagnostics().serializationRequests === 3, "serialization requests are diagnosed");
     inspector.dispose();
@@ -183,8 +183,8 @@ try {
 
     const serialized = hson.fromTrustedHtml("<article data-id='x'><strong>Hello</strong></article>").toHson().serialize();
     const hsonInspector = hson.inspect.fromHson({ value: serialized, host: makeHost(), initialDepth: 0, hsonMode: "canonical" });
-    expect(typeof hsonInspector.serialize("canonical-node") === "string", "canonical HSON node serialization is available for HSON-owned sources");
-    expect(hsonInspector.serialize("html").includes("article"), "HTML serialization is limited to representable HSON-derived sources");
+    expect(typeof hsonInspector.serialize("canonical-node") === "string", "canonical Hson node serialization is available for Hson-owned sources");
+    expect(hsonInspector.serialize("html").includes("article"), "HTML serialization is limited to representable Hson-derived sources");
     hsonInspector.dispose();
   }
 

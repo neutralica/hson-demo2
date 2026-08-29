@@ -37,6 +37,6 @@ Lower priority
 	•	indirect resolve_tree_el coverage via fixtures
 	•	extra CSS pseudo/content edge cases
 	•	CSS manager bookkeeping parity checks
-	•	HSON highlighter tests
+	•	Hson highlighter tests
 	•	prairie helper tests
     

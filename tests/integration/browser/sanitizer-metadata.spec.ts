@@ -26,7 +26,7 @@ function expect_equal_rejection(
   expect(result.worker.message).toMatch(reason);
 }
 
-test("production browser and Worker sanitizers share HSON metadata admission", async ({ page }) => {
+test("production browser and Worker sanitizers share Hson metadata admission", async ({ page }) => {
   const assertNoErrors = monitor_application_errors(page);
   await page.goto("/tests/fixtures/browser/sanitizer-metadata-fixture.html");
   const fixture = page.locator("#fixture-root");
@@ -53,26 +53,26 @@ test("production browser and Worker sanitizers share HSON metadata admission", a
 
   expect_equal_rejection(
     results.malformedQuid,
-    /invalid value for HSON metadata "hson:quid"/,
+    /invalid value for Hson metadata "hson:quid"/,
   );
   expect_equal_rejection(
     results.unknownMetadata,
-    /unknown HSON metadata markup name "hson:unknown"/,
+    /unknown Hson metadata markup name "hson:unknown"/,
   );
   expect_equal_rejection(results.malformedIndex, /not an exact canonical index/);
   expect_equal_rejection(
     results.misplacedIndex,
     /metadata "index" is not defined for node "main"/,
   );
-  expect_equal_rejection(results.duplicateQuid, /duplicate HSON metadata attribute/);
+  expect_equal_rejection(results.duplicateQuid, /duplicate Hson metadata attribute/);
   expect_equal_rejection(
     results.caseEquivalentDuplicateQuid,
-    /duplicate HSON metadata attribute/,
+    /duplicate Hson metadata attribute/,
   );
-  expect_equal_rejection(results.duplicateIndex, /duplicate HSON metadata attribute/);
+  expect_equal_rejection(results.duplicateIndex, /duplicate Hson metadata attribute/);
   expect_equal_rejection(
     results.metadataPrivateName,
-    /externally authored private HSON metadata transit name/,
+    /externally authored private Hson metadata transit name/,
   );
   expect_equal_rejection(
     results.ordinaryPrivateName,

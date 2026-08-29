@@ -13,27 +13,27 @@ async function run_in_browser<K extends keyof typeof BrowserBinaryHsonOracle>(
   }, operation);
 }
 
-test("browser Binary HSON exact bytes and canonical decode/encode closure", async ({ page }) => {
+test("browser Binary Hson exact bytes and canonical decode/encode closure", async ({ page }) => {
   await run_in_browser(page, "verify_browser_binary_exact_bytes_and_closure");
   await expect(page).toHaveURL(/\/$/);
 });
 
-test("browser Binary HSON typed units preserve absent, undefined, empty, and px states", async ({ page }) => {
+test("browser Binary Hson typed units preserve absent, undefined, empty, and px states", async ({ page }) => {
   await run_in_browser(page, "verify_browser_binary_typed_units");
   await expect(page).toHaveURL(/\/$/);
 });
 
-test("browser Binary HSON preserves UTF-16 lone surrogates and negative zero", async ({ page }) => {
+test("browser Binary Hson preserves UTF-16 lone surrogates and negative zero", async ({ page }) => {
   await run_in_browser(page, "verify_browser_binary_utf16_and_negative_zero");
   await expect(page).toHaveURL(/\/$/);
 });
 
-test("browser Binary HSON SHA-256 equals browser WebCrypto over exact binary bytes", async ({ page }) => {
+test("browser Binary Hson SHA-256 equals browser WebCrypto over exact binary bytes", async ({ page }) => {
   await run_in_browser(page, "verify_browser_binary_sha256");
   await expect(page).toHaveURL(/\/$/);
 });
 
-test("browser HSON JSON and HTML SHA-256 equal browser WebCrypto over exact UTF-8 bytes", async ({ page }) => {
+test("browser Hson JSON and HTML SHA-256 equal browser WebCrypto over exact UTF-8 bytes", async ({ page }) => {
   await run_in_browser(page, "verify_browser_textual_sha256");
   await expect(page).toHaveURL(/\/$/);
 });

@@ -114,7 +114,7 @@ LiveHost:
 These 22 command surfaces are classified `hosted-local-now` as semantic aliases,
 not launched a second time: hson-live default-identity fixture; TOWL and TOWL
 room; replay; the three Phase 3B cancellation commands; Node application-host;
-three circuit commands; two parsing commands; five LiveTree/HSON lifecycle
+three circuit commands; two parsing commands; five LiveTree/Hson lifecycle
 commands; the two external-library aggregate commands; inclusive-library; and
 DOM compatibility. Their exact work is already represented by canonical or
 opaque identities in the same authoritative selection.

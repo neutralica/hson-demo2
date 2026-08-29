@@ -34,7 +34,7 @@ and `/towl`; the Node service remains the complete future LiveHost deployment.
 ### TOWL client/authority compatibility gate
 
 The static browser bundle and WebSocket authority must be rebuilt from the same
-compatible `hson-live` source. Projected-state recovery snapshots are HSON
+compatible `hson-live` source. data state recovery snapshots are Hson
 protocol data; deploying a newer strict parser beside an older Worker serializer
 can let the socket and session attach succeed but fail the first recovery
 snapshot before TOWL state is installed.
@@ -227,12 +227,12 @@ evicted. Capacity exhaustion rejects new room/report creation; it never removes
 an active authority. The hosted-test coordinator and canonical catalog remain
 process-lifetime application state.
 
-TOWL rooms and hosted reports are ephemeral projected-data authorities.
+TOWL rooms and hosted reports are ephemeral data authorities.
 Eviction or process restart loses their state, sessions, history, and
 credentials. Returning to the same TOWL room key creates initial game state
 with a new incarnation; old bootstrap state uses the existing incarnation-
 replacement recovery path. Reports are not reconstructed after eviction.
-Document persistence in `hson-live` does not make these projected authorities
+Document persistence in `hson-live` does not make these data authorities
 durable.
 
 The supported Node topology is one process and one application registry owning

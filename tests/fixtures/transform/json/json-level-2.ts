@@ -310,7 +310,7 @@ export const jsonMostHeinous: Record<string, string> = {
   }`,
 
   // ----------------------------
-  // values that look like markup/HSON
+  // values that look like markup/Hson
   // ----------------------------
 
   weirdKeysWithWeirdValues: `{

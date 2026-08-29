@@ -88,8 +88,8 @@ export function parsing_browser_certificate_suite(): TestSuite {
     suite: SUITE,
     descriptor: Object.freeze({ subject: "transform", requirements: Object.freeze(["javascript", "node", "synthetic-dom"] as const) }),
     cases: Object.freeze([
-      Object.freeze({ suite: SUITE, caseId: "hson-origin-earns-a-browser-certificate", name: "HSON origin earns a browser certificate", run: () => {
-        const result = certify("hson", '<main id="hson-origin" "hello"/>'); expect(result.ok, "HSON must pass both boundaries");
+      Object.freeze({ suite: SUITE, caseId: "hson-origin-earns-a-browser-certificate", name: "Hson origin earns a browser certificate", run: () => {
+        const result = certify("hson", '<main id="hson-origin" "hello"/>'); expect(result.ok, "Hson must pass both boundaries");
       } }),
       Object.freeze({ suite: SUITE, caseId: "json-origin-earns-a-browser-certificate", name: "JSON origin earns a browser certificate", run: () => {
         const result = certify("json", '{"phase":3,"items":[1,true,"x"]}'); expect(result.ok, "JSON must pass both boundaries");
@@ -114,7 +114,7 @@ export function parsing_browser_certificate_suite(): TestSuite {
         const rootBearing = hson.fromTrustedHtml(worker.finalHtml).toNode();
         expect(rootBearing.$_tag === "_hson_root", "DOMParser admission must demonstrate its internal attachment carrier");
         const detached = admit_detached_browser_html(worker.finalHtml);
-        expect(detached.$_tag !== "_hson_root", "public HSON output/admission boundary must detach the root carrier");
+        expect(detached.$_tag !== "_hson_root", "public Hson output/admission boundary must detach the root carrier");
         const comparedTags: string[] = [];
         const result = certify("html", '<main data-boundary="root"><b>detached</b></main>', {
           compare(expected, actual, operation) {
@@ -146,7 +146,7 @@ export function parsing_browser_certificate_suite(): TestSuite {
         const baseline = hson.fromJson('{"first":1,"second":2}').toNode();
         const reordered = hson.fromJson('{"second":2,"first":1}').toNode();
         const result = verified_fixture(baseline, reordered);
-        expect(!result.ok && !result.stale && result.failure.code === "BROWSER_CERTIFICATE_FINAL_HTML_DIFFERENCE", "order must not use projected equality");
+        expect(!result.ok && !result.stale && result.failure.code === "BROWSER_CERTIFICATE_FINAL_HTML_DIFFERENCE", "order must not use data equality");
       } }),
       Object.freeze({ suite: SUITE, caseId: "zero-and-negative-zero-remain-distinct", name: "zero and negative zero remain distinct", run: () => {
         const negative = hson.fromJson("-0").toNode(); const positive = hson.fromJson("0").toNode();
@@ -165,7 +165,7 @@ export function parsing_browser_certificate_suite(): TestSuite {
         const result = verified_fixture(isolated, replacement);
         expect(!result.ok && !result.stale, "isolated surrogate replacement must fail");
       } }),
-      Object.freeze({ suite: SUITE, caseId: "quoted-hson-member-names-certify", name: "quoted HSON member names certify", run: () => {
+      Object.freeze({ suite: SUITE, caseId: "quoted-hson-member-names-certify", name: "quoted Hson member names certify", run: () => {
         const result = certify("hson", "<'a b' 1 'quoted:name' 2>"); expect(result.ok, "quoted member syntax must retain identity");
       } }),
       Object.freeze({ suite: SUITE, caseId: "array-position-changes-are-strict-disagreements", name: "array position changes are strict disagreements", run: () => {

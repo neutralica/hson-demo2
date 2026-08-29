@@ -23,11 +23,11 @@ const jsonRudiments = {
 };
 
 const jsonSamples = {
-  "kv": '{ "name": "HSON" }',
+  "kv": '{ "name": "Hson" }',
   "basicObj": `{ "details": { "version": "1.0" } }`,
   "boolObj": `{ "details": { "boolval": true, "stringbool": "true" } }`,
   "nullObj": `{ "details": { "null": null } }`,
-  "prop2Obj": `{ "info": { "name": "HSON", "status": "dev" } }`,
+  "prop2Obj": `{ "info": { "name": "Hson", "status": "dev" } }`,
   "arrayObj": `{ "letters": ["alpha", "beta"] }`,
 
   "primitives": `{

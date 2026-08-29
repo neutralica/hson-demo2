@@ -44,7 +44,7 @@ export type BuildPanel = Readonly<{
 }>;
 
 export type BuildFactoryOpts = Readonly<{
-  // default starter HSON
+  // default starter Hson
   seed?: string;
 }>;
 

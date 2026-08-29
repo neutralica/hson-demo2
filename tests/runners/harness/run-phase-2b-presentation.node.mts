@@ -21,7 +21,7 @@ function certify(condition: unknown, message: string): asserts condition {
 }
 
 const suiteSpecs = [
-  ["transform/hson-tokenizer", "HSON tokenizer", "transform", [], "hson-live", "opaque-aggregate", 139],
+  ["transform/hson-tokenizer", "Hson tokenizer", "transform", [], "hson-live", "opaque-aggregate", 139],
   ["transform/demo", "Transform demo", "transform", [], "hson-demo2", "cases"],
   ["livetree/demo", "LiveTree demo", "livetree", [], "hson-demo2", "cases"],
   ["livemap/canonical-ownership", "Canonical ownership", "livemap", [], "hson-live", "cases"],

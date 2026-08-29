@@ -217,7 +217,7 @@ export function bp_factory(hostBody: LiveTree, opts: BuildFactoryOpts = {}): Bui
   const textarea = inputWrap.create.textarea()
     .classlist.set("build-textarea")
     .data.set("input", "hson")
-    .attrs.setMany({ "data-testid": "build-source-editor", "aria-label": "build HSON source editor" })
+    .attrs.setMany({ "data-testid": "build-source-editor", "aria-label": "build Hson source editor" })
     .css.setMany(BUILD_TEXTAREAcss);
 
   const seed = opts.seed ?? BUILD_STRINGhson;

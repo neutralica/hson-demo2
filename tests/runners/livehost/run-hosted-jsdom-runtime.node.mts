@@ -37,7 +37,7 @@ const runtime = install_hosted_dom_runtime();
 expect_runtime(runtime.document === globalThis.document && runtime.window === globalThis.window, "runtime installs its own window and document");
 expect_runtime(new DOMParser().parseFromString("<x/>", "application/xml").documentElement.tagName === "x", "DOMParser is operational");
 const multiRootError = new DOMParser().parseFromString("<x/><y/>", "application/xml").querySelector("parsererror")?.textContent ?? "";
-expect_runtime(multiRootError.includes("extra content"), "XML parser diagnostics activate the existing HSON multi-root repair pass");
+expect_runtime(multiRootError.includes("extra content"), "XML parser diagnostics activate the existing Hson multi-root repair pass");
 expect_runtime(CSS.supports("display", "grid") && !CSS.supports("color", "light-grey"), "CSS.supports shim delegates declaration validity to jsdom");
 expect_runtime(new PointerEvent("pointerdown", { pointerId: 7 }).pointerId === 7, "PointerEvent shim preserves supported identity fields");
 const rectElement = runtime.document.createElement("div");

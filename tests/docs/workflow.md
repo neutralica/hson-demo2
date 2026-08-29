@@ -107,7 +107,7 @@ dev
 Subject is used for organization and selection. It does not describe the runtime.
 
 The deterministic Transform inventory currently contains nine suites and 361
-legacy/demo cases. Its earlier authored-HSON subset remains registered for
+legacy/demo cases. Its earlier authored-Hson subset remains registered for
 continuity, including the six bare primitive families and the two established
 adjacent-text element sources (`<div "a" "b"/>` and `<div """"""/>`).
 

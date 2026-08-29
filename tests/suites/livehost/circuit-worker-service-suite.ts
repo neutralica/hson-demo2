@@ -130,8 +130,8 @@ export function circuit_worker_service_suite(): TestSuite {
         await service.submit(request("warm-b", 1));
         expect(service.diagnostics().workerStarts === 1 && service.diagnostics().workerThreadId === threadId, "two jobs must reuse one thread");
       }) }),
-      Object.freeze({ suite: SUITE, caseId: "verifies-explicit-hson", name: "verifies explicit HSON", run: () => with_service(async (service) => {
-        expect((await service.submit(request("hson", 1, "hson"))).status === "verified", "HSON must verify");
+      Object.freeze({ suite: SUITE, caseId: "verifies-explicit-hson", name: "verifies explicit Hson", run: () => with_service(async (service) => {
+        expect((await service.submit(request("hson", 1, "hson"))).status === "verified", "Hson must verify");
       }) }),
       Object.freeze({ suite: SUITE, caseId: "verifies-explicit-json", name: "verifies explicit JSON", run: () => with_service(async (service) => {
         expect((await service.submit(request("json", 1, "json"))).status === "verified", "JSON must verify");

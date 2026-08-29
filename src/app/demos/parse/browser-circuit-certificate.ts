@@ -36,8 +36,8 @@ function strict_compare(expected: HsonNode, actual: HsonNode, operation: string)
 /**
  * Cross the documented public Transform detachment boundary for a
  * DOMParser-owned HTML frame. HTML/JSON source frames may retain their
- * `_hson_root` attachment carrier at `toNode()`. HSON output explicitly
- * detaches parser-owned roots, and HSON admission returns that one detached
+ * `_hson_root` attachment carrier at `toNode()`. Hson output explicitly
+ * detaches parser-owned roots, and Hson admission returns that one detached
  * semantic value. No graph field is peeled or normalized here.
  */
 export function admit_detached_browser_html(source: string): HsonNode {

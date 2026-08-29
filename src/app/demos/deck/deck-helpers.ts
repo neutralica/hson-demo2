@@ -162,7 +162,7 @@ export function deck_code_watermark(lang: string | undefined): string {
     case "json":
       return "{JSON}";
     case "hson":
-      return "<HSON>";
+      return "<Hson>";
     case "html":
       return "<HTML/>";
     default:

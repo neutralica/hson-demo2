@@ -18,7 +18,7 @@ import LIVEDEMO_README from "../../../../README.md?raw";
 export const ABOUT_DOCS: AboutDocs = [
   { key: "livedemo", title: "this site", body: LIVEDEMO_README },
   { key: "readme", title: "hson-live", body: README },
-  { key: "hson-syntax", title: "HSON", body: HSON_SPEC_SYNTAX },
+  { key: "hson-syntax", title: "Hson", body: HSON_SPEC_SYNTAX },
   { key: "json`", title: "JSON", body: HSON_SPEC_JSON },
   { key: "html", title: "HTML", body: HSON_SPEC_HTML },
   { key: "hson-nodes", title: "graph", body: HSON_SPEC_NODE_GRAPH },
@@ -34,4 +34,4 @@ export const ABOUT_DOCS: AboutDocs = [
   // { key: "api", title: "API", body: API_MD },
 ];
 
-export const MD_TERM_RE = /(hson-live|LiveDemo|hson |LiveTree|HSON)/g;
+export const MD_TERM_RE = /(hson-live|LiveDemo|hson |LiveTree|Hson)/g;

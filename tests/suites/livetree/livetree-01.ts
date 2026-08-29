@@ -1347,11 +1347,11 @@ export function suite_css_and_content(): TestSuite {
     },
 
     // -----------------------------------------------------------------------
-    // get_node_text fallback: no DOM => walk HSON content
+    // get_node_text fallback: no DOM => walk Hson content
     // We construct a minimal HsonNode tree with _hson_str leaves.
     {
       suite: SUITE,
-      caseId: "get_node_text-falls-back-to-hson-when-no-dom-exists", name: "get_node_text falls back to HSON when no DOM exists",
+      caseId: "get_node_text-falls-back-to-hson-when-no-dom-exists", name: "get_node_text falls back to Hson when no DOM exists",
       dom: true,
       fixture: "content/get_node_text",
       sub: "no-dom-fallback",

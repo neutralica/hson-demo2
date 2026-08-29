@@ -48,7 +48,7 @@ const htmlPlus = {
 }
 
 const htmlLosesAttrs = {
-  elem: `<p class="greeting" active-flag>Hello HSON!</p>`,
+  elem: `<p class="greeting" active-flag>Hello Hson!</p>`,
 
   escapedTitle: `
   <section id="profile" data-role="container" style="color:#333; font-size:16px; border-radius:8px; box-shadow:0 4px 6px rgba(0,0,0,.1);">
@@ -120,7 +120,7 @@ const html_edge_cases: { [name: string]: string } = {
   // 3) Unquoted attr with tricky chars (allowed in HTML)
   unquoted_attr_ok: `<div data-x=a:b,c.d/e?f=g&h=i#j>y</div>`,
 
-  // 4.5) Attr needing HTML entities vs HSON backslashes
+  // 4.5) Attr needing HTML entities vs Hson backslashes
   double_attribute: `<div title="once" titls="twkce">three times a ladyyyyy</div>`,
 
   // 5) Newlines/tabs in attr (normalize to HTML semantics)

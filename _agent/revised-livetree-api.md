@@ -54,7 +54,7 @@ LiveTree is a mutable handle to a single `HsonNode`. It provides structured acce
 - `removeChildren(): number`
   - Removes direct node children (ignores primitives). Returns count removed.
 - `removeSelf(): number`
-  - Removes this node from its parent (HSON + DOM). Returns `1` or `0`.
+  - Removes this node from its parent (Hson + DOM). Returns `1` or `0`.
 - `cloneBranch(): LiveTree`
   - Deep-clones subtree with new QUIDs; returns a detached branch.
 

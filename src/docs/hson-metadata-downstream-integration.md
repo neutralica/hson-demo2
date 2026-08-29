@@ -1,10 +1,10 @@
-# HSON metadata downstream integration
+# Hson metadata downstream integration
 
 LiveDemo uses one spelling at each representation boundary:
 
 - canonical graph metadata: `$_meta.quid` and `$_meta.index`;
 - HTML, SVG, and DOM metadata: `hson:quid` and `hson:index`;
-- HSON identity syntax: `@<quid>`;
+- Hson identity syntax: `@<quid>`;
 - application attributes: every `data-*` name, including `data-_quid` and
   `data-_index`.
 

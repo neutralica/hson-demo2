@@ -41,7 +41,7 @@ function binding_lifecycle_case(suite: string): LiveTreeCaseSpec {
         && _lifecycle_resource_counts_for_owner(quid).total === 0;
     },
     assert(_tree, t) {
-      t.eq("detach keeps binding active against detached HSON", detachPreserved, true);
+      t.eq("detach keeps binding active against detached Hson", detachPreserved, true);
       t.eq("remove unsubscribes before later LiveMap updates", removeTerminated, true);
     },
   };

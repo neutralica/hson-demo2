@@ -473,7 +473,7 @@ export function livetree_construction_parity(): TestSuite {
 
     {
       suite: SUITE,
-      caseId: "construction-livetree.fromhson-accepts-hson-only-child-syntax", name: "construction: liveTree.fromHson accepts HSON-only child syntax",
+      caseId: "construction-livetree.fromhson-accepts-hson-only-child-syntax", name: "construction: liveTree.fromHson accepts Hson-only child syntax",
       fixture: "construction/fromHson",
       sub: "hson-syntax",
       dom: true,
@@ -515,7 +515,7 @@ export function livetree_construction_parity(): TestSuite {
 
     {
       suite: SUITE,
-      caseId: "construction-livetree.fromnode-wraps-an-existing-hson-node-as-mutable-branch", name: "construction: liveTree.fromNode wraps an existing HSON node as mutable branch",
+      caseId: "construction-livetree.fromnode-wraps-an-existing-hson-node-as-mutable-branch", name: "construction: liveTree.fromNode wraps an existing Hson node as mutable branch",
       fixture: "construction/fromNode",
       sub: "hson-node",
       dom: true,

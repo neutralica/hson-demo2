@@ -42,10 +42,10 @@ export const SLIDES: readonly DeckSlideConfig[] = [
         `
 #__#
 #__#
-### An introduction to HSON, hson-live, and related subsystems.
+### An introduction to Hson, hson-live, and related subsystems.
 #__#
 #__#
-#_50# 24JUN2026     
+#_50# 24JUN2026
 #_50# Pip Hanson
 #_50# www.terminalgothic.com
 
@@ -56,7 +56,7 @@ export const SLIDES: readonly DeckSlideConfig[] = [
   {
     // stackAlign: "center",
     stackAlign: "center",
-    headerA: "HSON",
+    headerA: "Hson",
     bodyA: {
       kind: "text", text: `
 ### a 'glue format' that expresses both JSON and HTML
@@ -68,20 +68,20 @@ export const SLIDES: readonly DeckSlideConfig[] = [
     footer: "terminology",
   },
   {
-    headerA: "HSON",
+    headerA: "Hson",
     stackAlign: "center",
     bodyA: {
       kind: "text",
       text: `
 ### Hypertext Structured Object Notation
-HSON is a 'glue format'. Its syntax models the tree structure shared by JSON and HTML and can fully express both notations.
+Hson is a 'glue format'. Its syntax models the tree structure shared by JSON and HTML and can fully express both notations.
 #HR#
-### By parsing to HSON as intermediary step, HTML can be converted to JSON and vice versa.
+### By parsing to Hson as intermediary step, HTML can be converted to JSON and vice versa.
 #HR#
 Uniting two non-interchangeable building blocks of the web suggests new ways of building web content. This is the key insight that powers hson-live.
     `,
     },
-    footer: "about / HSON",
+    footer: "about / Hson",
   },
 
   /* hson-live */
@@ -91,17 +91,17 @@ Uniting two non-interchangeable building blocks of the web suggests new ways of 
       kind: "text",
       text: `
 ### hson.transform
-converts JSON and XML/HTML/SVG to and from HSON
+converts JSON and XML/HTML/SVG to and from Hson
 #__#
 ### hson.liveTree
-web-authoring & rendering interface via projection from canonical HSON document
+web-authoring & rendering interface via projection from canonical Hson document
 `,
     },
     bodyB: {
       kind: "text",
       text: `
 ### hson.liveMap
-application state machine and HSON graph editor
+application state machine and Hson graph editor
 #__#
 ### hson.locus
 server-side authority, coordination, history, and recovery
@@ -116,13 +116,13 @@ server-side authority, coordination, history, and recovery
       kind: "text",
       text: `
 ### The core of hson-live
-A circuit of parsers and serializers that convert data to and from HSON. Transformations are stable across multiple cycles, without structural drift or data loss. hson-live's _circuit_test() diagnostic allows independent verification of the transformer chain for any valid string.
+A circuit of parsers and serializers that convert data to and from Hson. Transformations are stable across multiple cycles, without structural drift or data loss. hson-live's _circuit_test() diagnostic allows independent verification of the transformer chain for any valid string.
 hson-live supports:
 - JSON
 - HTML*
 - XML
 - SVG
-- HSON
+- Hson
 - HsonNode
 #### (* hson-live requires xml-compatible html)
 `
@@ -130,12 +130,12 @@ hson-live supports:
     footer: "about / transform",
   },
   {
-    headerA: "HTML <=> HSON",
+    headerA: "HTML <=> Hson",
     stackAlign: "center",
     bodyA: {
       kind: "text",
       text: `
-### html: 
+### html:
 \`\`\`html
 <div>hello world</div>
 \`\`\`
@@ -151,9 +151,9 @@ hson-live supports:
       kind: "text",
       text: `
 #__#
-HSON resembles pared-down HTML. Instead of opening and closing tags, HSON encloses nested content within a single tag.
+Hson resembles pared-down HTML. Instead of opening and closing tags, Hson encloses nested content within a single tag.
 #__#
-HSON can express any XML-compliant HTML. HSON derived from HTML uses a slash-closer:
+Hson can express any XML-compliant HTML. Hson derived from HTML uses a slash-closer:
 ### />
       `,
     },
@@ -162,7 +162,7 @@ HSON can express any XML-compliant HTML. HSON derived from HTML uses a slash-clo
 
   /* json - hson */
   {
-    headerA: "JSON <=> HSON",
+    headerA: "JSON <=> Hson",
     stackAlign: "center",
     bodyA: {
       kind: "text",
@@ -182,16 +182,16 @@ HSON can express any XML-compliant HTML. HSON derived from HTML uses a slash-clo
       kind: "text",
       text: `
   #__#
-HSON can express any valid JSON. It shares JSON’s primitive types and numeric edges exactly, making conversion structurally direct and type-preserving.
+Hson can express any valid JSON. It shares JSON’s primitive types and numeric edges exactly, making conversion structurally direct and type-preserving.
 #__#
-JSON-derived HSON object values use an angle closer:
+JSON-derived Hson object values use an angle closer:
 ### >
       `,
     },
     footer: "json -> hson",
   },
   {
-    headerA: "HTML => HSON => JSON",
+    headerA: "HTML => Hson => JSON",
     bodyA: {
       kind: "code",
       lang: "html",
@@ -210,7 +210,7 @@ JSON-derived HSON object values use an angle closer:
     footer: "html -> json",
   },
   {
-    headerA: "JSON => HSON => HTML",
+    headerA: "JSON => Hson => HTML",
     bodyA: {
       kind: "text",
       text: `
@@ -272,11 +272,11 @@ JSON-derived HSON object values use an angle closer:
       kind: "text",
       text: `
 ### markup + styling + interaction in one live graph
-LiveTree is a live web-authoring interface built on HSON. Web content is represented as a HSON node graph and projected to the DOM. Mutations are made to the HSON graph and reflected to the DOM in realtime.
+LiveTree is a live web-authoring interface built on Hson. Web content is represented as a Hson node graph and projected to the DOM. Mutations are made to the Hson graph and reflected to the DOM in realtime.
 
 LiveTree's chainable API brings markup, CSS, events, SVG, canvas, forms, input, and DOM traversal together in a low-friction typed interface.
 
-Used alone, LiveTree offers a complete local live-document runtime. Integrated with LiveMap, it gains a schema-enforced HSON graph editor and state layer with revisioned commit history, "Reflection" (live bindings), and subscriptions.
+Used alone, LiveTree offers a complete local live-document runtime. Integrated with LiveMap, it gains a schema-enforced Hson graph editor and state layer with revisioned commit history, "Reflection" (live bindings), and subscriptions.
 `,
     },
     footer: "livetree / about",
@@ -291,8 +291,8 @@ Used alone, LiveTree offers a complete local live-document runtime. Integrated w
 // this example wraps DOM creation, EventListeners, CSS, inline style, and box-property geometry into a single chained call
 
 
-const button = hson.queryBody()                    // Query document.body, deep-parse to HSON.
-  .liveTree                                        // Initialize LiveTree creation. 
+const button = hson.queryBody()                    // Query document.body, deep-parse to Hson.
+  .liveTree                                        // Initialize LiveTree creation.
   .graft()                                         // Replace DOM with a projection from the node graph.
   .create.div()                                    // LiveTree offers rich namespace-aware creation methods.
   .setText("hello world")                          // Changes to node graph are immediately updated on-DOM.
@@ -300,12 +300,12 @@ const button = hson.queryBody()                    // Query document.body, deep-
   .listen                                          // LiveTree offers listener and event management with options baked-in.
     .once()                                        // Listener teardown is managed automatically upon node removal.
     .onAnimationEnd(() => {                        // Sequenced events and animations are easy to schedule in LiveTree.
-      branchDiv.setText("goodbye world")           // Text, DOM traversal, CSS, events, inline style, 
+      branchDiv.setText("goodbye world")           // Text, DOM traversal, CSS, events, inline style,
         .style.set.backgroundColor(                //   are all managed in a unified, typed ecosystem.
           liveTree.dom.rect().width > 500          // LiveTree wraps many DOMRect and viewport methods in its API.
           ? "red"                                  // CSS can be dynamically created from JS variables.
-          : "blue"                                 // (Conventional selector-based styling is also fully supported.) 
-      );                                        
+          : "blue"                                 // (Conventional selector-based styling is also fully supported.)
+      );
   });
 `,
     },
@@ -326,8 +326,8 @@ const button = hson.queryBody()                    // Query document.body, deep-
       kind: "text",
       text: `
 ### canonical application state
-LiveMap owns, edits, and tracks HSON graphs for both application state and page markup. It manages changes to the state graph, enforcing schema, creating commits, and updating subscribers. 
-LiveMap can manage document and styling properties such as color values, geometry, and text content. 
+LiveMap owns, edits, and tracks Hson graphs for both application state and page markup. It manages changes to the state graph, enforcing schema, creating commits, and updating subscribers.
+LiveMap can manage document and styling properties such as color values, geometry, and text content.
 Via Reflection, application state can be directly linked to, and automatically update, DOM values in LiveTree.
 
 #__#
@@ -359,7 +359,7 @@ button.flags.has("disabled");
     bodyB: {
       kind: "text",
       text: `
-Integrated with LiveTree, LiveMap manages page markup alongside application state, controling access and mutation to an application's styling, structure, and metadata. 
+Integrated with LiveTree, LiveMap manages page markup alongside application state, controling access and mutation to an application's styling, structure, and metadata.
 
 Changes to state push effects synchronously to the DOM via Reflection.
 
@@ -378,7 +378,7 @@ LiveMap makes bulk structural changes to documents or data lightweight, relative
       text: `
 ### server-side LiveMap authority
 
-Locus manages an authoritative LiveMap in a server environment. It holds app state in a single location and streams commit changes to clients via WebSocket. 
+Locus manages an authoritative LiveMap in a server environment. It holds app state in a single location and streams commit changes to clients via WebSocket.
 
 It coordinates:
 - canonical mutations
@@ -442,7 +442,7 @@ LiveTree
 DOM
 \`\`\`
 
-The authoritative map lives in the local application. 
+The authoritative map lives in the local application.
       `,
     },
     footer: "architecture / local",

@@ -16,7 +16,7 @@ export type TransformDomDependency =
 
 /**
  * Verified by executing every fixed Transform suite without DOM globals and
- * inspecting the shared circuit harness. The JSON/HSON entry paths themselves
+ * inspecting the shared circuit harness. The JSON/Hson entry paths themselves
  * are DOM-free, but these suites assert dual HTML round trips. HTML/mixed
  * fixtures additionally exercise DOM-backed production parsing directly.
  */

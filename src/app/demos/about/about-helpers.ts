@@ -7,7 +7,7 @@ import type { CssMap } from "hson-live/types";
 import { MD_TERM_RE } from "./about.consts";
 import type { ListItem } from "./about.types";
 import { _colors } from "../../core/consts/colors.consts";
-import { HSON } from "hson-live";
+import { Hson } from "hson-live";
 
 
 

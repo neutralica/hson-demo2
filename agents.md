@@ -1,6 +1,6 @@
 # agents.md
 
-This repository is a demo / integration surface for HSON + LiveTree + Intrastructure.
+This repository is a demo / integration surface for Hson + LiveTree + Intrastructure.
 Agents working in this repo must follow the rules below.
 
 ## 1. Scope and intent

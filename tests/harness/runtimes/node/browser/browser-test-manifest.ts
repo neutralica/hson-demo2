@@ -43,11 +43,11 @@ function browser_suite(
 
 export const BROWSER_SUITE_MANIFEST = Object.freeze([
   browser_suite("binary-hson", [
-    "browser Binary HSON exact bytes and canonical decode/encode closure",
-    "browser Binary HSON typed units preserve absent, undefined, empty, and px states",
-    "browser Binary HSON preserves UTF-16 lone surrogates and negative zero",
-    "browser Binary HSON SHA-256 equals browser WebCrypto over exact binary bytes",
-    "browser HSON JSON and HTML SHA-256 equal browser WebCrypto over exact UTF-8 bytes",
+    "browser Binary Hson exact bytes and canonical decode/encode closure",
+    "browser Binary Hson typed units preserve absent, undefined, empty, and px states",
+    "browser Binary Hson preserves UTF-16 lone surrogates and negative zero",
+    "browser Binary Hson SHA-256 equals browser WebCrypto over exact binary bytes",
+    "browser Hson JSON and HTML SHA-256 equal browser WebCrypto over exact UTF-8 bytes",
   ]),
   browser_suite("app-boot", [
     "splash completes naturally without retaining work or disposed nodes",
@@ -105,7 +105,7 @@ export const BROWSER_SUITE_MANIFEST = Object.freeze([
     "measure Phase 3 edit-to-certificate stages without imposing a budget",
   ]),
   browser_suite("parse-verification", [
-    "authored HSON reaches the Locus worker and browser certificate",
+    "authored Hson reaches the Locus worker and browser certificate",
     "JSON is an editable explicit verification origin",
     "authored HTML is admitted by DOMParser and reaches the final certificate",
     "an immediate parse failure never dispatches verification",
@@ -118,17 +118,17 @@ export const BROWSER_SUITE_MANIFEST = Object.freeze([
   browser_suite("parse", [
     "Parsing Panels lazily seeds the Wikipedia HTML demonstration",
     "Parse transforms valid-invalid-valid input without duplicate surfaces",
-    "HSON bare primitives preserve Demo and Transform semantic identity",
+    "Hson bare primitives preserve Demo and Transform semantic identity",
     "Demo accepts adjacent and empty element text items without collapsing order",
     "browser object parsing and serialization use one stable angle pair per object",
-    "browser HSON parsing enforces authored names, duplicates, and escape grammars",
+    "browser Hson parsing enforces authored names, duplicates, and escape grammars",
     "browser executes the portable strict Transform oracle and structured witness",
   ]),
   browser_suite("quid-selector", [
     "canonical QUID selectors schedule, apply, update, isolate, and clean up in HTML and SVG",
   ]),
   browser_suite("sanitizer-metadata", [
-    "production browser and Worker sanitizers share HSON metadata admission",
+    "production browser and Worker sanitizers share Hson metadata admission",
   ]),
   browser_suite("shell-resource-lifecycle", [
     "Bar-Bar and Pointer cancel owned loops and ambient listeners before recreation",

@@ -312,7 +312,7 @@ export function roundtrip_projection_stability(): TestSuite {
 }
 
 
-// helper — adjust this to however HSON-Live exposes/injects its style text in tests.
+// helper — adjust this to however Hson-Live exposes/injects its style text in tests.
 function get_style_text_for_test(tree: LiveTree): string {
     const sandboxEl = (tree as any).__sandboxEl as HTMLElement | undefined;
 

@@ -6,7 +6,7 @@ import { CssManager } from "hson-live/livetree";
 
 export const øWATERMARK_FMT_: Record<Fmt, string> = {
   json: "{JSON}",
-  hson: "<HSON>",
+  hson: "<Hson>",
   html: "<HTML/>",
 } as const;
 

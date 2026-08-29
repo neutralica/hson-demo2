@@ -101,7 +101,7 @@ export function livemap_suite_html_proof(): TestSuite {
 
       make_html_replace_case({
         suite: SUITE,
-        caseId: "html-projected-object-replace-removes-sibling-projection", name: "html projected object replace removes sibling projection",
+        caseId: "html-data object-replace-removes-sibling-projection", name: "html data object replace removes sibling projection",
         html: `<section><h1>Hello</h1><p>World</p></section>`,
         path: ["section"],
         value: { h1: "Changed" },
