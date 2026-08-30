@@ -56,7 +56,6 @@ export function livemap_suites_bridge(): TestSuite {
       make_input_writeback_case(SUITE),
       make_input_external_update_case(SUITE),
       make_input_dispose_case(SUITE),
-      make_schema_reject_case(SUITE),
       make_batch_single_update_case(SUITE),
       make_text_object_value_case(SUITE),
       make_text_array_value_case(SUITE),
@@ -303,44 +302,6 @@ function make_input_dispose_case(suite: string): TestCase {
           equal_row("disposed map remains unchanged by input", map.snap(), { form: { name: "Grace" } }),
         ],
       };
-    },
-  };
-}
-
-function make_schema_reject_case(suite: string): TestCase {
-  return {
-    suite,
-    caseId: "input-binding-schema-rejection-leaves-map-value-stable", name: "input binding schema rejection leaves map value stable",
-    meta: {
-      input: preview_value({ form: { count: 1 } }),
-      path: preview_value(["form", "count"]),
-    },
-    run: () => {
-      const schema = hson.liveMap.schema.define((s) => s.object({
-        form: s.object({
-          count: s.number,
-        }),
-      }));
-      const map = hson.liveMap.fromJson({ form: { count: 1 } }).schema.use(schema) as unknown as BridgeMap;
-      const target = make_input_target();
-
-      const binding = bind_input_value(target, map, ["form", "count"]);
-      target.setValue("not-a-number");
-
-      let message = "";
-      try {
-        target.emitInput();
-      } catch (error) {
-        message = error instanceof Error ? error.message : String(error);
-      }
-
-      const rows = [
-        equal_row("schema rejection mentions number", message.includes("expected number"), true),
-        equal_row("map remains stable", map.snap(), { form: { count: 1 } }),
-      ];
-      binding.dispose();
-
-      return { assertRows: rows };
     },
   };
 }

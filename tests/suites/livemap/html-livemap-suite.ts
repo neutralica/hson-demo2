@@ -101,7 +101,7 @@ export function livemap_suite_html_proof(): TestSuite {
 
       make_html_replace_case({
         suite: SUITE,
-        caseId: "html-data object-replace-removes-sibling-projection", name: "html data object replace removes sibling projection",
+        caseId: "html-data-object-replace-removes-sibling-projection", name: "html data object replace removes sibling projection",
         html: `<section><h1>Hello</h1><p>World</p></section>`,
         path: ["section"],
         value: { h1: "Changed" },
@@ -111,13 +111,6 @@ export function livemap_suite_html_proof(): TestSuite {
           },
         },
         expectedCommitChanged: true,
-      }),
-
-      make_html_schema_case({
-        suite: SUITE,
-        caseId: "html-projected-snap-accepts-compatible-schema", name: "html projected snap accepts compatible schema",
-        html: "<button>Press</button>",
-        expectedSnap: { button: "Press" },
       }),
     ] as const,
   };
@@ -222,29 +215,6 @@ function make_html_replace_case(spec: HtmlReplaceCaseSpec): TestCase {
       return {
         assertRows: [
           equal_row(`${spec.name}: changed`, commit.changed, spec.expectedCommitChanged),
-          equal_row(`${spec.name}: snap`, map.snap(), spec.expectedSnap),
-        ],
-      };
-    },
-  };
-}
-
-function make_html_schema_case(spec: HtmlSchemaCaseSpec): TestCase {
-  return {
-    suite: spec.suite,
-    caseId: spec.caseId, name: spec.name,
-    meta: {
-      html: spec.html,
-    },
-    run: () => {
-      const schema = hson.liveMap.schema.define((s) => s.object({
-        button: s.string,
-      }));
-
-      const map = html_map(spec.html).schema.use(schema);
-
-      return {
-        assertRows: [
           equal_row(`${spec.name}: snap`, map.snap(), spec.expectedSnap),
         ],
       };

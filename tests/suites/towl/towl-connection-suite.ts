@@ -9,8 +9,8 @@ import type {
   LocusSocketLike,
 } from "hson-live/types";
 import type { TestSuite } from "../../harness/core/test-contracts";
+import { TOWL_SCHEMA } from "../../../src/app/demos/towl/towl.schema";
 import {
-  TOWL_SCHEMA,
   classify_towl_connection_error,
   create_towl_connection_controller,
   create_towl_runtime,

@@ -110,7 +110,7 @@ export function create_towl_runtime(options: TowlRuntimeOptions = {}): TowlRunti
       reset_round: { payload: decode_empty },
     },
   };
-  const map = hson.liveMap.fromJson(create_towl_state()).schema.use(TOWL_SCHEMA);
+  const map = hson.liveMap.fromJson(create_towl_state()).schema.use<TowlState>(TOWL_SCHEMA);
   const host = create_locus({
     map,
     actions,

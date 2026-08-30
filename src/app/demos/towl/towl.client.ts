@@ -32,7 +32,7 @@ export type TowlSeat = TowlSeatId;
 export type TowlUncertainAction = LocusClientActionRequest<TowlActions>;
 
 export function create_towl_client_mirror(): LiveMap<TowlState> {
-  return hson.liveMap.fromJson(create_towl_state()).schema.use(TOWL_SCHEMA);
+  return hson.liveMap.fromJson(create_towl_state()).schema.use<TowlState>(TOWL_SCHEMA);
 }
 
 export type TowlClientOptions = Omit<

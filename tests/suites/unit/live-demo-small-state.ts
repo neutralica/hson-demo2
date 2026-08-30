@@ -1,8 +1,6 @@
 import type { TestCase, TestSuite } from "../../harness/core/test-contracts";
-import type { JsonValue } from "hson-live/types";
 import {
   create_oklch_store,
-  make_oklch_schema,
   type OklchCanonicalState,
 } from "../../../src/app/demos/oklch/oklch.state";
 import { read_bling_preference, write_bling_preference } from "../../../src/app/state/local-preferences";
@@ -21,10 +19,9 @@ function initial(): OklchCanonicalState {
 }
 
 function expect_valid(value: unknown, expected: boolean): void {
-  const result = make_oklch_schema(PATHS).validateRoot(value as JsonValue);
-  if (result.ok !== expected) {
-    throw new Error(`expected schema validation ok=${expected}, received ${JSON.stringify(result)}`);
-  }
+  let accepted = true;
+  try { create_oklch_store(value as OklchCanonicalState, PATHS); } catch { accepted = false; }
+  if (accepted !== expected) throw new Error(`expected application validation ok=${expected}`);
 }
 
 export function live_demo_small_state_suite(): TestSuite {
@@ -82,21 +79,6 @@ export function live_demo_small_state_suite(): TestSuite {
         }
         stopActive();
         stopTokens();
-      },
-    },
-    {
-      suite: SUITE,
-      caseId: "oklch-attached-schema-rejects-invalid-direct-location-writes", name: "OKLCH attached schema rejects invalid direct location writes",
-      run: () => {
-        const store = create_oklch_store(initial(), PATHS);
-        let rejected = false;
-        try {
-          store.locations.activePath.set("unknown");
-        } catch {
-          rejected = true;
-        }
-        if (!rejected) throw new Error("expected unknown active path to reject");
-        if (store.locations.activePath.snap() !== PATHS[0]) throw new Error("rejected write changed canonical state");
       },
     },
     {

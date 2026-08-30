@@ -22,7 +22,6 @@ export {
   type TowlRoomUrlState,
   type TowlEntryUrlState,
 } from "./towl.room";
-export { TOWL_SCHEMA } from "./towl.schema";
 export { create_towl_runtime } from "./towl.runtime";
 export {
   create_towl_state,

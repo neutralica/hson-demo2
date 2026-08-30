@@ -1,0 +1,8 @@
+{
+  "compatibilityVersion": "hson-schema-mvp-6",
+  "declarationIdentity": "src/app/demos/towl/towl.schema.ts#TOWL_SCHEMA",
+  "sourceDigest": "f7c0192a77edfa136f7bd4817f617d5a812012b61fc605f7d1248606ce6eeec6",
+  "semanticGraphDigest": "10545e592d9dfa1d25f721d52e21edabc4fea94a3f285faecf8a7d63ddf2c0eb",
+  "generatedDeclarationDigest": "ad544125911ce02ccad10010b4b7b8ffbb165e8e15e6cd44e699809a3b7c46aa",
+  "graphHson": "<format \"hson-canonical-schema\" version 1 capabilities <projectedRoot 0> nodes «<kind \"projected-object\" exact true properties ««\"phase\",1»,«\"player1\",2»,«\"player2\",9»,«\"position\",10»,«\"winner\",14»,«\"round\",17»»>,<kind \"projected-string\">,<kind \"projected-ref\" target 3>,<kind \"projected-object\" exact true properties ««\"sessionId\",4»,«\"connected\",7»,«\"ready\",8»»>,<kind \"projected-union\" choices «5,6»>,<kind \"projected-string\">,<kind \"projected-null\">,<kind \"projected-boolean\">,<kind \"projected-boolean\">,<kind \"projected-ref\" target 3>,<kind \"projected-refinement\" base 11 rule <kind \"integer\"> label \"int\">,<kind \"projected-refinement\" base 12 rule <kind \"number-lower-bound\" value -10 inclusive true> label \"min\">,<kind \"projected-refinement\" base 13 rule <kind \"number-upper-bound\" value 10 inclusive true> label \"max\">,<kind \"projected-number\">,<kind \"projected-union\" choices «15,16»>,<kind \"projected-string\">,<kind \"projected-null\">,<kind \"projected-refinement\" base 18 rule <kind \"integer\"> label \"int\">,<kind \"projected-refinement\" base 19 rule <kind \"number-lower-bound\" value 1 inclusive true> label \"min\">,<kind \"projected-number\">»>"
+}

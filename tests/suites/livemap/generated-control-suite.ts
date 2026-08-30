@@ -7,7 +7,7 @@ import { equal_row, preview_value } from "./test-helpers";
 import {
   render_livemap_schema_controls_snap,
 } from "../../../../hson-live/dist/api/livemap/livemap.bridge";
-import type { LiveControlViewBridgeTarget, LiveInputListenerResult, LiveMapSchemaControlSpec } from "../../../../hson-live/dist/types/bridge.types";
+import type { LiveControlViewBridgeTarget, LiveInputListenerResult, LiveMapControlSpec } from "../../../../hson-live/dist/types/bridge.types";
 
 type BridgeMap = LiveMap;
 type LiveTreeControlViewTarget = LiveControlViewBridgeTarget &
@@ -131,7 +131,7 @@ function make_schema_control_label_case(suite: string): TestCase {
     run: () => {
       const map = make_bridge_map({ title: "Ready" });
       const tree = make_control_view_target();
-      const schema: LiveMapSchemaControlSpec = {
+      const schema: LiveMapControlSpec = {
         title: {
           label: "Title",
           description: "Displayed heading",
@@ -166,7 +166,7 @@ function make_schema_control_number_attrs_case(suite: string): TestCase {
     run: () => {
       const map = make_bridge_map({ count: 1 });
       const tree = make_control_view_target();
-      const schema: LiveMapSchemaControlSpec = {
+      const schema: LiveMapControlSpec = {
         count: {
           kind: "number",
           min: 0,
@@ -205,7 +205,7 @@ function make_schema_control_enum_select_case(suite: string): TestCase {
     run: () => {
       const map = make_bridge_map({ mode: "draft" });
       const tree = make_control_view_target();
-      const schema: LiveMapSchemaControlSpec = {
+      const schema: LiveMapControlSpec = {
         mode: {
           kind: "enum",
           choices: ["draft", "published"],
@@ -243,7 +243,7 @@ function make_schema_control_boolean_checkbox_case(suite: string): TestCase {
     run: () => {
       const map = make_bridge_map({ enabled: true });
       const tree = make_control_view_target();
-      const schema: LiveMapSchemaControlSpec = {
+      const schema: LiveMapControlSpec = {
         enabled: {
           kind: "boolean",
           label: "Enabled",
@@ -282,7 +282,7 @@ function make_schema_control_nested_dotted_schema_path_case(suite: string): Test
     run: () => {
       const map = make_bridge_map({ ui: { count: 1 } });
       const tree = make_control_view_target();
-      const schema: LiveMapSchemaControlSpec = {
+      const schema: LiveMapControlSpec = {
         "ui.count": {
           kind: "number",
           label: "Count",
@@ -321,7 +321,7 @@ function make_schema_control_missing_schema_fallback_case(suite: string): TestCa
     run: () => {
       const map = make_bridge_map({ ui: { label: "Ready", count: 1 } });
       const tree = make_control_view_target();
-      const schema: LiveMapSchemaControlSpec = {
+      const schema: LiveMapControlSpec = {
         count: {
           kind: "number",
           min: 0,
@@ -365,7 +365,7 @@ function make_schema_control_binding_count_case(suite: string): TestCase {
     run: () => {
       const map = make_bridge_map({ ui: { label: "Ready", count: 1, enabled: true } });
       const tree = make_control_view_target();
-      const schema: LiveMapSchemaControlSpec = {
+      const schema: LiveMapControlSpec = {
         "ui.label": { label: "Label" },
         "ui.count": { kind: "number", min: 0 },
         "ui.enabled": { kind: "boolean", label: "Enabled" },
@@ -397,7 +397,7 @@ function make_schema_control_rerender_uses_latest_schema_case(suite: string): Te
     run: () => {
       const map = make_bridge_map({ count: 1 });
       const tree = make_control_view_target();
-      const firstSchema: LiveMapSchemaControlSpec = {
+      const firstSchema: LiveMapControlSpec = {
         count: {
           kind: "number",
           label: "First",
@@ -410,7 +410,7 @@ function make_schema_control_rerender_uses_latest_schema_case(suite: string): Te
       firstBinding.dispose();
       clear_generated_schema_controls(tree);
 
-      const secondSchema: LiveMapSchemaControlSpec = {
+      const secondSchema: LiveMapControlSpec = {
         count: {
           kind: "number",
           label: "Second",

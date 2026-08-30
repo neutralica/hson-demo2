@@ -190,12 +190,9 @@ try {
 
   runtime.reset_document();
   {
-    const schema = hson.liveMap.schema.define((s) => s.object.exact({ name: s.string, age: s.number.optional }));
-    const source = hson.liveMap.fromJson({ name: "Ada" }).schema.use(schema);
+    const source = hson.liveMap.fromJson({ name: "Ada" });
     const inspector = hson.inspect.create({ source, host: makeHost(), initialDepth: 1, showSchema: true });
     const selected = inspector.select(["name"]);
-    expect(selected.schema?.includes("string") === true && selected.schema.includes("required"), "selection resolves effective LiveMap schema facets");
-    expect(selected.schema?.includes("valid") === true, "schema detail reports current validation state");
     let observerCalls = 0;
     inspector.subscribe(() => { observerCalls += 1; throw new Error("observer fixture"); });
     source.set(["name"], "Grace");

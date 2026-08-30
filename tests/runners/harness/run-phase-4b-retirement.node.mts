@@ -1,11 +1,9 @@
 import assert from "node:assert/strict";
-import { hson } from "hson-live";
 import { decode_run_selected_tests_request } from "../../../src/shared/testing/test-run-contract";
 import { make_test_executor_discovery } from "../../harness/core/test-discovery";
 import { make_test_run_plan } from "../../harness/core/test-run-plan";
 import { TEST_CONVERGENCE_BOUNDARIES } from "../../harness/core/test-convergence-compatibility";
-import { HOSTED_TEST_COORDINATOR_SCHEMA } from "../../harness/hosted/hosted-test-application";
-import { HOSTED_TEST_REPORT_SCHEMA, make_initial_hosted_test_report } from "../../harness/reporting/hosted/hosted-test-report";
+import { make_initial_hosted_test_report } from "../../harness/reporting/hosted/hosted-test-report";
 import { resolve_external_launcher_binding, resolve_external_library_launchers } from "../../harness/runtimes/node/external-library-launchers";
 import { make_local_node_locus_executor_registry } from "../../harness/runtimes/node/livehost-node-executor";
 import { hosted_test_panel_primary_choices, hosted_test_panel_selected_ids } from "../../../src/app/demos/tests/panel/hosted-test-panel-selection";
@@ -14,13 +12,6 @@ let checks = 0;
 function certify(condition: unknown, message: string): asserts condition { assert.ok(condition, message); checks += 1; }
 function rejects(run: () => unknown, pattern?: RegExp): boolean {
   try { run(); return false; } catch (error) { return pattern === undefined || pattern.test(error instanceof Error ? error.message : String(error)); }
-}
-function schema_accepts(value: unknown, schema: unknown): boolean {
-  try {
-    const map = hson.liveMap.fromJson(JSON.parse(JSON.stringify(value)));
-    map.schema.use(schema as Parameters<typeof map.schema.use>[0]);
-    return true;
-  } catch { return false; }
 }
 
 const registry = make_local_node_locus_executor_registry();
@@ -51,16 +42,7 @@ certify(rejects(() => resolve_external_launcher_binding(availability, { ...opaqu
 certify(!Object.hasOwn(discovery, "externalTargets"), "discovery has no externalTargets side list");
 
 const report = make_initial_hosted_test_report(plan, 1);
-certify(schema_accepts(report, HOSTED_TEST_REPORT_SCHEMA), "normalized report passes the exact schema");
-for (const removed of ["caseBatches", "suites", "externalResults"] as const) certify(!schema_accepts({ ...report, [removed]: {} }, HOSTED_TEST_REPORT_SCHEMA), `removed report field ${removed} rejects`);
 certify(!Object.hasOwn(report, "caseBatches") && !Object.hasOwn(report, "suites") && !Object.hasOwn(report, "externalResults"), "report has no compatibility result bags");
-
-const attemptId = `${plan.runId}:attempt:1`;
-const coordinator = { requests: { client: { request: { clientId: "client", requestId: "request", runId: plan.runId, attemptId } } }, runs: { [plan.runId]: { id: plan.runId, clientId: "client", requestId: "request", suite: "canonical/selected", activeAttemptId: attemptId, acceptedPlan: plan, attempts: { [attemptId]: { id: attemptId, ordinal: 1, reportHostId: `hosted-report:${plan.runId}`, controlStatus: "settled", cancellation: null } } } } };
-certify(schema_accepts(coordinator, HOSTED_TEST_COORDINATOR_SCHEMA), "coordinator accepts one exact accepted RunPlan");
-certify(!schema_accepts({ ...coordinator, runs: { [plan.runId]: { ...coordinator.runs[plan.runId], acceptedPlan: null } } }, HOSTED_TEST_COORDINATOR_SCHEMA), "nullable acceptedPlan is retired");
-const { acceptedPlan: _removedPlan, ...planlessRun } = coordinator.runs[plan.runId]!;
-certify(!schema_accepts({ ...coordinator, runs: { [plan.runId]: planlessRun } }, HOSTED_TEST_COORDINATOR_SCHEMA), "plan-less coordinator runs reject");
 
 const choices = hosted_test_panel_primary_choices(discovery.catalog.tests, discovery.catalog.suites);
 certify(choices.map((choice) => choice.key).join("|") === "all|subject:transform|subject:livetree|subject:livemap|subject:livehost|subject:reflect|collection:unit|collection:dev", "selector UX remains All, subjects, Unit, and Dev");

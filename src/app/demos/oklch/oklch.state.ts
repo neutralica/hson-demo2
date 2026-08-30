@@ -1,51 +1,37 @@
-import { hson } from "hson-live";
-import type { InferLiveMapSchema } from "hson-live/livemap";
+import { Hson, hson, type HsonSchema } from "hson-live";
 import type { OklchValues } from "./oklch.types";
 
-const finite_range = (label: string, min: number, max: number) =>
-  hson.liveMap.schema.define((s) => s.number.constrain(
-    `${label} must be finite and within ${min}–${max}`,
-    (value) => Number.isFinite(value) && value >= min && value <= max,
-  ));
+export const OKLCH_SCHEMA: HsonSchema = Hson`
+  <type "data" content <
+    activePath "string"
+    tokens <array <content <
+      path "string"
+      value <content <
+        l <number <min 0 max 100>>
+        c <number <min 0 max 1>>
+        h <number <min 0 max 360>>
+        a <number <min 0 max 1>>
+      >>
+    >>>
+  >>
+`;
 
-const lightness = finite_range("OKLCH lightness", 0, 100);
-const chroma = finite_range("OKLCH chroma", 0, 1);
-const hue = finite_range("OKLCH hue", 0, 360);
-const alpha = finite_range("OKLCH alpha", 0, 1);
-
-export function make_oklch_schema(targetPaths: readonly string[]) {
-  const allowedPaths = new Set(targetPaths);
-  return hson.liveMap.schema.define((s) => s.object.exact({
-    activePath: s.string.constrain(
-      "activePath must identify one configured OKLCH token",
-      (value) => allowedPaths.has(value),
-    ),
-    tokens: s.array(s.object.exact({
-      path: s.string.constrain(
-        "token path must identify one configured OKLCH token",
-        (value) => allowedPaths.has(value),
-      ),
-      value: s.object.exact({
-        l: lightness,
-        c: chroma,
-        h: hue,
-        a: alpha,
-      }),
-    })).constrain(
-      "tokens must contain every configured path exactly once in configured order",
-      (tokens) => tokens.length === targetPaths.length
-        && tokens.every((token, index) => token.path === targetPaths[index]),
-    ),
-  }));
-}
-
-export type OklchCanonicalState = InferLiveMapSchema<ReturnType<typeof make_oklch_schema>>;
-export type OklchCanonicalToken = OklchCanonicalState["tokens"][number];
+export type OklchCanonicalToken = Readonly<{ path: string; value: OklchValues }>;
+export type OklchCanonicalState = Readonly<{
+  activePath: string;
+  tokens: readonly OklchCanonicalToken[];
+}>;
 
 export function create_oklch_store(initial: OklchCanonicalState, targetPaths: readonly string[]) {
+  const allowedPaths = new Set(targetPaths);
+  if (!allowedPaths.has(initial.activePath)
+    || initial.tokens.length !== targetPaths.length
+    || initial.tokens.some((token, index) => token.path !== targetPaths[index])) {
+    throw new TypeError("OKLCH state paths must match the configured targets exactly and in order.");
+  }
   const map = hson.liveMap
     .fromJson(JSON.stringify(initial))
-    .schema.use(make_oklch_schema(targetPaths));
+    .schema.use<OklchCanonicalState>(OKLCH_SCHEMA);
   const activePath = map.at(["activePath"]);
   const tokens = map.at(["tokens"]);
 
@@ -61,3 +47,8 @@ export function token_value(
 ): OklchValues | undefined {
   return tokens.find((token) => token.path === path)?.value;
 }
+
+// @hson-schema generated type exports
+import type { OKLCH_SCHEMAType, OKLCH_SCHEMAHson } from "./oklch.state.OKLCH_SCHEMA.hson-schema.generated.js";
+export type { OKLCH_SCHEMAType, OKLCH_SCHEMAHson };
+// @hson-schema end generated type exports

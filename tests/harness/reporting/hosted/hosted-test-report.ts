@@ -1,122 +1,12 @@
 import { hson } from "hson-live";
 import type { LiveMapAnyOp, LiveMapBatchTx, LiveMapCommit, LiveMapOp } from "hson-live/livemap";
 import type { JsonValue, LivePath } from "hson-live/types";
-import { TEST_SUBJECT_IDENTIFIERS } from "../../../../src/shared/testing/test-contracts";
 import type { RunResult, TestEvent } from "../../core/test-contracts";
 import { make_test_lifecycle_adapter } from "../../core/test-lifecycle";
-import { TEST_ERROR_KINDS, TEST_LIFECYCLE_STATUSES, type TestLifecycleCounts, type TestLifecycleError, type TestLifecycleEvent, type TestLifecycleStatus, type TestLifecycleTerminalStatus } from "../../../../src/shared/testing/test-lifecycle-contract";
+import type { TestLifecycleCounts, TestLifecycleError, TestLifecycleEvent, TestLifecycleStatus, TestLifecycleTerminalStatus } from "../../../../src/shared/testing/test-lifecycle-contract";
 import type { TestRunPlan } from "../../../../src/shared/testing/test-run-contract";
 import type { HostedTestInfrastructureError, HostedTestPlannedCaseReport, HostedTestReport, HostedTestReportCommit, HostedTestReportMap } from "../../../../src/shared/hosted-tests/hosted-test-report.types";
 import { HOSTED_TEST_SELECTED_RUN_TARGET } from "../../../../src/shared/hosted-tests/hosted-test-suite-contract";
-
-export const HOSTED_TEST_REPORT_SCHEMA = hson.liveMap.schema.define((s) => {
-  const nonNegativeInteger = s.number.constrain(
-    "non-negative integer",
-    (value) => Number.isInteger(value) && value >= 0,
-  );
-  const finiteNumber = s.number.constrain("finite number", Number.isFinite);
-  const lifecycleError = s.object.exact({
-    kind: s.pick(...TEST_ERROR_KINDS),
-    executorId: s.string,
-    message: s.string,
-    stack: s.string.nullable,
-    expected: s.string.nullable,
-    actual: s.string.nullable,
-  });
-  const counts = s.object.exact({
-    declared: nonNegativeInteger,
-    total: nonNegativeInteger,
-    executed: nonNegativeInteger,
-    passed: nonNegativeInteger,
-    failed: nonNegativeInteger,
-    skipped: nonNegativeInteger,
-    unsupported: nonNegativeInteger,
-    cancelled: nonNegativeInteger,
-  });
-  return s.object.exact({
-    run: s.object.exact({
-      id: s.string,
-      suite: s.pick(HOSTED_TEST_SELECTED_RUN_TARGET),
-      status: s.pick("idle", "running", "passed", "failed", "cancelled", "error"),
-      startedAt: finiteNumber.nullable,
-      completedAt: finiteNumber.nullable,
-      timing: s.object.exact({ runnerMs: finiteNumber, hostMs: finiteNumber }).nullable,
-      lastSequence: nonNegativeInteger,
-      lastEventSignature: s.string,
-    }),
-    summary: s.object.exact({
-      cases: nonNegativeInteger,
-      pass: nonNegativeInteger,
-      fail: nonNegativeInteger,
-      skip: nonNegativeInteger,
-    }),
-    plan: s.object.exact({
-      protocolVersion: nonNegativeInteger,
-      catalogVersion: s.string,
-      executorId: s.string,
-      selectionIds: s.array(s.string),
-    }),
-    suiteRuns: s.array(s.object.exact({
-      id: s.string,
-      title: s.string,
-      subject: s.pick(...TEST_SUBJECT_IDENTIFIERS),
-      collections: s.array(s.pick("unit", "dev")),
-      provenance: s.pick("hson-demo2", "hson-live"),
-      order: nonNegativeInteger,
-      executionShape: s.pick("cases", "browser-journeys", "opaque-aggregate", "certification-aggregate"),
-      plannedExecutorId: s.string,
-      sourceRef: s.string.nullable,
-      declaredChecks: nonNegativeInteger.nullable,
-      status: s.pick(...TEST_LIFECYCLE_STATUSES),
-      queuedAt: finiteNumber,
-      startedAt: finiteNumber.nullable,
-      completedAt: finiteNumber.nullable,
-      durationMs: finiteNumber.nullable,
-      ms: finiteNumber.nullable,
-      counts,
-      errors: s.array(lifecycleError),
-      evidence: s.array(s.object.exact({
-        id: s.string,
-        sequence: nonNegativeInteger,
-        timestamp: finiteNumber,
-        executorId: s.string,
-        kind: s.pick("stdout", "stderr", "runtime_warning", "raw_process_output", "protocol_control", "artifact"),
-        name: s.string,
-        content: s.string,
-        truncated: s.boolean,
-        knownBytes: nonNegativeInteger.nullable,
-        reference: s.string.nullable,
-        mediaType: s.string.nullable,
-      })),
-      evidenceRefs: s.array(s.string),
-      caseOrder: s.array(s.string),
-      runtime: s.string.nullable,
-      executorIds: s.array(s.string),
-      lastSequence: nonNegativeInteger,
-      lastEventSignature: s.string,
-      cases: s.array(s.object.exact({
-        id: s.string,
-        caseId: s.string,
-        title: s.string,
-        order: nonNegativeInteger,
-        status: s.pick(...TEST_LIFECYCLE_STATUSES),
-        queuedAt: finiteNumber,
-        startedAt: finiteNumber.nullable,
-        completedAt: finiteNumber.nullable,
-        durationMs: finiteNumber.nullable,
-        ms: finiteNumber.nullable,
-        err: s.string.nullable,
-        diagnostic: s.unknown.nullable,
-        errors: s.array(lifecycleError),
-        evidenceRefs: s.array(s.string),
-        executorId: s.string.nullable,
-        lastSequence: nonNegativeInteger,
-        lastEventSignature: s.string,
-      })),
-    })),
-    error: lifecycleError.nullable,
-  });
-});
 
 export function make_initial_hosted_test_report(
   runPlan: TestRunPlan,
@@ -348,7 +238,7 @@ export function make_hosted_test_report(
   const queuedAt = finite_time(now);
   const initialJson = JSON.parse(JSON.stringify(make_initial_hosted_test_report(options.runPlan, queuedAt))) as JsonValue;
   const map = options.map === undefined
-    ? hson.liveMap.fromJson(initialJson).schema.use(HOSTED_TEST_REPORT_SCHEMA) as unknown as HostedTestReportMap
+    ? hson.liveMap.fromJson(initialJson) as unknown as HostedTestReportMap
     : options.map;
   const captured: HostedTestReportCommit[] = [];
   const unsubscribe = options.captureCommits === false

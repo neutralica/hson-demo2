@@ -1,27 +1,19 @@
-import { hson } from "hson-live";
-import { TOWL_WIN_POSITION } from "./towl.consts";
+import { Hson, type HsonSchema } from "hson-live";
 
-const ropePosition = hson.liveMap.schema.define((s) => s.number.constrain(
-  "integer TOWL rope position within the win boundaries",
-  (value) => Number.isInteger(value) && Math.abs(value) <= TOWL_WIN_POSITION,
-));
+export const TOWL_SCHEMA: HsonSchema = Hson`
+  <type "data" defs <
+    Seat <content <sessionId <union ["string", "null"]> connected "boolean" ready "boolean">>
+  > content <
+    phase "string"
+    player1 <ref "Seat">
+    player2 <ref "Seat">
+    position <number <int true min -10 max 10>>
+    winner <union ["string", "null"]>
+    round <number <int true min 1>>
+  >>
+`;
 
-const positiveInteger = hson.liveMap.schema.define((s) => s.number.constrain(
-  "positive integer",
-  (value) => Number.isInteger(value) && value > 0,
-));
-
-const seat = hson.liveMap.schema.define((s) => s.object.exact({
-  sessionId: s.string.nullable,
-  connected: s.boolean,
-  ready: s.boolean,
-}));
-
-export const TOWL_SCHEMA = hson.liveMap.schema.define((s) => s.object.exact({
-  phase: s.pick("lobby", "ready", "playing", "finished"),
-  player1: seat,
-  player2: seat,
-  position: ropePosition,
-  winner: s.pick("player1", "player2").nullable,
-  round: positiveInteger,
-}));
+// @hson-schema generated type exports
+import type { TOWL_SCHEMAType, TOWL_SCHEMAHson } from "./towl.schema.TOWL_SCHEMA.hson-schema.generated.js";
+export type { TOWL_SCHEMAType, TOWL_SCHEMAHson };
+// @hson-schema end generated type exports

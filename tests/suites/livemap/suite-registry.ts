@@ -11,12 +11,10 @@ import { livemap_suites_path } from "./path-suite";
 import { livemap_suites_guard } from "./guard-suite";
 import { livemap_suites_handle_2 } from "./handle-suite-2";
 import { livemap_suites_proxy } from "./proxy-suite";
-import { livemap_suites_schema } from "./schema-suite";
 import { livemap_suites_api } from "./api-suite";
 import { livemap_suites_store } from "./store-suite";
 import { livemap_suite_batch } from "./batch-suite";
-import { livemap_editor_contract, livemap_object_exact } from "./editor-contract-tests";
-import { livemap_schema_contract_suite } from "./editor-contract-tests";
+import { livemap_editor_contract } from "./editor-contract-tests";
 import { livemap_link_contract_suites } from "./link-contract-suite";
 import { snap_live_path } from "hson-live/livemap";
 import { livemap_suite_html_proof } from "./html-livemap-suite";
@@ -38,7 +36,6 @@ import {
 import { livemap_projected_equality_suite } from "./projected-equality-suite";
 import { livemap_ordered_object_array_helpers_suite } from "./ordered-object-array-helpers-suite";
 import { livemap_equivalence_mutation_matrix_suite } from "./equivalence-mutation-matrix-suite";
-import { livemap_equivalence_schema_helper_matrix_suite } from "./equivalence-schema-helper-matrix-suite";
 import { livemap_equivalence_transport_propagation_suite } from "./equivalence-transport-propagation-suite";
 import { livemap_equivalence_rejection_isolation_suite } from "./equivalence-rejection-isolation-suite";
 
@@ -98,13 +95,10 @@ export function all_livemap_suites(): readonly TestSuite[] {
     livemap_suites_guard(),
     livemap_suites_handle_2(),
     livemap_suites_proxy(),
-    livemap_suites_schema(),
     livemap_suites_api(),
     livemap_suites_store(),
     livemap_suite_batch(),
     livemap_editor_contract(),
-    livemap_schema_contract_suite(),
-    livemap_object_exact(),
     livemap_link_contract_suites(),
     livemap_suites_bridge(),
     livemap_suites_bridge_livetree(),
@@ -122,7 +116,6 @@ export function all_livemap_suites(): readonly TestSuite[] {
     livemap_projected_equality_suite(),
     livemap_ordered_object_array_helpers_suite(),
     livemap_equivalence_mutation_matrix_suite(),
-    livemap_equivalence_schema_helper_matrix_suite(),
     livemap_equivalence_transport_propagation_suite(),
     livemap_equivalence_rejection_isolation_suite(),
 

@@ -1,5 +1,5 @@
-import { hson } from "hson-live";
-import { MAIN_VIEW_IDS, WIDGET_IDS, type WidgetId } from "./shell-ids";
+import { Hson, type HsonSchema } from "hson-live";
+import { WIDGET_IDS, type WidgetId } from "./shell-ids";
 
 export function are_canonical_widget_ids(widgets: readonly WidgetId[]): boolean {
   let priorRegistrationIndex = -1;
@@ -11,12 +11,14 @@ export function are_canonical_widget_ids(widgets: readonly WidgetId[]): boolean 
   return true;
 }
 
-export const DEMO_LIVEMAP_SCHEMA = hson.liveMap.schema.define((s) => s.object.exact({
-  ui: s.object.exact({
-    currentView: s.literal(...MAIN_VIEW_IDS).nullable,
-    activeWidgets: s.array(s.literal(...WIDGET_IDS)).constrain(
-      "unique widget IDs in registration order",
-      are_canonical_widget_ids,
-    ),
-  }),
-}));
+export const DEMO_LIVEMAP_SCHEMA: HsonSchema = Hson`
+  <type "data" content <ui <content <
+    currentView <union ["string", "null"]>
+    activeWidgets <array "string">
+  >>>>
+`;
+
+// @hson-schema generated type exports
+import type { DEMO_LIVEMAP_SCHEMAType, DEMO_LIVEMAP_SCHEMAHson } from "./shell.schema.DEMO_LIVEMAP_SCHEMA.hson-schema.generated.js";
+export type { DEMO_LIVEMAP_SCHEMAType, DEMO_LIVEMAP_SCHEMAHson };
+// @hson-schema end generated type exports

@@ -202,8 +202,6 @@ The twelve entries marked as removed were internal re-export shims: ten LiveHost
 | `src/tests/livemap-tests/bridge-livetree-2.ts` | suite definition | `tests/suites/livemap/bridge-livetree-2.ts` |
 | `src/tests/livemap-tests/bridge-livetree-suite.ts` | suite definition | `tests/suites/livemap/bridge-livetree-suite.ts` |
 | `src/tests/livemap-tests/bridge-suite.ts` | suite definition | `tests/suites/livemap/bridge-suite.ts` |
-| `src/tests/livemap-tests/compile-tests-api-bulk.ts` | suite definition | `tests/suites/livemap/compile-tests-api-bulk.ts` |
-| `src/tests/livemap-tests/compile-tests-schema.ts` | suite definition | `tests/suites/livemap/compile-tests-schema.ts` |
 | `src/tests/livemap-tests/core-helpers.ts` | suite definition | `tests/suites/livemap/core-helpers.ts` |
 | `src/tests/livemap-tests/core-suite.ts` | suite definition | `tests/suites/livemap/core-suite.ts` |
 | `src/tests/livemap-tests/core.types.ts` | helper | `tests/suites/livemap/core.types.ts` |
@@ -232,7 +230,6 @@ The twelve entries marked as removed were internal re-export shims: ten LiveHost
 | `src/tests/livemap-tests/run-replay-suite.node.mts` | runner | `tests/runners/livemap/run-replay-suite.node.mts` |
 | `src/tests/livemap-tests/run-replay-suite.ts` | runner | `tests/runners/livemap/run-replay-suite.ts` |
 | `src/tests/livemap-tests/schema-control-suite-2.ts` | suite definition | `tests/suites/livemap/schema-control-suite-2.ts` |
-| `src/tests/livemap-tests/schema-suite.ts` | suite definition | `tests/suites/livemap/schema-suite.ts` |
 | `src/tests/livemap-tests/store-suite.ts` | suite definition | `tests/suites/livemap/store-suite.ts` |
 | `src/tests/livemap-tests/test-helpers.ts` | suite definition | `tests/suites/livemap/test-helpers.ts` |
 | `src/tests/livemap-tests/types.ts` | suite definition | `tests/suites/livemap/types.ts` |

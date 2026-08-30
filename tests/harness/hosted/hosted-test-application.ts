@@ -15,7 +15,7 @@ import { hson } from "hson-live";
 import type { JsonValue } from "hson-live/types";
 import type { TestExecutorDiscovery } from "../../../src/shared/testing/test-discovery-contract";
 import { decode_test_executor_discovery_request } from "../../../src/shared/testing/test-discovery-contract";
-import { TEST_SUBJECT_IDENTIFIERS, type TestFailure, type TestSummary } from "../../../src/shared/testing/test-contracts";
+import type { TestFailure, TestSummary } from "../../../src/shared/testing/test-contracts";
 import type { RunOptions, RunResult, TestEvent } from "../core/test-contracts";
 import type { TestExecutorRegistry } from "../core/test-executor";
 import { decode_run_selected_tests_request } from "../../../src/shared/testing/test-run-contract";
@@ -31,7 +31,6 @@ import {
   type HostedTestRunRetention,
 } from "./hosted-test-action";
 import {
-  HOSTED_TEST_REPORT_SCHEMA,
   make_hosted_test_report,
   make_initial_hosted_test_report,
   type HostedTestReportController,
@@ -62,70 +61,6 @@ export type {
   HostedTestRunAssociation,
   HostedTestRunRequestAssociation,
 } from "../../../src/shared/hosted-tests/hosted-test-application.types";
-
-export const HOSTED_TEST_COORDINATOR_SCHEMA = hson.liveMap.schema.define((s) => {
-  const nonNegativeInteger = s.number.constrain(
-    "non-negative integer",
-    (value) => Number.isSafeInteger(value) && value >= 0,
-  );
-  const positiveInteger = s.number.constrain(
-    "positive integer",
-    (value) => Number.isSafeInteger(value) && value >= 1,
-  );
-  const plannedCase = s.object.exact({
-    id: s.string,
-    caseId: s.string,
-    title: s.string,
-    order: nonNegativeInteger,
-  });
-  const plannedSuite = s.object.exact({
-    id: s.string,
-    title: s.string,
-    subject: s.pick(...TEST_SUBJECT_IDENTIFIERS),
-    collections: s.array(s.pick("unit", "dev")),
-    provenance: s.pick("hson-demo2", "hson-live"),
-    order: nonNegativeInteger,
-    executionShape: s.pick("cases", "browser-journeys", "opaque-aggregate", "certification-aggregate"),
-    executorId: s.string.optional,
-    sourceRef: s.string.optional,
-    declaredChecks: nonNegativeInteger.optional,
-    cases: s.array(plannedCase),
-  });
-  const runPlan = s.object.exact({
-    runId: s.string,
-    protocolVersion: positiveInteger,
-    catalogVersion: s.string,
-    executorId: s.string,
-    selectionIds: s.array(s.string),
-    suites: s.array(plannedSuite),
-  });
-  const request = s.object.exact({
-    clientId: s.string,
-    requestId: s.string,
-    runId: s.string,
-    attemptId: s.string,
-  });
-  const attempt = s.object.exact({
-    id: s.string,
-    ordinal: positiveInteger,
-    reportHostId: s.string,
-    controlStatus: s.pick("accepted", "running", "cancelling", "settled"),
-    cancellation: s.object.exact({ clientId: s.string, requestId: s.string }).nullable,
-  });
-  const run = s.object.exact({
-    id: s.string,
-    clientId: s.string,
-    requestId: s.string,
-    suite: s.pick(HOSTED_TEST_SELECTED_RUN_TARGET),
-    activeAttemptId: s.string,
-    acceptedPlan: runPlan,
-    attempts: s.record(attempt),
-  });
-  return s.object.exact({
-    requests: s.record(s.record(request.optional).optional),
-    runs: s.record(run.optional),
-  });
-});
 
 type HostedTestReportActions = Readonly<{
   "tests.inspect": HostedTestInspectRequest;
@@ -382,8 +317,7 @@ export function create_hosted_test_application(
     reportPlan: TestRunPlan;
   }>;
   const reportBlueprints = new Map<string, ReportBlueprint>();
-  const coordinatorMap = hson.liveMap.fromJson({ requests: {}, runs: {} })
-    .schema.use(HOSTED_TEST_COORDINATOR_SCHEMA) as unknown as HostedTestCoordinatorMap;
+  const coordinatorMap = hson.liveMap.fromJson({ requests: {}, runs: {} }) as unknown as HostedTestCoordinatorMap;
   const attemptControls = new Map<string, HostedTestExecutionControl>();
   let coordinator: Locus<HostedTestCoordinatorMap, HostedTestActions>;
   let disposing = false;
@@ -420,7 +354,7 @@ export function create_hosted_test_application(
       suites: initial.suiteRuns.length,
       cases: initial.suiteRuns.reduce((total, suiteRun) => total + suiteRun.cases.length, 0),
     });
-    const map = hson.liveMap.fromJson(initial).schema.use(HOSTED_TEST_REPORT_SCHEMA) as unknown as HostedTestReportMap;
+    const map = hson.liveMap.fromJson(initial) as unknown as HostedTestReportMap;
     const host = create_locus({
       map,
       actions: reportActions,

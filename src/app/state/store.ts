@@ -1,6 +1,6 @@
 import { hson } from "hson-live";
-import { WIDGET_IDS, type MainViewId, type WidgetId } from "./shell-ids";
-import { DEMO_LIVEMAP_SCHEMA } from "./shell.schema";
+import { MAIN_VIEW_IDS, WIDGET_IDS, type MainViewId, type WidgetId } from "./shell-ids";
+import { are_canonical_widget_ids, DEMO_LIVEMAP_SCHEMA } from "./shell.schema";
 import type { DemoState, DemoStore, DemoView } from "./state.types";
 
 export function make_initial_demo_state(): DemoState {
@@ -15,8 +15,6 @@ export function make_initial_demo_state(): DemoState {
 export const INITIAL_DEMO_STATE: DemoState = make_initial_demo_state();
 
 
-export { DEMO_LIVEMAP_SCHEMA } from "./shell.schema";
-
 export function canonicalize_widget_ids(widgets: readonly WidgetId[]): WidgetId[] {
   return WIDGET_IDS.filter((widget) => widgets.includes(widget));
 }
@@ -24,9 +22,15 @@ export function canonicalize_widget_ids(widgets: readonly WidgetId[]): WidgetId[
 export function create_demo_store(
   initial: DemoState = INITIAL_DEMO_STATE,
 ): DemoStore {
+  if (initial.ui.currentView !== null && !MAIN_VIEW_IDS.includes(initial.ui.currentView)) {
+    throw new TypeError("Demo view must be a registered main view.");
+  }
+  if (!are_canonical_widget_ids(initial.ui.activeWidgets)) {
+    throw new TypeError("Demo widgets must be unique and in registration order.");
+  }
   const demoState = hson.liveMap
     .fromJson(JSON.stringify(initial))
-    .schema.use(DEMO_LIVEMAP_SCHEMA);
+    .schema.use<DemoState>(DEMO_LIVEMAP_SCHEMA);
   const currentView = demoState.at(["ui", "currentView"]);
   const activeWidgets = demoState.at(["ui", "activeWidgets"]);
   const locations = { currentView, activeWidgets } as const;

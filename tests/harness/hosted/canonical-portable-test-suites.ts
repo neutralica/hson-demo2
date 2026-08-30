@@ -10,14 +10,11 @@ import { livemap_suites_path } from "../../suites/livemap/path-suite";
 import { livemap_suites_guard } from "../../suites/livemap/guard-suite";
 import { livemap_suites_handle_2 } from "../../suites/livemap/handle-suite-2";
 import { livemap_suites_proxy } from "../../suites/livemap/proxy-suite";
-import { livemap_suites_schema } from "../../suites/livemap/schema-suite";
 import { livemap_suites_api } from "../../suites/livemap/api-suite";
 import { livemap_suites_store } from "../../suites/livemap/store-suite";
 import { livemap_suite_batch } from "../../suites/livemap/batch-suite";
 import {
   livemap_editor_contract,
-  livemap_object_exact,
-  livemap_schema_contract_suite,
 } from "../../suites/livemap/editor-contract-tests";
 import { livemap_link_contract_suites } from "../../suites/livemap/link-contract-suite";
 import { livemap_suites_bridge } from "../../suites/livemap/bridge-suite";
@@ -34,7 +31,6 @@ import {
 import { livemap_projected_equality_suite } from "../../suites/livemap/projected-equality-suite";
 import { livemap_ordered_object_array_helpers_suite } from "../../suites/livemap/ordered-object-array-helpers-suite";
 import { livemap_equivalence_mutation_matrix_suite } from "../../suites/livemap/equivalence-mutation-matrix-suite";
-import { livemap_equivalence_schema_helper_matrix_suite } from "../../suites/livemap/equivalence-schema-helper-matrix-suite";
 import { livemap_equivalence_transport_propagation_suite } from "../../suites/livemap/equivalence-transport-propagation-suite";
 import { livemap_equivalence_rejection_isolation_suite } from "../../suites/livemap/equivalence-rejection-isolation-suite";
 import { parsing_verification_coordinator_suite } from "../../suites/transform/parsing-verification-coordinator-suite";
@@ -92,13 +88,10 @@ export function all_canonical_portable_test_suites(): readonly TestSuite[] {
     livemap_suites_guard(),
     livemap_suites_handle_2(),
     livemap_suites_proxy(),
-    livemap_suites_schema(),
     livemap_suites_api(),
     livemap_suites_store(),
     livemap_suite_batch(),
     livemap_editor_contract(),
-    livemap_schema_contract_suite(),
-    livemap_object_exact(),
     livemap_link_contract_suites(),
     livemap_suites_bridge(),
     livemap_misc_suite(),
@@ -110,7 +103,6 @@ export function all_canonical_portable_test_suites(): readonly TestSuite[] {
     livemap_projected_equality_suite(),
     livemap_ordered_object_array_helpers_suite(),
     livemap_equivalence_mutation_matrix_suite(),
-    livemap_equivalence_schema_helper_matrix_suite(),
     livemap_equivalence_transport_propagation_suite(),
     livemap_equivalence_rejection_isolation_suite(),
     parsing_verification_coordinator_suite(),

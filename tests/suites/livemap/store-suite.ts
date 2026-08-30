@@ -128,7 +128,7 @@ export function livemap_suites_store(): TestSuite {
             },
             {
                 suite: SUITE,
-                caseId: "subscribediff-skips-unchanged-ordered-data state", name: "subscribeDiff skips unchanged ordered data state",
+                caseId: "subscribediff-skips-unchanged-ordered-data-state", name: "subscribeDiff skips unchanged ordered data state",
                 run: () => {
                     const map = as_ui_map({
                         ui: {

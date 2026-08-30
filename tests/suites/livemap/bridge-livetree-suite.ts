@@ -50,7 +50,6 @@ export function livemap_suites_bridge_livetree(): TestSuite {
       make_livetree_attr_zero_case(SUITE),
       make_livetree_input_number_writeback_case(SUITE),
       make_livetree_input_boolean_writeback_case(SUITE),
-      make_livetree_input_schema_reject_case(SUITE),
       make_livetree_input_dispose_writeback_case(SUITE),
       make_livetree_text_fanout_case(SUITE),
       make_livetree_input_to_text_loop_case(SUITE),
@@ -668,44 +667,6 @@ function make_livetree_input_boolean_writeback_case(suite: string): TestCase {
       emit_input(tree);
 
       const rows = [equal_row("boolean LiveTree input writeback", map.snap(), { form: { enabled: true } })];
-      binding.dispose();
-
-      return { assertRows: rows };
-    },
-  };
-}
-
-function make_livetree_input_schema_reject_case(suite: string): TestCase {
-  return {
-    suite,
-    caseId: "livetree-input-binding-schema-rejection-leaves-map-value-stable", name: "LiveTree input binding schema rejection leaves map value stable",
-    meta: {
-      input: preview_value({ form: { count: 1 } }),
-      path: preview_value(["form", "count"]),
-    },
-    run: () => {
-      const schema = hson.liveMap.schema.define((s) => s.object({
-        form: s.object({
-          count: s.number,
-        }),
-      }));
-      const map = hson.liveMap.fromJson({ form: { count: 1 } }).schema.use(schema) as unknown as BridgeMap;
-      const tree = make_livetree_input_target();
-
-      const binding = bind_livetree_input_value(tree, map.at(["form", "count"]));
-      tree.form.setValue("not-a-number", { silent: true });
-
-      let message = "";
-      try {
-        emit_input(tree);
-      } catch (error) {
-        message = error instanceof Error ? error.message : String(error);
-      }
-
-      const rows = [
-        equal_row("schema rejection mentions number", message.includes("expected number"), true),
-        equal_row("schema rejection keeps map stable", map.snap(), { form: { count: 1 } }),
-      ];
       binding.dispose();
 
       return { assertRows: rows };

@@ -1,0 +1,8 @@
+{
+  "compatibilityVersion": "hson-schema-mvp-6",
+  "declarationIdentity": "src/app/demos/cellsheet/cellsheet.state.ts#CELLSHEET_WORKBOOK_SCHEMA",
+  "sourceDigest": "fa60c15c16bd21a7583d2b1f01929165f16d1eabded65e09f816e20241458bf8",
+  "semanticGraphDigest": "d04f3a559089615b7c9a68cfbcfce7ab3f38fd32e6b915dcbb3df65d465e3def",
+  "generatedDeclarationDigest": "ee9d33319a7f0866a6e8412f9771fbb624e5d3b850d97787b2fc81650830b4da",
+  "graphHson": "<format \"hson-canonical-schema\" version 1 capabilities <projectedRoot 0> nodes «<kind \"projected-object\" exact true properties ««\"cells\",1»»>,<kind \"projected-tuple\" items «2,12,13,14,15,16,17,18»>,<kind \"projected-ref\" target 3>,<kind \"projected-tuple\" items «4,5,6,7,8,9,10,11»>,<kind \"projected-string\">,<kind \"projected-string\">,<kind \"projected-string\">,<kind \"projected-string\">,<kind \"projected-string\">,<kind \"projected-string\">,<kind \"projected-string\">,<kind \"projected-string\">,<kind \"projected-ref\" target 3>,<kind \"projected-ref\" target 3>,<kind \"projected-ref\" target 3>,<kind \"projected-ref\" target 3>,<kind \"projected-ref\" target 3>,<kind \"projected-ref\" target 3>,<kind \"projected-ref\" target 3>»>"
+}

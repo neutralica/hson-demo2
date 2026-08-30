@@ -1,0 +1,8 @@
+{
+  "compatibilityVersion": "hson-schema-mvp-6",
+  "declarationIdentity": "src/app/state/shell.schema.ts#DEMO_LIVEMAP_SCHEMA",
+  "sourceDigest": "c5d9c8272d6da3c428623b18a824c436d1b3f48a13438594a5dea1031f94054f",
+  "semanticGraphDigest": "c9801e0392f3288d225020fb82bfb933ed59864722ae519397e006797956e80f",
+  "generatedDeclarationDigest": "fac114b9189ab6f9e4ae494cec9d149b31ddecca7cc4545998c518d10c34e591",
+  "graphHson": "<format \"hson-canonical-schema\" version 1 capabilities <projectedRoot 0> nodes «<kind \"projected-object\" exact true properties ««\"ui\",1»»>,<kind \"projected-object\" exact true properties ««\"currentView\",2»,«\"activeWidgets\",5»»>,<kind \"projected-union\" choices «3,4»>,<kind \"projected-string\">,<kind \"projected-null\">,<kind \"projected-array\" item 6>,<kind \"projected-string\">»>"
+}

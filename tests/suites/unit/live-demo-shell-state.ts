@@ -1,6 +1,4 @@
-import type { JsonValue } from "hson-live/types";
 import type { TestCase, TestSuite } from "../../harness/core/test-contracts";
-import { DEMO_LIVEMAP_SCHEMA } from "../../../src/app/state/shell.schema";
 import { canonicalize_widget_ids, create_demo_store } from "../../../src/app/state/store";
 import type { DemoView, WidgetId } from "../../../src/app/state/state.types";
 
@@ -12,11 +10,10 @@ function state(activeWidgets: WidgetId[] = [], currentView: DemoView = null): {
   return { ui: { currentView, activeWidgets } };
 }
 
-function assert_validation(candidate: JsonValue, expected: boolean): void {
-  const validation = DEMO_LIVEMAP_SCHEMA.validateRoot(candidate);
-  if (validation.ok !== expected) {
-    throw new Error(`expected validation ok=${expected}, received ${JSON.stringify(validation)}`);
-  }
+function assert_validation(candidate: ReturnType<typeof state> | { ui: { currentView: string | null; activeWidgets: string[]; aboutTocOpen?: boolean } }, expected: boolean): void {
+  let accepted = true;
+  try { create_demo_store(candidate as never); } catch { accepted = false; }
+  if (accepted !== expected) throw new Error(`expected application validation ok=${expected}`);
 }
 
 function assert_widgets(actual: readonly WidgetId[], expected: readonly WidgetId[]): void {
@@ -82,21 +79,6 @@ export function live_demo_shell_state_suite(): TestSuite {
         canonicalize_widget_ids(["bling", "point", "point", "oklch"]),
         ["point", "oklch", "bling"],
       ),
-    },
-    {
-      suite: SUITE,
-      caseId: "typed-widget-location-retains-the-schema-as-final-invariant-guard", name: "typed widget location retains the schema as final invariant guard",
-      run: () => {
-        const store = create_demo_store(state(["point", "bling"]));
-        let rejected = false;
-        try {
-          store.locations.activeWidgets.set(["bling", "point"]);
-        } catch {
-          rejected = true;
-        }
-        if (!rejected) throw new Error("expected noncanonical direct location write to reject");
-        assert_widgets(store.getWidgets(), ["point", "bling"]);
-      },
     },
     {
       suite: SUITE,

@@ -8,7 +8,7 @@ import {
 import type { JsonValue, LiveMap } from "hson-live/types";
 import type { TestCase, TestSuite } from "../../harness/core/test-contracts";
 import { equal_row, preview_value } from "./test-helpers";
-import type { LiveControlViewBridgeTarget, LiveInputListenerResult, LiveMapSchemaControlSpec } from "../../../../hson-live/dist/types/bridge.types";
+import type { LiveControlViewBridgeTarget, LiveInputListenerResult, LiveMapControlSpec } from "../../../../hson-live/dist/types/bridge.types";
 
 type BridgeMap = LiveMap;
 type LiveTreeControlViewTarget = LiveControlViewBridgeTarget &
@@ -101,7 +101,7 @@ function make_bridge_map(value: JsonValue): BridgeMap {
   return hson.liveMap.fromJson(value) as unknown as BridgeMap;
 }
 
-function make_number_schema(min: number, max: number): LiveMapSchemaControlSpec {
+function make_number_schema(min: number, max: number): LiveMapControlSpec {
   return {
     count: {
       kind: "number",

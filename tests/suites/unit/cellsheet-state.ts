@@ -1,6 +1,6 @@
 import type { TestCase, TestSuite } from "../../harness/core/test-contracts";
+import { Hson, hson } from "hson-live";
 import type { JsonValue } from "hson-live/types";
-import type { InferLiveMapSchema } from "hson-live/livemap";
 import {
   CELLSHEET_WORKBOOK_SCHEMA,
   create_cellsheet_workbook_store,
@@ -21,10 +21,6 @@ type Equal<TLeft, TRight> =
   (<T>() => T extends TRight ? 1 : 2) ? true : false;
 type Expect<TValue extends true> = TValue;
 type Snap<TLocation extends { snap: () => unknown }> = ReturnType<TLocation["snap"]>;
-type _WorkbookIsSchemaInferred = Expect<Equal<
-  CellsheetWorkbook,
-  InferLiveMapSchema<typeof CELLSHEET_WORKBOOK_SCHEMA>
->>;
 
 function typed_location_evidence(): void {
   const cells = create_cellsheet_workbook_store().locations.cells;
@@ -62,7 +58,12 @@ function deep_equal(actual: unknown, expected: unknown, message: string): void {
 }
 
 function rejects(value: JsonValue, message: string): void {
-  if (CELLSHEET_WORKBOOK_SCHEMA.validateRoot(value).ok) fail(message);
+  try {
+    Hson.certify(CELLSHEET_WORKBOOK_SCHEMA, hson.fromJson(value).toHson().serialize());
+  } catch {
+    return;
+  }
+  fail(message);
 }
 
 export function cellsheet_state_suite(): TestSuite {
@@ -72,7 +73,7 @@ export function cellsheet_state_suite(): TestSuite {
       caseId: "seeded-workbook-is-the-exact-8-by-8-raw-string-shape", name: "seeded workbook is the exact 8 by 8 raw-string shape",
       run: () => {
         const workbook = create_seeded_cellsheet_workbook();
-        equal(CELLSHEET_WORKBOOK_SCHEMA.validateRoot(workbook).ok, true, "schema admission");
+        Hson.certify(CELLSHEET_WORKBOOK_SCHEMA, hson.fromJson(workbook).toHson().serialize());
         deep_equal(Object.keys(workbook), ["cells"], "canonical keys");
         equal(workbook.cells.length, 8, "row count");
         for (const row of workbook.cells) {
@@ -155,9 +156,6 @@ export function cellsheet_state_suite(): TestSuite {
         deep_equal(Object.keys(store.map.snap()), ["cells"], "map keys");
         equal(store.map.rev, 0, "fresh revision");
         equal(store.map.schema.get(), CELLSHEET_WORKBOOK_SCHEMA, "attached schema");
-        equal(store.map.schema.has(["cells", 0, 0]), true, "valid cell schema path");
-        equal(store.map.schema.has(["cells", 8, 0]), false, "invalid row schema path");
-        equal(store.map.schema.has(["cells", 0, 8]), false, "invalid cell schema path");
       },
     },
     {

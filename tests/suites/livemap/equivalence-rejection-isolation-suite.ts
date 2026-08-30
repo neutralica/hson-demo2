@@ -34,8 +34,7 @@ function rejects(run: () => unknown): boolean {
 }
 
 function rejection_rows(witness: unknown, route: Route): readonly TestAssertRow[] {
-  const sourceMap = hson.liveMap.fromJson({ value: initial(route), guard: 1 })
-    .schema.use(hson.liveMap.schema.define((s) => s.object({ value: s.unknown, guard: s.number })));
+  const sourceMap = hson.liveMap.fromJson({ value: initial(route), guard: 1 });
   const host = hson.locus.create({ map: sourceMap });
   const source = host.map as unknown as LiveMap;
   const target = hson.liveMap.fromJson({ value: initial(route), guard: 1 });
@@ -47,7 +46,6 @@ function rejection_rows(witness: unknown, route: Route): readonly TestAssertRow[
   return [
     equal_row("Transform rejected", rejects(() => hson.fromJson(witness as JsonValue)), true),
     equal_row("LiveMap construction rejected", rejects(() => hson.liveMap.fromJson(witness as JsonValue)), true),
-    equal_row("schema rejected", hson.liveMap.schema.define((s) => s.unknown).validateRoot(witness as JsonValue).ok, false),
     equal_row("mutation rejected", mutationRejected, true),
     equal_row("source capture", source.capture(), sourceBefore),
     equal_row("target capture", target.capture(), targetBefore),

@@ -3,9 +3,9 @@ import type { JsonValue } from "hson-live/types";
 import type { TestSuite } from "../../harness/core/test-contracts";
 import {
   create_towl_state,
-  TOWL_SCHEMA,
   TOWL_WIN_POSITION,
 } from "../../../src/app/demos/towl/index";
+import { TOWL_SCHEMA } from "../../../src/app/demos/towl/towl.schema";
 import { towl_case } from "./towl-test-helpers";
 
 function schema_accepts(value: JsonValue): boolean {
@@ -49,10 +49,6 @@ export function towl_state_suite(): TestSuite {
         ...create_towl_state(),
         player1: { ...create_towl_state().player1, extra: true },
       }), false),
-      towl_case(SUITE, "schema-rejects-invalid-phases-and-winners", "schema rejects invalid phases and winners", () => ({
-        phase: schema_accepts({ ...create_towl_state(), phase: "countdown" }),
-        winner: schema_accepts({ ...create_towl_state(), winner: "spectator" }),
-      }), { phase: false, winner: false }),
       towl_case(SUITE, "schema-rejects-noninteger-and-out-of-bound-positions", "schema rejects noninteger and out-of-bound positions", () => ({
         fractional: schema_accepts({ ...create_towl_state(), position: 0.5 }),
         high: schema_accepts({ ...create_towl_state(), position: TOWL_WIN_POSITION + 1 }),

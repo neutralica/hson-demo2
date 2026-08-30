@@ -3,7 +3,6 @@ import { hson } from "hson-live";
 import { create_locus } from "hson-live/locus";
 import type { TestRunPlan } from "../../../src/shared/testing/test-run-contract";
 import {
-  HOSTED_TEST_REPORT_SCHEMA,
   make_hosted_test_report,
   make_initial_hosted_test_report,
 } from "../../harness/reporting/hosted/hosted-test-report";
@@ -50,7 +49,7 @@ globalThis.gc?.();
 const baseline = memory();
 const initial = make_initial_hosted_test_report(runPlan);
 const initialJson = JSON.stringify(initial);
-const map = hson.liveMap.fromJson(JSON.parse(initialJson)).schema.use(HOSTED_TEST_REPORT_SCHEMA) as unknown as HostedTestReportMap;
+const map = hson.liveMap.fromJson(JSON.parse(initialJson)) as unknown as HostedTestReportMap;
 const host = create_locus({ map, logicalMapId: `hosted-report:${runId}` });
 let canonicalCommits = 0;
 let canonicalOperations = 0;

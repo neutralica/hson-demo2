@@ -119,13 +119,6 @@ export function livemap_suite_batch(): TestSuite {
           { name: "Grace", role: "admin" },
         ],
       }),
-      make_batch_schema_reject_case({
-        suite: SUITE,
-        caseId: "batch-schema-rejects-before-any-mutation", name: "batch schema rejects before any mutation",
-        input: { user: { name: "Ada", age: 37 } },
-        expectedMessage: "LiveMap schema rejected value at [\"user\",\"age\"]:\n- LiveMap schema expected number at [\"user\",\"age\"], received string",
-        expectedRoot: { user: { name: "Ada", age: 37 } },
-      }),
       make_batch_editor_reject_case({
         suite: SUITE,
         caseId: "batch-editor-rejection-preserves-earlier-writes", name: "batch editor rejection preserves earlier writes",
@@ -139,15 +132,6 @@ export function livemap_suite_batch(): TestSuite {
         input: { user: { name: "Ada" } },
         expectedMessage: "LiveMap batch transaction is already closed",
         expectedRoot: { user: { name: "Grace" } },
-      }),
-      make_set_many_schema_reject_case({
-        suite: SUITE,
-        caseId: "write-op-pipeline-setmany-schema-rejects-before-any-mutation", name: "write-op pipeline setMany schema rejects before any mutation",
-        input: { user: { name: "Ada", age: 37 } },
-        path: ["user"],
-        values: { name: "Grace", age: "old" },
-        expectedMessage: "LiveMap schema rejected value at [\"user\",\"age\"]:\n- LiveMap schema expected number at [\"user\",\"age\"], received string",
-        expectedRoot: { user: { name: "Ada", age: 37 } },
       }),
       make_set_many_editor_reject_case({
         suite: SUITE,
@@ -417,45 +401,6 @@ function make_batch_feed_case(spec: BatchFeedCaseSpec): TestCase {
   };
 }
 
-
-function make_batch_schema_reject_case(spec: BatchRejectCaseSpec): TestCase {
-  return {
-    suite: spec.suite,
-    caseId: spec.caseId, name: spec.name,
-    meta: {
-      input: preview_value(spec.input),
-    },
-    run: () => {
-      const schema = hsonLiveMap.schema.define((s) =>
-        s.object.exact({
-          user: s.object.exact({
-            name: s.string,
-            age: s.number,
-          }),
-        }),
-      );
-      const map = hsonLiveMap.fromJson(spec.input).schema.use(schema);
-      let message = "";
-
-      try {
-        map.batch((tx) => {
-          tx.set(["user", "name"], "Grace");
-          tx.set(["user", "age"], "old" as unknown as number);
-        });
-      } catch (error) {
-        message = error instanceof Error ? error.message : String(error);
-      }
-
-      return {
-        assertRows: [
-          equal_row(`${spec.name}: error`, message, spec.expectedMessage),
-          equal_row(`${spec.name}: root`, map.snap(), spec.expectedRoot),
-        ],
-      };
-    },
-  };
-}
-
 function make_batch_editor_reject_case(spec: BatchRejectCaseSpec): TestCase {
   return {
     suite: spec.suite,
@@ -505,44 +450,6 @@ function make_batch_closed_tx_case(spec: BatchClosedTxCaseSpec): TestCase {
 
       try {
         capturedTx?.set(["user", "name"], "Margaret");
-      } catch (error) {
-        message = error instanceof Error ? error.message : String(error);
-      }
-
-      return {
-        assertRows: [
-          equal_row(`${spec.name}: error`, message, spec.expectedMessage),
-          equal_row(`${spec.name}: root`, map.snap(), spec.expectedRoot),
-        ],
-      };
-    },
-  };
-}
-
-function make_set_many_schema_reject_case(spec: SetManyRejectCaseSpec): TestCase {
-  return {
-    suite: spec.suite,
-    caseId: spec.caseId, name: spec.name,
-    meta: {
-      input: preview_value(spec.input),
-      path: preview_value(spec.path),
-      values: preview_value(spec.values),
-    },
-    run: () => {
-      const schema = hsonLiveMap.schema.define((s) =>
-        s.object.exact({
-          user: s.object.exact({
-            name: s.string,
-            age: s.number,
-          }),
-        }),
-      );
-      let message = "";
-
-      const map = hsonLiveMap.fromJson(spec.input).schema.use(schema);
-
-      try {
-        map.setMany(spec.path, spec.values);
       } catch (error) {
         message = error instanceof Error ? error.message : String(error);
       }

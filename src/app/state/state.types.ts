@@ -1,12 +1,13 @@
-import type { InferLiveMapSchema, LiveMapPathHandle } from "hson-live/livemap";
-import type { DEMO_LIVEMAP_SCHEMA } from "./shell.schema";
+import type { LiveMapPathHandle } from "hson-live/livemap";
 import type { MainViewId, WidgetId } from "./shell-ids";
 
 export type { MainViewId, WidgetId } from "./shell-ids";
 
 export type DemoView = MainViewId | null;
 export type DemoWidget = WidgetId;
-export type DemoState = InferLiveMapSchema<typeof DEMO_LIVEMAP_SCHEMA>;
+export type DemoState = Readonly<{
+  ui: Readonly<{ currentView: DemoView; activeWidgets: readonly DemoWidget[] }>;
+}>;
 
 export type DemoShellLocations = Readonly<{
   currentView: LiveMapPathHandle<DemoView>;
