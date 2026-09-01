@@ -426,13 +426,13 @@ function empty_regression_case(suite: string): LiveTreeCaseSpec {
   };
 }
 
-function remove_self_regression_case(suite: string): LiveTreeCaseSpec {
+function remove_regression_case(suite: string): LiveTreeCaseSpec {
   let nonRootTerminal = false;
   let ownedRootTerminal = false;
 
   return {
     suite,
-    caseId: "patch-2-removeself-is-a-terminal-remove-alias", name: "Patch 2 removeSelf is a terminal remove alias",
+    caseId: "remove-terminally-disposes-branches", name: "remove terminally disposes branches",
     dom: true,
     html: `<main><section id="target"><span id="child">x</span></section></main>`,
     act(tree) {
@@ -442,9 +442,8 @@ function remove_self_regression_case(suite: string): LiveTreeCaseSpec {
       const childNode = child.node;
       const targetQuid = target.quid;
       const childQuid = child.quid;
-      const removed = target.removeSelf();
-      nonRootTerminal = removed === 1
-        && _get_livetree_node_by_quid(targetQuid) === undefined
+      target.remove();
+      nonRootTerminal = _get_livetree_node_by_quid(targetQuid) === undefined
         && _get_livetree_quid(targetNode) === undefined
         && _get_livetree_node_by_quid(childQuid) === undefined
         && target.isDisposed
@@ -453,46 +452,14 @@ function remove_self_regression_case(suite: string): LiveTreeCaseSpec {
       const rootBranch = hsonLiveTree.fromTrustedHtml(`<aside></aside>`);
       const rootQuid = rootBranch.quid;
       const rootNode = rootBranch.node;
-      const rootRemoved = rootBranch.removeSelf();
-      ownedRootTerminal = rootRemoved === 1
-        && _get_livetree_node_by_quid(rootQuid) === undefined
+      rootBranch.remove();
+      ownedRootTerminal = _get_livetree_node_by_quid(rootQuid) === undefined
         && _get_livetree_quid(rootNode) === undefined
         && rootBranch.isDisposed;
     },
     assert(_tree, t) {
-      t.eq("non-root removeSelf terminally disposes its subtree", nonRootTerminal, true);
-      t.eq("ordinary owned root removeSelf terminally disposes", ownedRootTerminal, true);
-    },
-  };
-}
-
-function remove_children_regression_case(suite: string): LiveTreeCaseSpec {
-  let removed = -1;
-  let textPreserved = false;
-  let identityPreserved = false;
-
-  return {
-    suite,
-    caseId: "patch-1-preserves-filtered-removechildren-behavior", name: "Patch 1 preserves filtered removeChildren behavior",
-    dom: true,
-    html: `<main id="root">before<section id="one">one</section><section id="two">two</section>after</main>`,
-    act(tree) {
-      const root = tree.find.must.byId("root");
-      const one = tree.find.must.byId("one");
-      const oneNode = one.node;
-      const oneQuid = one.quid;
-      removed = root.removeChildren();
-      textPreserved = root.text.get().includes("before")
-        && root.text.get().includes("after")
-        && root.dom.must.el().textContent?.includes("before") === true
-        && root.dom.must.el().textContent?.includes("after") === true;
-      identityPreserved = _get_livetree_node_by_quid(oneQuid) === oneNode
-        && !one.isDisposed;
-    },
-    assert(_tree, t) {
-      t.eq("removeChildren still removes two semantic elements", removed, 2);
-      t.eq("removeChildren still preserves primitive text", textPreserved, true);
-      t.eq("removeChildren still retains removed identity", identityPreserved, true);
+      t.eq("non-root remove terminally disposes its subtree", nonRootTerminal, true);
+      t.eq("ordinary owned root remove terminally disposes", ownedRootTerminal, true);
     },
   };
 }
@@ -510,8 +477,7 @@ export function livetree_lifecycle_foundations(): TestSuite {
     detach_state_case(suite),
     disposed_error_case(suite),
     empty_regression_case(suite),
-    remove_self_regression_case(suite),
-    remove_children_regression_case(suite),
+    remove_regression_case(suite),
   ];
   return make_livetree_suite(suite, cases);
 }

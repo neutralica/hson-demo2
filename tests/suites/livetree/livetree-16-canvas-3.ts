@@ -990,7 +990,7 @@ export function livetree_document_ownership(): TestSuite {
         const beforeEl = target.dom.el();
         const beforeDoc = beforeEl?.ownerDocument;
 
-        const removed = target.removeSelf();
+        target.remove();
 
         let disposedError = false;
         try {
@@ -1005,7 +1005,6 @@ export function livetree_document_ownership(): TestSuite {
         (tree as any).__result = {
           hadDoc: beforeDoc !== undefined,
           hadEl: beforeEl !== undefined,
-          removed,
           disposedError,
         };
       },
@@ -1015,7 +1014,6 @@ export function livetree_document_ownership(): TestSuite {
 
         t.eq("target had document before removal", r.hadDoc, true);
         t.eq("target had element before removal", r.hadEl, true);
-        t.eq("removeSelf removed one node", r.removed, 1);
         t.eq("removed target rejects DOM and document access", r.disposedError, true);
       }
     },

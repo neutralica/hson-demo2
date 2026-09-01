@@ -475,7 +475,7 @@ export function node_lifecycle(): TestSuite {
                 await tick();
                 gcss.syncNow();
 
-                box.removeSelf();
+                box.remove();
 
                 await tick();
                 gcss.syncNow();
@@ -519,7 +519,7 @@ export function node_lifecycle(): TestSuite {
                 await tick();
                 gcss.syncNow();
 
-                a.removeSelf();
+                a.remove();
 
                 await tick();
                 gcss.syncNow();
@@ -559,7 +559,7 @@ export function node_lifecycle(): TestSuite {
 
                 const el = btn.dom.el() as HTMLElement;
                 el.click();       // should count
-                btn.removeSelf();
+                btn.remove();
                 el.click();       // stale ref click after removal
 
                 (tree as any).__hits = hits;
@@ -592,7 +592,7 @@ export function node_lifecycle(): TestSuite {
                 const oldEl = oldBtn.dom.el() as HTMLElement;
                 oldEl.click();
 
-                oldBtn.removeSelf();
+                oldBtn.remove();
 
                 const host = tree.find.must.byTag("main");
                 const newBtn = host.create.button().id.set("btn").text.set("new");
@@ -633,7 +633,7 @@ export function node_lifecycle(): TestSuite {
                 gcss.syncNow();
 
                 const oldQuid = oldBox.dom.must.el().getAttribute("hson:quid") ?? "";
-                oldBox.removeSelf();
+                oldBox.remove();
 
                 await tick();
                 gcss.syncNow();
@@ -690,7 +690,7 @@ export function node_lifecycle(): TestSuite {
                 gcss.syncNow();
 
                 const parent = tree.find.must.byId("parent");
-                parent.removeSelf();
+                parent.remove();
 
                 await tick();
                 gcss.syncNow();

@@ -49,12 +49,14 @@ LiveTree is a mutable handle to a single `HsonNode`. It provides structured acce
 
 - `append(branch: LiveTree, index?: number): LiveTree`
   - Appends children from another branch under this node. Mirrors to DOM when present.
-- `empty(): LiveTree`
-  - Removes all content from this node.
-- `removeChildren(): number`
-  - Removes direct node children (ignores primitives). Returns count removed.
-- `removeSelf(): number`
-  - Removes this node from its parent (Hson + DOM). Returns `1` or `0`.
+- `empty(): this`
+  - Terminally disposes all ordered content while leaving this branch active.
+- `detachContents(): DetachedLiveContent`
+  - Detaches all ordered content while preserving identity for reuse.
+- `detach(): 0 | 1`
+  - Detaches this branch while preserving identity for reuse.
+- `remove(): void`
+  - Terminally removes and disposes this complete branch.
 - `cloneBranch(): LiveTree`
   - Deep-clones subtree with new QUIDs; returns a detached branch.
 
@@ -231,7 +233,8 @@ Returned by `findAll(...)`.
 - `forEach(fn)`
 - `map(fn)`
 - `filter(fn): TreeSelector`
-- `removeSelf(): number` (alias `remove()`)
+- `removeAt(index): boolean`
+- `removeAll(): number`
 
 Broadcast proxies (apply to all selected nodes):
 

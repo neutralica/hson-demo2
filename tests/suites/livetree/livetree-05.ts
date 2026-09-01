@@ -16,7 +16,7 @@ function reimport_current_markup_with_fresh_identity(tree: LiveTree) {
     });
     const markup = copied.outerHTML;
     const sandboxHost = (tree as any).__sandboxHost;
-    tree.removeSelf();
+    tree.remove();
     const restored = hson.liveTree.fromTrustedHtml(markup);
     sandboxHost.append(restored);
     return restored;
@@ -243,7 +243,7 @@ export function roundtrip_projection_stability(): TestSuite {
   `,
 
                 async act(tree) {
-                    tree.find.must.byId("drop").removeSelf();
+                    tree.find.must.byId("drop").remove();
                     await tick();
 
                     const keepQuid = tree.find.must.byId("keep").quid;
@@ -515,7 +515,7 @@ export function livetree_sync_perf(): TestSuite {
 
                 const beforeRemove = get_style_text_for_test(tree);
 
-                box.removeSelf();
+                box.remove();
                 gcss.syncNow?.();
 
                 const afterRemove = get_style_text_for_test(tree);
@@ -631,7 +631,7 @@ export function livetree_sync_perf(): TestSuite {
                 gcss.syncNow?.();
 
                 const quidA = (a.dom.el() as HTMLElement).getAttribute("hson:quid") ?? "";
-                a.removeSelf();
+                a.remove();
                 gcss.syncNow?.();
 
                 const b = host.create.div().id.set("box");
@@ -723,7 +723,7 @@ export function livetree_completionist(): TestSuite {
                     const firstEl = first.dom.el() as HTMLElement;
                     const firstQuid = firstEl.getAttribute("hson:quid") ?? "";
 
-                    first.removeSelf();
+                    first.remove();
                     gcss.syncNow?.();
 
                     const second = host.create.div().id.set("box");

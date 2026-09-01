@@ -10,7 +10,7 @@ function reimport_svg_fixture_with_fresh_identity(tree: LiveTree): LiveTree {
   });
   const markup = copied.outerHTML;
   const sandboxHost = (tree as any).__sandboxHost;
-  tree.removeSelf();
+  tree.remove();
   const restored = hsonLiveTree.fromTrustedHtml(markup);
   sandboxHost.append(restored);
   return restored;

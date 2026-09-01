@@ -37,7 +37,7 @@ export function livetree_more_listeners(): TestSuite {
 
                 const beforeRemove = count;
 
-                owner.removeSelf();
+                owner.remove();
                 await flush_dom();
 
                 document.dispatchEvent(new KeyboardEvent("keydown", { key: "b" }));
@@ -88,7 +88,7 @@ export function livetree_more_listeners(): TestSuite {
 
                 const beforeRemove = count;
 
-                owner.removeSelf();
+                owner.remove();
                 await flush_dom();
 
                 window.dispatchEvent(new KeyboardEvent("keydown", { key: "x" }));
@@ -136,7 +136,7 @@ export function livetree_more_listeners(): TestSuite {
                 (owner.dom.must.el() as HTMLElement).click();
                 await flush_dom();
 
-                owner.removeSelf();
+                owner.remove();
 
                 // element is gone; do not click again. the count should remain stable.
                 await flush_dom();
@@ -182,7 +182,7 @@ export function livetree_more_listeners(): TestSuite {
                 document.dispatchEvent(new KeyboardEvent("keydown", { key: "b" }));
                 await flush_dom();
 
-                owner.removeSelf();
+                owner.remove();
 
                 document.dispatchEvent(new KeyboardEvent("keydown", { key: "c" }));
                 await flush_dom();

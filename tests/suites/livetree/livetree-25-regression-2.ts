@@ -70,7 +70,7 @@ export function livetree_regression_2(): TestSuite {
           next,
         };
 
-        clone.removeSelf();
+        clone.remove();
       },
 
       assert(tree, t) {
@@ -120,7 +120,7 @@ export function livetree_regression_2(): TestSuite {
           ),
         };
 
-        hydrated?.removeSelf();
+        hydrated?.remove();
       },
 
       assert(tree, t) {
@@ -157,8 +157,8 @@ export function livetree_regression_2(): TestSuite {
           independent: identitiesDiffer(firstIds, secondIds, ROUNDTRIP_IDS),
         };
 
-        first.removeSelf();
-        second.removeSelf();
+        first.remove();
+        second.remove();
       },
 
       assert(tree, t) {
@@ -191,7 +191,7 @@ export function livetree_regression_2(): TestSuite {
           importedChildQuid: imported.find.must.byId("persisted-child").quid,
         };
 
-        imported.removeSelf();
+        imported.remove();
       },
 
       assert(tree, t) {
@@ -237,7 +237,7 @@ export function livetree_regression_2(): TestSuite {
         } catch (error) {
           message = error instanceof Error ? error.message : String(error);
         } finally {
-          imported?.removeSelf();
+          imported?.remove();
         }
 
         (tree as any).__result = {
@@ -272,7 +272,7 @@ export function livetree_regression_2(): TestSuite {
           const second = hsonLiveTree.fromTrustedHtml(
             `<section id="contender" hson:quid="${duplicateQuid}"></section>`,
           );
-          second.removeSelf();
+          second.remove();
         } catch (error) {
           message = error instanceof Error ? error.message : String(error);
         }
@@ -282,7 +282,7 @@ export function livetree_regression_2(): TestSuite {
           ownerStillHasQuid: first.find.must.byId("owner").quid === duplicateQuid,
         };
 
-        first.removeSelf();
+        first.remove();
       },
 
       assert(tree, t) {
@@ -324,7 +324,7 @@ export function livetree_regression_2(): TestSuite {
           outsideAbsent: clone.find.byId("outside") === undefined,
         };
 
-        clone.removeSelf();
+        clone.remove();
       },
 
       assert(tree, t) {
@@ -349,7 +349,7 @@ export function livetree_regression_2(): TestSuite {
       `,
 
       act(tree) {
-        tree.find.must.byId("removed").removeSelf();
+        tree.find.must.byId("removed").remove();
         const clone = tree.cloneBranch();
 
         (tree as any).__result = {
@@ -357,7 +357,7 @@ export function livetree_regression_2(): TestSuite {
           removedAbsent: clone.find.byId("removed") === undefined,
         };
 
-        clone.removeSelf();
+        clone.remove();
       },
 
       assert(tree, t) {
@@ -402,7 +402,7 @@ export function livetree_regression_2(): TestSuite {
           childDataPreserved: accent.attrs.get("data-kind") === "accent",
         };
 
-        clone.removeSelf();
+        clone.remove();
       },
 
       assert(tree, t) {
@@ -493,7 +493,7 @@ export function livetree_regression_2(): TestSuite {
         } catch (error) {
           message = error instanceof Error ? error.message : String(error);
         } finally {
-          imported?.removeSelf();
+          imported?.remove();
         }
 
         (tree as any).__result = {

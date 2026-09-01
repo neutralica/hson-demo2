@@ -500,51 +500,6 @@ export function livetree_text_content_surface(): TestSuite {
       },
     },
 
-    {
-      suite: SUITE,
-      caseId: "text-and-content-surface-removechildren-leaves-text-apis-usable", name: "text and content surface: removeChildren leaves text APIs usable",
-      fixture: "text-content/interactions",
-      sub: "remove-children-then-text",
-      dom: true,
-      html: `
-        <main id="root">
-          before
-          <section id="one">one</section>
-          <section id="two">two</section>
-          after
-        </main>
-      `,
-
-      act(tree) {
-        const root = tree.find.must.byId("root");
-
-        const removed = root.removeChildren();
-        const countAfterRemove = root.content.count();
-
-        root.text.set("remaining text changed");
-        root.text.add(" + added");
-
-        (tree as any).__result = {
-          removed,
-          countAfterRemove,
-          textAfter: root.text.get(),
-          domTextAfter: root.dom.must.el().textContent,
-          oneExists: !!tree.find.byId("one"),
-          twoExists: !!tree.find.byId("two"),
-        };
-      },
-
-      assert(tree, t) {
-        const r = (tree as any).__result;
-
-        t.eq("removeChildren removes two element children", r.removed, 2);
-        t.eq("content.count is zero after removeChildren", r.countAfterRemove, 0);
-        t.eq("text APIs remain usable after removeChildren", r.textAfter, "remaining text changed + added");
-        t.eq("text APIs mirror after removeChildren", r.domTextAfter, "remaining text changed + added");
-        t.eq("first removed child is no longer findable", r.oneExists, false);
-        t.eq("second removed child is no longer findable", r.twoExists, false);
-      },
-    },
   ];
 
   return make_livetree_suite(SUITE, cases);
@@ -817,7 +772,7 @@ export function livetree_listener_builder_corners(): TestSuite {
         document.dispatchEvent(new CustomEvent("ambient-clean-doc"));
         window.dispatchEvent(new CustomEvent("ambient-clean-win"));
 
-        owner.removeSelf();
+        owner.remove();
 
         document.dispatchEvent(new CustomEvent("ambient-clean-doc"));
         window.dispatchEvent(new CustomEvent("ambient-clean-win"));

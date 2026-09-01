@@ -7,8 +7,7 @@ import type { HsonNode, Primitive } from "hson-live/types";
 import { _CREATE_NODE } from "hson-live/diagnostics";
 import { get_node_text_content, set_node_text_content } from "../../../../hson-live/dist/api/livetree/managers/text-form-values";
 import { flush_dom } from "../inspector/inspector.helpers";
-import  { ELEM_TAG, STR_TAG } from "../../../../hson-live/dist/core/constants";
-import { is_Node } from "../../../../hson-live/dist/core/node-guards";
+import { STR_TAG } from "../../../../hson-live/dist/core/constants";
 
 
 function after_paint(): Promise<void> {
@@ -175,8 +174,6 @@ export function suite_attrs_and_flags(): TestSuite {
 export function suite_append_and_create(): TestSuite {
   const SUITE = "livetree/append-and-create";
 
-  let removedCount = -1; // ok for now; runner is sequential per case.
-
   const cases: readonly LiveTreeCaseSpec[] = [
     {
       suite: SUITE,
@@ -229,31 +226,6 @@ export function suite_append_and_create(): TestSuite {
 
     {
       suite: SUITE,
-      caseId: "removechildren-returns-direct-element-child-count-removed-empty-clears", name: "removeChildren returns direct element-child count removed; empty clears",
-      fixture: "remove/empty",
-      sub: "counts",
-      html: `<div id="root"><div id="a"></div><div id="b"></div></div>`,
-
-      act(tree: LiveTree) {
-        const elem = tree.find.must.byId("root");
-
-        // operate at the level where the children actually are.
-        removedCount = elem.removeChildren();
-
-        elem.create.div().id.set("c");
-        elem.empty();
-      },
-
-      assert(tree: LiveTree, t: Asserter) {
-        const elem = tree.find.must.byId("root");
-
-        t.eq("removedCount", removedCount, 2);
-        t.eq("elem child count after empty()", elem.content.all().length, 0);
-      },
-    },
-
-    {
-      suite: SUITE,
       caseId: "create.p-appends-distinct-element-children-under-_hson_elem", name: "create.p appends distinct element-children under _hson_elem",
       fixture: "create.p",
       sub: "append",
@@ -276,63 +248,6 @@ export function suite_append_and_create(): TestSuite {
 
         const cls = kids.map((k) => String(k.attrs.get("class") ?? ""));
         t.eq("cls", cls.join(","), "orig,a,b");
-      },
-    },
-    {
-      suite: SUITE,
-      caseId: "removechildren-removes-only-direct-node-children-leaves-primitives-under-_hson_elem-returns-count", name: "removeChildren: removes only direct node-children; leaves primitives under _hson_elem; returns count",
-      html: `<div id="root"></div>`,
-      fixture: "remove/children",
-      sub: "ignore-primitives-count",
-
-      act(tree) {
-        const root = tree.find.must.byId("root");
-
-        root.append(hsonLiveTree.fromTrustedHtml(`<div id="a"></div>`));
-        root.append(hsonLiveTree.fromTrustedHtml(`<div id="b"></div>`));
-
-        // inject a primitive into the semantic content container (_hson_elem)
-        // (works in no-dom mode; matches your “_hson_elem is invisible” rule)
-        const raw = (root.node.$_content ?? []) as unknown[];
-        const elem = raw.find((x): x is HsonNode =>
-          is_Node(x) && x.$_tag === ELEM_TAG
-        );
-
-        if (elem) {
-          const kids = (elem.$_content ?? []) as unknown[];
-          kids.push("Z");
-          elem.$_content = kids as unknown as (HsonNode | Primitive)[];
-        } else {
-          // if a root ever lacks _hson_elem, keep test honest rather than silently passing
-          throw new Error(`test invariant: expected #root to have a single _hson_elem child`);
-        }
-
-        (tree as unknown as { __removed?: number }).__removed = root.removeChildren();
-      },
-
-      assert(tree, t) {
-        const removed = (tree as unknown as { __removed?: number }).__removed ?? -1;
-        t.eq("removedCount", removed, 2);
-
-        const root = tree.find.must.byId("root");
-
-        // node-children are gone
-        t.eq("content.all().length (node children)", root.content.all().length, 0);
-
-        // primitive survived under _hson_elem
-        const raw = (root.node.$_content ?? []) as unknown[];
-        const elem = raw.find((x): x is HsonNode => is_Node(x) && x.$_tag === ELEM_TAG);
-        const elemKids = (elem?.$_content ?? []) as unknown[];
-        t.ok(`primitive "Z" remains under _hson_elem`, elemKids.includes("Z"));
-      },
-
-      preview(tree) {
-        const root = tree.find.byId("root");
-        if (!root) return "<no root tree>";
-        const raw = (root.node.$_content ?? []) as unknown[];
-        const elem = raw.find((x): x is HsonNode => is_Node(x) && x.$_tag === ELEM_TAG);
-        const kids = (elem?.$_content ?? []) as unknown[];
-        return `<root _hson_elem kids=${kids.map(x => (is_Node(x) ? `<${x.$_tag}>` : JSON.stringify(x))).join(", ")}>`;
       },
     },
     {
@@ -478,7 +393,7 @@ export function mixedRegression() {
     // ------------------------------------------------------------
     {
       suite: SUITE,
-      caseId: "removeself-reappend-refind-keeps-dom-ir-in-sync", name: "removeSelf + reappend + refind keeps DOM/IR in sync",
+      caseId: "remove-reappend-refind-keeps-dom-ir-in-sync", name: "remove + reappend + refind keeps DOM/IR in sync",
       html: `<div id="root"></div>`,
       fixture: "remove/reappend",
       sub: "dom-ir-sync",
@@ -494,7 +409,7 @@ export function mixedRegression() {
 
         // remove it (must exist as a node in IR regardless of DOM mode)
         const firstLayer = root.find.must.byId("layer");
-        firstLayer.removeSelf();
+        firstLayer.remove();
 
         // 2) append a new one with same id
         const layer2 = hsonLiveTree
@@ -862,7 +777,7 @@ export function extraCases(): readonly TestSuite[] {
         const first = root.find.must.byId("layer");
         const firstNode = first.node;
 
-        first.removeSelf();
+        first.remove();
 
         root.append(
           hsonLiveTree.fromTrustedHtml(`<layer id="layer"></layer>`)

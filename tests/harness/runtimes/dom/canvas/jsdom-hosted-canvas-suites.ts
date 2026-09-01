@@ -16,7 +16,6 @@ export const JSDOM_HOSTED_CANVAS_SUITE_IDS = Object.freeze([
 
 export const JSDOM_HOSTED_CANVAS_DUPLICATE_CASE_KEYS = Object.freeze([
   "livetree/canvas-display::canvas.display.match.watch-manual-off-is-idempotent",
-  "livetree/canvas-display::canvas.display.match.watch-auto-cleans-on-parent-removechildren",
   "livetree/canvas-pointer::canvas.display.match.watch-updates-backing-size-after-display-resize",
 ] as const);
 

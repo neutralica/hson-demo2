@@ -261,10 +261,10 @@ function remove_and_guards_case(suite: string): LiveTreeCaseSpec {
       target.css.setMany({ color: "red" });
       target.listen.onClick(() => undefined);
 
-      const removed = target.remove();
-      repeatedSafe = target.remove() === 0 && target.removeSelf() === 0;
-      terminalState = removed === 1
-        && target.isDisposed
+      target.remove();
+      target.remove();
+      repeatedSafe = target.isDisposed;
+      terminalState = target.isDisposed
         && alias.isDisposed
         && child.isDisposed
         && _get_livetree_node_by_quid(targetQuid) === undefined
@@ -328,27 +328,25 @@ function remove_and_guards_case(suite: string): LiveTreeCaseSpec {
       t.eq("root descendants aliases registry and metadata are terminal", terminalState, true);
       t.eq("DOM mappings listeners and CSS are removed", runtimeGone, true);
       t.eq("every meaningful and cached public surface is guarded", guards, 38);
-      t.eq("repeated remove and deprecated alias are safe", repeatedSafe, true);
+      t.eq("repeated remove is safe", repeatedSafe, true);
     },
   };
 }
 
-function roots_and_legacy_case(suite: string): LiveTreeCaseSpec {
+function roots_and_protection_case(suite: string): LiveTreeCaseSpec {
   let ordinaryRoot = false;
   let protectedRoots = 0;
-  let legacyAlias = false;
-  let legacyChildren = false;
 
   return {
     suite,
-    caseId: "owned-roots-are-removable-browser-roots-are-protected-and-legacy-apis-are-explicit", name: "owned roots are removable browser roots are protected and legacy APIs are explicit",
+    caseId: "owned-roots-are-removable-and-browser-roots-are-protected", name: "owned roots are removable and browser roots are protected",
     dom: true,
-    html: `<main><section id="legacy">before<span id="legacy-child">x</span>after</section><aside id="legacy-remove"></aside></main>`,
+    html: `<main></main>`,
     act(tree) {
       const detachedRoot = hsonLiveTree.fromTrustedHtml(`<article></article>`);
-      const detachedRootRemoved = detachedRoot.detach() === 0
-        && detachedRoot.remove() === 1
-        && detachedRoot.isDisposed;
+      const detachedRootWasDetached = detachedRoot.detach() === 0;
+      detachedRoot.remove();
+      const detachedRootRemoved = detachedRootWasDetached && detachedRoot.isDisposed;
 
       const ownedElement = document.createElement("section");
       ownedElement.id = `owned-lifecycle-${crypto.randomUUID()}`;
@@ -358,9 +356,8 @@ function roots_and_legacy_case(suite: string): LiveTreeCaseSpec {
         && !ownedElement.isConnected
         && !ownedTree.isDisposed;
       document.body.appendChild(ownedElement);
-      const ownedRemoved = ownedTree.remove() === 1
-        && ownedTree.isDisposed
-        && !ownedElement.isConnected;
+      ownedTree.remove();
+      const ownedRemoved = ownedTree.isDisposed && !ownedElement.isConnected;
       ordinaryRoot = detachedRootRemoved && ownedDetached && ownedRemoved;
 
       const freshDocument = document.implementation.createHTMLDocument("lifecycle roots");
@@ -378,24 +375,10 @@ function roots_and_legacy_case(suite: string): LiveTreeCaseSpec {
           branch.remove();
         }
       }
-
-      const legacyRemove = tree.find.must.byId("legacy-remove");
-      legacyAlias = legacyRemove.removeSelf() === 1 && legacyRemove.isDisposed;
-
-      const legacy = tree.find.must.byId("legacy");
-      const legacyChild = tree.find.must.byId("legacy-child");
-      const legacyQuid = legacyChild.quid;
-      legacyChildren = legacy.removeChildren() === 1
-        && legacy.text.get().includes("before")
-        && legacy.text.get().includes("after")
-        && !legacyChild.isDisposed
-        && _get_livetree_node_by_quid(legacyQuid) === legacyChild.node;
     },
     assert(_tree, t) {
       t.eq("ordinary owned root supports terminal removal", ordinaryRoot, true);
       t.eq("documentElement head and body throw the stable protected-root error", protectedRoots, 3);
-      t.eq("removeSelf is a deprecated terminal alias", legacyAlias, true);
-      t.eq("removeChildren retains its documented specialized legacy behavior", legacyChildren, true);
     },
   };
 }
@@ -407,6 +390,6 @@ export function livetree_lifecycle_public(): TestSuite {
     detach_contents_case(suite),
     detach_case(suite),
     remove_and_guards_case(suite),
-    roots_and_legacy_case(suite),
+    roots_and_protection_case(suite),
   ]);
 }

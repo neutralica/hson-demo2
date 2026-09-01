@@ -402,7 +402,7 @@ export function root_multi_isolation(): TestSuite {
         await tick();
         gcss.syncNow();
 
-        rootA.removeSelf();
+        rootA.remove();
 
         await tick();
         gcss.syncNow();
@@ -688,7 +688,7 @@ export function document_question(): TestSuite {
         gcss.syncNow();
 
         // replace with your actual instance teardown/removal path
-        treeA.removeSelf();
+        treeA.remove();
 
         await tick();
         gcss.syncNow();
@@ -939,10 +939,10 @@ export function error_handling(): TestSuite {
 
         let threwSecond = false;
 
-        box.removeSelf();
+        box.remove();
 
         try {
-          box.removeSelf();
+          box.remove();
         } catch {
           threwSecond = true;
         }
@@ -966,7 +966,7 @@ export function error_handling(): TestSuite {
 
       async act(tree) {
         const box = tree.find.must.byId("box");
-        box.removeSelf();
+        box.remove();
 
         let threw = false;
 

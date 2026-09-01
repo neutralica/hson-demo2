@@ -338,7 +338,7 @@ export function livetree_canvas_display(): TestSuite {
 
     {
       suite: SUITE,
-      caseId: "canvas.display.match.watch-stops-after-removeself", name: "canvas.display.match.watch stops after removeSelf",
+      caseId: "canvas.display.match.watch-stops-after-remove", name: "canvas.display.match.watch stops after remove",
       dom: true,
       html: `
     <main id="root">
@@ -363,7 +363,7 @@ export function livetree_canvas_display(): TestSuite {
 
         await flush_dom();
 
-        target.removeSelf();
+        target.remove();
 
         // If cleanup is broken, this usually won't be directly observable unless
         // you expose dev counts. So this test may need a devSnapshot/count helper.
@@ -506,10 +506,10 @@ export function livetree_canvas_display(): TestSuite {
     },
     {
   suite: SUITE,
-  caseId: "canvas.display.match.watch-auto-cleans-on-parent-removechildren", name: "canvas.display.match.watch auto-cleans on parent removeChildren",
+  caseId: "canvas.display.match.watch-auto-cleans-on-parent-empty", name: "canvas.display.match.watch auto-cleans on parent empty",
   dom: true,
   fixture: "canvas/lifecycle",
-  sub: "watch-cleans-remove-children",
+  sub: "watch-cleans-empty",
 
   html: `
     <main id="root">
@@ -536,11 +536,10 @@ export function livetree_canvas_display(): TestSuite {
     target.canvas.display.match.watch({ dpr: 1 });
 
     const beforeRemove = _disposables_count_for_owner(q);
-    const removed = host.removeChildren();
+    host.empty();
     const afterRemove = _disposables_count_for_owner(q);
 
     (tree as any).__result = {
-      removed,
       beforeRemove,
       afterRemove,
     };
@@ -549,67 +548,16 @@ export function livetree_canvas_display(): TestSuite {
   assert(tree, t) {
     const r = (tree as any).__result;
 
-    t.eq("watch registered before removeChildren", r.beforeRemove, 1);
-    t.eq("removeChildren removed one child", r.removed, 1);
-    t.eq("removeChildren cleaned child owner disposable", r.afterRemove, 0);
+    t.eq("watch registered before empty", r.beforeRemove, 1);
+    t.eq("empty cleaned child owner disposable", r.afterRemove, 0);
   },
 },
 {
   suite: SUITE,
-  caseId: "canvas.display.match.watch-auto-cleans-on-parent-removechildren", name: "canvas.display.match.watch auto-cleans on parent removeChildren",
+  caseId: "canvas.display.match.watch-auto-cleans-deep-child-canvas-on-ancestor-remove", name: "canvas.display.match.watch auto-cleans deep child canvas on ancestor remove",
   dom: true,
   fixture: "canvas/lifecycle",
-  sub: "watch-cleans-remove-children",
-
-  html: `
-    <main id="root">
-      <section id="host">
-        <canvas id="target"></canvas>
-      </section>
-    </main>
-  `,
-
-  async act(tree) {
-    const host = tree.find.must.byId("host");
-    const target = tree.find.must.byId("target");
-
-    target.css.setMany({
-      display: "block",
-      width: "100px",
-      height: "50px",
-    });
-
-    await flush_dom();
-
-    const q = target.quid;
-
-    target.canvas.display.match.watch({ dpr: 1 });
-
-    const beforeRemove = _disposables_count_for_owner(q);
-    const removed = host.removeChildren();
-    const afterRemove = _disposables_count_for_owner(q);
-
-    (tree as any).__result = {
-      removed,
-      beforeRemove,
-      afterRemove,
-    };
-  },
-
-  assert(tree, t) {
-    const r = (tree as any).__result;
-
-    t.eq("watch registered before removeChildren", r.beforeRemove, 1);
-    t.eq("removeChildren removed one child", r.removed, 1);
-    t.eq("removeChildren cleaned child owner disposable", r.afterRemove, 0);
-  },
-},
-{
-  suite: SUITE,
-  caseId: "canvas.display.match.watch-auto-cleans-deep-child-canvas-on-ancestor-removeself", name: "canvas.display.match.watch auto-cleans deep child canvas on ancestor removeSelf",
-  dom: true,
-  fixture: "canvas/lifecycle",
-  sub: "watch-cleans-ancestor-remove-self",
+  sub: "watch-cleans-ancestor-remove",
 
   html: `
     <main id="root">
@@ -638,11 +586,10 @@ export function livetree_canvas_display(): TestSuite {
     target.canvas.display.match.watch({ dpr: 1 });
 
     const beforeRemove = _disposables_count_for_owner(q);
-    const removed = outer.removeSelf();
+    outer.remove();
     const afterRemove = _disposables_count_for_owner(q);
 
     (tree as any).__result = {
-      removed,
       beforeRemove,
       afterRemove,
     };
@@ -652,8 +599,7 @@ export function livetree_canvas_display(): TestSuite {
     const r = (tree as any).__result;
 
     t.eq("deep canvas watch registered before ancestor remove", r.beforeRemove, 1);
-    t.eq("ancestor removeSelf removed one subtree root", r.removed, 1);
-    t.eq("ancestor removeSelf cleaned deep canvas disposable", r.afterRemove, 0);
+    t.eq("ancestor remove cleaned deep canvas disposable", r.afterRemove, 0);
   },
     },
 {
@@ -712,7 +658,7 @@ export function livetree_canvas_display(): TestSuite {
 },
 {
   suite: SUITE,
-  caseId: "canvas.display.match.watch-removed-node-does-not-keep-matching-after-detach", name: "canvas.display.match.watch removed node does not keep matching after detach",
+  caseId: "canvas.display.match.watch-detached-node-preserves-watcher-without-rematching", name: "canvas.display.match.watch detached node preserves watcher without rematching",
   dom: true,
   fixture: "canvas/lifecycle",
   sub: "watch-no-match-after-detach",
@@ -748,7 +694,7 @@ export function livetree_canvas_display(): TestSuite {
     const beforeWidth = target.attrs.get("width");
     const beforeHeight = target.attrs.get("height");
 
-    host.removeChildren();
+    host.detachContents();
 
     const afterCount = _disposables_count_for_owner(q);
 
@@ -776,7 +722,7 @@ export function livetree_canvas_display(): TestSuite {
 
     t.eq("initial watch wrote width", r.beforeWidth, "80");
     t.eq("initial watch wrote height", r.beforeHeight, "40");
-    t.eq("detach cleaned disposable count", r.afterCount, 0);
+    t.eq("detach preserves disposable for branch reuse", r.afterCount, 1);
 
     // These should remain the old attrs; the detached watcher should not keep
     // observing and rewriting backing dimensions.
