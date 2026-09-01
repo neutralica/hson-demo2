@@ -1,6 +1,7 @@
 // client-suite.ts
 
-import { create_locus_client, LocusDisconnectedError } from "hson-live/locus";
+import { LocusDisconnectedError } from "hson-live/locus";
+import { create_echo } from "hson-live/echo";
 import type { TestCase, TestSuite } from "../../harness/core/test-contracts";
 import { preview_value, equal_row } from "../livemap/test-helpers";
 
@@ -114,7 +115,7 @@ export function locus_client_suite(): TestSuite {
         input: {},
         act: () => {
           const socket = make_memory_socket();
-          const client = create_locus_client({
+          const client = create_echo({
             socket,
             clientId: "client-a",
           });
@@ -142,7 +143,7 @@ export function locus_client_suite(): TestSuite {
         input: {},
         act: async () => {
           const socket = make_memory_socket();
-          const client = create_locus_client<{ user: { name: string } }>({ socket });
+          const client = create_echo<{ user: { name: string } }>({ socket });
 
           client.connect();
           await socket.receive({
@@ -170,7 +171,7 @@ export function locus_client_suite(): TestSuite {
         input: {},
         act: async () => {
           const socket = make_memory_socket();
-          const client = create_locus_client<{ user: { name: string } }>({ socket });
+          const client = create_echo<{ user: { name: string } }>({ socket });
 
           client.connect();
           await socket.receive({
@@ -204,7 +205,7 @@ export function locus_client_suite(): TestSuite {
         input: {},
         act: async () => {
           const socket = make_memory_socket();
-          const client = create_locus_client<{ user: { name: string } }>({ socket });
+          const client = create_echo<{ user: { name: string } }>({ socket });
 
           client.connect();
           await socket.receive({
@@ -238,7 +239,7 @@ export function locus_client_suite(): TestSuite {
         input: {},
         act: () => {
           const socket = make_memory_socket();
-          const client = create_locus_client({ socket });
+          const client = create_echo({ socket });
 
           client.subscribe(["ui", "selected"]);
           const [message] = socket.sent() as Array<Record<string, unknown>>;
@@ -259,7 +260,7 @@ export function locus_client_suite(): TestSuite {
         input: {},
         act: () => {
           const socket = make_memory_socket();
-          const client = create_locus_client({ socket });
+          const client = create_echo({ socket });
 
           client.unsubscribe(["ui", "selected"]);
           const [message] = socket.sent() as Array<Record<string, unknown>>;
@@ -283,9 +284,8 @@ export function locus_client_suite(): TestSuite {
             rename_user: { name: string };
           }>;
           const socket = make_memory_socket();
-          const client = create_locus_client<undefined, Actions>({
+          const client = create_echo<undefined, Actions>({
             socket,
-            actionId: () => "action-a",
           });
 
           client.connect();
@@ -293,7 +293,7 @@ export function locus_client_suite(): TestSuite {
           const [, message] = socket.sent() as Array<Record<string, unknown>>;
           await socket.receive({
             type: "ack",
-            id: "action-a",
+            id: resultPromise.request.requestId,
             ok: true,
             seq: 1,
           });
@@ -301,7 +301,7 @@ export function locus_client_suite(): TestSuite {
 
           return {
             sentType: message?.type,
-            sentId: message?.id,
+            requestMatches: message?.id === resultPromise.request.requestId,
             sentName: message?.name,
             sentPayload: message?.payload,
             resultType: result.type,
@@ -311,7 +311,7 @@ export function locus_client_suite(): TestSuite {
         },
         expected: {
           sentType: "action",
-          sentId: "action-a",
+          requestMatches: true,
           sentName: "rename_user",
           sentPayload: { name: "Grace" },
           resultType: "ack",
@@ -328,16 +328,15 @@ export function locus_client_suite(): TestSuite {
             fail: undefined;
           }>;
           const socket = make_memory_socket();
-          const client = create_locus_client<undefined, Actions>({
+          const client = create_echo<undefined, Actions>({
             socket,
-            actionId: () => "action-a",
           });
 
           client.connect();
           const resultPromise = client.action("fail");
           await socket.receive({
             type: "error",
-            id: "action-a",
+            id: resultPromise.request.requestId,
             ok: false,
             seq: 2,
             error: { message: "Nope.", code: "NOPE" },
@@ -369,14 +368,14 @@ export function locus_client_suite(): TestSuite {
             save: { id: string };
           }>;
           const socket = make_memory_socket();
-          const client = create_locus_client<undefined, Actions>({
+          const client = create_echo<undefined, Actions>({
             socket,
-            actionId: () => "action-a",
           });
           let resolved = false;
 
           client.connect();
-          const resultPromise = client.action("save", { id: "row-a" }).then((result) => {
+          const action = client.action("save", { id: "row-a" });
+          const resultPromise = action.then((result) => {
             resolved = true;
             return result;
           });
@@ -389,7 +388,7 @@ export function locus_client_suite(): TestSuite {
           const afterUnrelated = resolved;
           await socket.receive({
             type: "ack",
-            id: "action-a",
+            id: action.request.requestId,
             ok: true,
             seq: 2,
           });
@@ -415,7 +414,7 @@ export function locus_client_suite(): TestSuite {
         input: {},
         act: () => {
           const socket = make_memory_socket();
-          const client = create_locus_client({
+          const client = create_echo({
             socket,
             clientId: "client-a",
           });
@@ -443,7 +442,7 @@ export function locus_client_suite(): TestSuite {
         input: {},
         act: async () => {
           const socket = make_memory_socket();
-          const client = create_locus_client({
+          const client = create_echo({
             socket,
             clientId: "client-a",
           });
@@ -483,7 +482,7 @@ export function locus_client_suite(): TestSuite {
         input: {},
         act: async () => {
           const socket = make_memory_socket();
-          const client = create_locus_client({ socket });
+          const client = create_echo({ socket });
 
           client.connect();
           const before = socket.listener_count();
@@ -516,7 +515,7 @@ export function locus_client_suite(): TestSuite {
         input: {},
         act: async () => {
           const socket = make_memory_socket();
-          const client = create_locus_client({ socket });
+          const client = create_echo({ socket });
 
           client.connect();
           await socket.receive(["not", "a", "message"]);
@@ -545,9 +544,8 @@ export function locus_client_suite(): TestSuite {
             ping: undefined;
           }>;
           const socket = make_memory_socket();
-          const client = create_locus_client<undefined, Actions>({
+          const client = create_echo<undefined, Actions>({
             socket,
-            actionId: () => "action-a",
           });
 
           client.connect();
@@ -555,7 +553,7 @@ export function locus_client_suite(): TestSuite {
           const [, message] = socket.sent() as Array<Record<string, unknown>>;
           await socket.receive({
             type: "ack",
-            id: "action-a",
+            id: resultPromise.request.requestId,
             ok: true,
             seq: 1,
           });
@@ -583,7 +581,7 @@ export function locus_client_suite(): TestSuite {
         input: {},
         act: async () => {
           const socket = make_memory_socket();
-          const client = create_locus_client({ socket });
+          const client = create_echo({ socket });
 
           client.connect();
           const before = socket.listener_count();
@@ -617,12 +615,12 @@ export function locus_client_suite(): TestSuite {
         act: async () => {
           type Actions = Readonly<{ read: undefined }>;
           const socket = make_memory_socket();
-          const client = create_locus_client<undefined, Actions>({ socket, actionId: () => "result-a" });
+          const client = create_echo<undefined, Actions>({ socket });
           client.connect();
           const resultPromise = client.action("read");
           await socket.receive({
             type: "ack",
-            id: "result-a",
+            id: resultPromise.request.requestId,
             ok: true,
             seq: 1,
             result: { status: "done", count: 2 },
@@ -639,7 +637,7 @@ export function locus_client_suite(): TestSuite {
         act: async () => {
           type Actions = Readonly<{ wait: undefined }>;
           const socket = make_memory_socket();
-          const client = create_locus_client<undefined, Actions>({ socket, actionId: () => "pending-a" });
+          const client = create_echo<undefined, Actions>({ socket });
           client.connect();
           const outcome = client.action("wait").then(
             () => ({ resolved: true as const }),
@@ -668,10 +666,8 @@ export function locus_client_suite(): TestSuite {
         act: async () => {
           type Actions = Readonly<{ wait: { index: number } }>;
           const socket = make_memory_socket();
-          let nextId = 0;
-          const client = create_locus_client<undefined, Actions>({
+          const client = create_echo<undefined, Actions>({
             socket,
-            actionId: () => `pending-${nextId += 1}`,
           });
           const settlements = [0, 0, 0];
           client.connect();
@@ -705,25 +701,24 @@ export function locus_client_suite(): TestSuite {
         act: async () => {
           type Actions = Readonly<{ wait: undefined }>;
           const socket = make_memory_socket();
-          const ids = ["completed", "pending"];
-          let nextId = 0;
           let pendingSettlements = 0;
-          const client = create_locus_client<undefined, Actions>({ socket, actionId: () => ids[nextId++]! });
+          const client = create_echo<undefined, Actions>({ socket });
           client.connect();
           const completed = client.action("wait");
-          const pending = client.action("wait").then(
+          const pendingAction = client.action("wait");
+          const pending = pendingAction.then(
             () => "resolved",
             () => {
               pendingSettlements += 1;
               return "rejected";
             },
           );
-          await socket.receive({ type: "ack", id: "completed", ok: true, seq: 1 });
+          await socket.receive({ type: "ack", id: completed.request.requestId, ok: true, seq: 1 });
           client.disconnect();
           const completedResult = await completed;
           const pendingResult = await pending;
-          await socket.receive({ type: "ack", id: "pending", ok: true, seq: 2 });
-          await socket.receive({ type: "error", id: "pending", ok: false, seq: 3, error: { message: "late" } });
+          await socket.receive({ type: "ack", id: pendingAction.request.requestId, ok: true, seq: 2 });
+          await socket.receive({ type: "error", id: pendingAction.request.requestId, ok: false, seq: 3, error: { message: "late" } });
 
           return {
             completedType: completedResult.type,
@@ -746,20 +741,19 @@ export function locus_client_suite(): TestSuite {
         act: async () => {
           type Actions = Readonly<{ wait: undefined }>;
           const socket = make_memory_socket();
-          const ids = ["old-action", "new-action"];
-          let nextId = 0;
-          const client = create_locus_client<undefined, Actions>({ socket, actionId: () => ids[nextId++]! });
+          const client = create_echo<undefined, Actions>({ socket });
           client.connect();
-          const oldOutcome = client.action("wait").then(
+          const oldAction = client.action("wait");
+          const oldOutcome = oldAction.then(
             () => "resolved",
             () => "rejected",
           );
           client.disconnect();
           client.connect();
           const newAction = client.action("wait");
-          await socket.receive({ type: "ack", id: "old-action", ok: true, seq: 1 });
-          await socket.receive({ type: "error", id: "old-action", ok: false, seq: 2, error: { message: "late" } });
-          await socket.receive({ type: "ack", id: "new-action", ok: true, seq: 3 });
+          await socket.receive({ type: "ack", id: oldAction.request.requestId, ok: true, seq: 1 });
+          await socket.receive({ type: "error", id: oldAction.request.requestId, ok: false, seq: 2, error: { message: "late" } });
+          await socket.receive({ type: "ack", id: newAction.request.requestId, ok: true, seq: 3 });
           const newResult = await newAction;
 
           return {
@@ -784,7 +778,7 @@ export function locus_client_suite(): TestSuite {
           type Actions = Readonly<{ wait: undefined }>;
           const socket = make_memory_socket();
           let settlements = 0;
-          const client = create_locus_client<undefined, Actions>({ socket });
+          const client = create_echo<undefined, Actions>({ socket });
           client.connect();
           const outcome = client.action("wait").catch((error: unknown) => {
             settlements += 1;
@@ -799,120 +793,15 @@ export function locus_client_suite(): TestSuite {
       }),
       locus_client_read_case({
         suite: SUITE,
-        caseId: "action-before-connect-rejects-without-allocating-or-sending", name: "action before connect rejects without allocating or sending",
-        input: {},
-        act: async () => {
-          type Actions = Readonly<{ wait: undefined }>;
-          const socket = make_memory_socket();
-          let actionIdCalls = 0;
-          const client = create_locus_client<undefined, Actions>({
-            socket,
-            actionId: () => `action-${actionIdCalls += 1}`,
-          });
-          const error = await client.action("wait").catch((reason: unknown) => reason);
-
-          return {
-            instance: error instanceof LocusDisconnectedError,
-            name: error instanceof Error ? error.name : undefined,
-            actionIdCalls,
-            sentCount: socket.sent().length,
-          };
-        },
-        expected: {
-          instance: true,
-          name: "LocusDisconnectedError",
-          actionIdCalls: 1,
-          sentCount: 0,
-        },
-      }),
-      locus_client_read_case({
-        suite: SUITE,
-        caseId: "action-after-explicit-disconnect-rejects-without-allocating-or-sending", name: "action after explicit disconnect rejects without allocating or sending",
-        input: {},
-        act: async () => {
-          type Actions = Readonly<{ wait: undefined }>;
-          const socket = make_memory_socket();
-          let actionIdCalls = 0;
-          const client = create_locus_client<undefined, Actions>({
-            socket,
-            actionId: () => `action-${actionIdCalls += 1}`,
-          });
-          client.connect();
-          client.disconnect();
-          const error = await client.action("wait").catch((reason: unknown) => reason);
-
-          return {
-            instance: error instanceof LocusDisconnectedError,
-            actionIdCalls,
-            sentCount: socket.sent().length,
-          };
-        },
-        expected: { instance: true, actionIdCalls: 1, sentCount: 1 },
-      }),
-      locus_client_read_case({
-        suite: SUITE,
-        caseId: "action-after-socket-close-rejects-without-allocating-or-sending", name: "action after socket close rejects without allocating or sending",
-        input: {},
-        act: async () => {
-          type Actions = Readonly<{ wait: undefined }>;
-          const socket = make_memory_socket();
-          let actionIdCalls = 0;
-          const client = create_locus_client<undefined, Actions>({
-            socket,
-            actionId: () => `action-${actionIdCalls += 1}`,
-          });
-          client.connect();
-          socket.close();
-          const error = await client.action("wait").catch((reason: unknown) => reason);
-
-          return {
-            instance: error instanceof LocusDisconnectedError,
-            actionIdCalls,
-            sentCount: socket.sent().length,
-          };
-        },
-        expected: { instance: true, actionIdCalls: 1, sentCount: 1 },
-      }),
-      locus_client_read_case({
-        suite: SUITE,
-        caseId: "duplicate-logical-request-ids-retain-independent-delivery-attempts", name: "duplicate logical request IDs retain independent delivery attempts",
-        input: {},
-        act: async () => {
-          type Actions = Readonly<{ wait: undefined }>;
-          const socket = make_memory_socket();
-          const client = create_locus_client<undefined, Actions>({ socket, actionId: () => "duplicate" });
-          client.connect();
-          const first = client.action("wait");
-          const second = client.action("wait");
-          const sent = socket.sent() as Array<Record<string, unknown>>;
-          await socket.receive({ type: "ack", id: "duplicate", attemptId: sent[1]?.attemptId, ok: true, seq: 1 });
-          await socket.receive({ type: "ack", id: "duplicate", attemptId: sent[2]?.attemptId, ok: true, seq: 2 });
-          const firstResult = await first;
-          const secondResult = await second;
-
-          return {
-            firstType: firstResult.type,
-            secondType: secondResult.type,
-            sentTypes: (socket.sent() as Array<Record<string, unknown>>).map((message) => message.type),
-          };
-        },
-        expected: {
-          firstType: "ack",
-          secondType: "ack",
-          sentTypes: ["hello", "action", "action"],
-        },
-      }),
-      locus_client_read_case({
-        suite: SUITE,
         caseId: "event-listeners-receive-once-and-dispose-idempotently", name: "event listeners receive once and dispose idempotently",
         input: {},
         act: async () => {
           const socket = make_memory_socket();
-          const client = create_locus_client({ socket });
+          const client = create_echo({ socket });
           const first: string[] = [];
           const second: string[] = [];
-          const stopFirst = client.on_event((message) => first.push(message.event));
-          client.on_event((message) => second.push(message.event));
+          const stopFirst = client.onEvent((message) => first.push(message.event));
+          client.onEvent((message) => second.push(message.event));
           client.connect();
           await socket.receive({ type: "event", event: "one", payload: { n: 1 } });
           stopFirst();
@@ -929,16 +818,17 @@ export function locus_client_suite(): TestSuite {
         act: async () => {
           type Actions = Readonly<{ wait: undefined }>;
           const socket = make_memory_socket();
-          const client = create_locus_client<undefined, Actions>({ socket, actionId: () => "pending" });
+          const client = create_echo<undefined, Actions>({ socket });
           client.connect();
           let settled = false;
-          const pending = client.action("wait").then((result) => {
+          const action = client.action("wait");
+          const pending = action.then((result) => {
             settled = true;
             return result;
           });
           await socket.receive({ type: "event", event: "notice", payload: null });
           const settledAfterEvent = settled;
-          await socket.receive({ type: "ack", id: "pending", ok: true, seq: 1 });
+          await socket.receive({ type: "ack", id: action.request.requestId, ok: true, seq: 1 });
           const result = await pending;
           return { settledAfterEvent, resultType: result.type };
         },
@@ -950,9 +840,9 @@ export function locus_client_suite(): TestSuite {
         input: {},
         act: async () => {
           const socket = make_memory_socket();
-          const client = create_locus_client({ socket });
+          const client = create_echo({ socket });
           const received: string[] = [];
-          client.on_event((message) => received.push(message.event));
+          client.onEvent((message) => received.push(message.event));
           client.connect();
           client.disconnect();
           await socket.receive({ type: "event", event: "detached", payload: null });

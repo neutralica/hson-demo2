@@ -1,5 +1,5 @@
-import { create_locus_client } from "hson-live/locus";
-import type { LiveMap, LocusClient, LocusSocketLike } from "hson-live/types";
+import { create_echo, type Echo } from "hson-live/echo";
+import type { LiveMap, LocusSocketLike } from "hson-live/types";
 import type { HostedTestPanelRuntime, HostedTestRemoteRun } from "../../../src/app/demos/tests/panel/hosted-test-panel-runtime";
 import type { HostedTestActions, HostedTestAnyRunResult } from "../../../src/shared/hosted-tests/hosted-test-action.types";
 import { decode_hosted_test_discovery_response, decode_hosted_test_cancel_response, decode_selected_hosted_test_run_response, inspect_hosted_test_action } from "../../../src/shared/hosted-tests/hosted-test-client-action";
@@ -59,7 +59,7 @@ export function make_in_memory_hosted_test_runtime(
     disposers.push(connected.value);
     return clientSocket;
   }
-  const client = create_locus_client<HostedTestCoordinatorState, HostedTestActions>({
+  const client = create_echo<HostedTestCoordinatorState, HostedTestActions>({
     socket: connect(HOSTED_TEST_COORDINATOR_HOST_ID),
     recovery: { logicalMapId: HOSTED_TEST_COORDINATOR_HOST_ID },
     session: {},
@@ -74,7 +74,7 @@ export function make_in_memory_hosted_test_runtime(
     association: HostedTestRunAssociation,
     actionResult?: Promise<HostedTestAnyRunResult>,
   ): Promise<HostedTestRemoteRun> {
-    const reportClient = create_locus_client<HostedTestReportState, ReportActions>({
+    const reportClient = create_echo<HostedTestReportState, ReportActions>({
       socket: connect(association.reportHostId),
       recovery: { logicalMapId: association.reportHostId },
       session: {},
@@ -112,9 +112,9 @@ export function make_in_memory_hosted_test_runtime(
     let runDisposed = false;
     const run: HostedTestRemoteRun = Object.freeze({
       association,
-      client: reportClient as LocusClient<LiveMap<HostedTestReportState>, ReportActions>,
+      client: reportClient as Echo<LiveMap<HostedTestReportState>, ReportActions>,
       actionResult: settledResult,
-      on_change(listener) { return reportClient.recovery.on_change(() => listener()); },
+      on_change(listener) { return reportClient.recovery.onChange(() => listener()); },
       async ready() {},
       inspect(request) { return inspect_hosted_test_action(reportClient, request); },
       async cancel() {
@@ -156,7 +156,7 @@ export function make_in_memory_hosted_test_runtime(
         const existing = initial.requests[client.clientId]?.[requestId];
         const joined = existing === undefined ? undefined : hosted_test_run_association(initial, existing);
         if (joined) { resolve(joined); return; }
-        const stop = client.recovery.on_change(() => {
+        const stop = client.recovery.onChange(() => {
           const state = client.recovery.map.snap();
           const found = state.requests[client.clientId]?.[requestId];
           const association = found === undefined ? undefined : hosted_test_run_association(state, found);

@@ -1,9 +1,9 @@
 import WebSocket from "ws";
 import {
   create_browser_locus_socket,
-  LocusClientRecoveryError,
   type BrowserWebSocketConstructor,
 } from "hson-live/locus";
+import { EchoRecoveryError } from "hson-live/echo";
 import { create_towl_client, towl_host_id_for_room } from "../../../src/app/demos/towl/index";
 
 const endpoint = process.env.TOWL_DEPLOYED_WS_URL;
@@ -64,7 +64,7 @@ try {
 const result = Object.freeze({
   room,
   compatible: error === undefined,
-  recoveryError: error instanceof LocusClientRecoveryError,
+  recoveryError: error instanceof EchoRecoveryError,
   error: error === undefined ? undefined : describe(error),
   snapshot,
 });

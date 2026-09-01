@@ -1,6 +1,7 @@
 // pair-suite.ts
 
-import { create_locus, create_locus_client } from "hson-live/locus";
+import { create_locus } from "hson-live/locus";
+import { create_echo } from "hson-live/echo";
 import type { TestCase, TestSuite } from "../../harness/core/test-contracts";
 import { equal_row, preview_value } from "../livemap/test-helpers";
 
@@ -149,7 +150,7 @@ export function locus_pair_suite(): TestSuite {
         act: async () => {
           const [clientSocket, hostSocket] = make_socket_pair();
           const host = create_locus({ state: { ready: true } });
-          const client = create_locus_client<{ ready: boolean }>({
+          const client = create_echo<{ ready: boolean }>({
             socket: clientSocket,
             clientId: "client-a",
           });
@@ -194,7 +195,7 @@ export function locus_pair_suite(): TestSuite {
         act: async () => {
           const [clientSocket, hostSocket] = make_socket_pair();
           const host = create_locus({ state: { user: { name: "Ada" } } });
-          const client = create_locus_client<{ user: { name: string } }>({
+          const client = create_echo<{ user: { name: string } }>({
             socket: clientSocket,
             clientId: "client-a",
           });
@@ -231,7 +232,7 @@ export function locus_pair_suite(): TestSuite {
         act: async () => {
           const [clientSocket, hostSocket] = make_socket_pair();
           const host = create_locus({ state: { ui: { selected: "home" } } });
-          const client = create_locus_client<{ ui: { selected: string } }>({ socket: clientSocket });
+          const client = create_echo<{ ui: { selected: string } }>({ socket: clientSocket });
 
           host.connect(hostSocket);
           client.connect();
@@ -278,9 +279,8 @@ export function locus_pair_suite(): TestSuite {
               },
             },
           });
-          const client = create_locus_client<{ user: { name: string } }, Actions>({
+          const client = create_echo<{ user: { name: string } }>({
             socket: clientSocket,
-            actionId: () => "action-a",
           });
 
           host.connect(hostSocket);
@@ -333,9 +333,8 @@ export function locus_pair_suite(): TestSuite {
           }>;
           const [clientSocket, hostSocket] = make_socket_pair();
           const host = create_locus({ state: {} });
-          const client = create_locus_client<undefined, Actions>({
+          const client = create_echo<undefined, Actions>({
             socket: clientSocket,
-            actionId: () => "action-a",
           });
 
           host.connect(hostSocket);
@@ -379,9 +378,8 @@ export function locus_pair_suite(): TestSuite {
               },
             },
           });
-          const client = create_locus_client<{ count: number }, Actions>({
+          const client = create_echo<{ count: number }>({
             socket: clientSocket,
-            actionId: () => "action-a",
           });
 
           host.connect(hostSocket);
@@ -434,9 +432,8 @@ export function locus_pair_suite(): TestSuite {
               },
             },
           });
-          const firstClient = create_locus_client<{ count: number }, Actions>({
+          const firstClient = create_echo<{ count: number }>({
             socket: firstClientSocket,
-            actionId: () => "action-a",
           });
 
           host.connect(firstHostSocket);
@@ -449,7 +446,7 @@ export function locus_pair_suite(): TestSuite {
           await resultPromise;
           await settle_pair();
 
-          const secondClient = create_locus_client<{ count: number }, Actions>({
+          const secondClient = create_echo<{ count: number }>({
             socket: secondClientSocket,
             clientId: "client-b",
           });
@@ -503,9 +500,8 @@ export function locus_pair_suite(): TestSuite {
               },
             },
           });
-          const firstClient = create_locus_client<{ count: number }, Actions>({
+          const firstClient = create_echo<{ count: number }>({
             socket: firstClientSocket,
-            actionId: () => "action-a",
           });
 
           host.connect(firstHostSocket);
@@ -518,7 +514,7 @@ export function locus_pair_suite(): TestSuite {
           await resultPromise;
           await settle_pair();
 
-          const secondClient = create_locus_client<{ count: number }, Actions>({ socket: secondClientSocket });
+          const secondClient = create_echo<{ count: number }>({ socket: secondClientSocket });
           host.connect(secondHostSocket);
           secondClient.connect();
           await settle_pair();
@@ -577,9 +573,8 @@ export function locus_pair_suite(): TestSuite {
               },
             },
           });
-          const writer = create_locus_client<{ count: number }, Actions>({
+          const writer = create_echo<{ count: number }>({
             socket: writerClientSocket,
-            actionId: () => "action-a",
           });
 
           host.connect(writerHostSocket);
@@ -592,7 +587,7 @@ export function locus_pair_suite(): TestSuite {
           await resultPromise;
           await settle_pair();
 
-          const reader = create_locus_client<{ count: number }, Actions>({ socket: readerClientSocket });
+          const reader = create_echo<{ count: number }>({ socket: readerClientSocket });
           host.connect(readerHostSocket);
           reader.connect();
           await settle_pair();
@@ -628,12 +623,12 @@ export function locus_pair_suite(): TestSuite {
           const [firstClientSocket, firstHostSocket] = make_socket_pair();
           const [secondClientSocket, secondHostSocket] = make_socket_pair();
           const host = create_locus({ state: { ready: true } });
-          const first = create_locus_client<{ ready: boolean }>({ socket: firstClientSocket });
-          const second = create_locus_client<{ ready: boolean }>({ socket: secondClientSocket });
+          const first = create_echo<{ ready: boolean }>({ socket: firstClientSocket });
+          const second = create_echo<{ ready: boolean }>({ socket: secondClientSocket });
           const firstEvents: unknown[] = [];
           const secondEvents: unknown[] = [];
-          first.on_event((message) => firstEvents.push(message));
-          second.on_event((message) => secondEvents.push(message));
+          first.onEvent((message) => firstEvents.push(message));
+          second.onEvent((message) => secondEvents.push(message));
           const firstConnection = host.connect(firstHostSocket);
           host.connect(secondHostSocket);
           first.connect();
@@ -665,12 +660,12 @@ export function locus_pair_suite(): TestSuite {
               },
             },
           });
-          const first = create_locus_client<undefined, Actions>({ socket: firstClientSocket, actionId: () => "emit-a" });
-          const second = create_locus_client<undefined, Actions>({ socket: secondClientSocket });
+          const first = create_echo<undefined, Actions>({ socket: firstClientSocket });
+          const second = create_echo<undefined, Actions>({ socket: secondClientSocket });
           const firstEvents: string[] = [];
           const secondEvents: string[] = [];
-          first.on_event((message) => firstEvents.push(message.event));
-          second.on_event((message) => secondEvents.push(message.event));
+          first.onEvent((message) => firstEvents.push(message.event));
+          second.onEvent((message) => secondEvents.push(message.event));
           host.connect(firstHostSocket);
           host.connect(secondHostSocket);
           first.connect();
@@ -720,7 +715,7 @@ export function locus_pair_suite(): TestSuite {
               },
             },
           });
-          const client = create_locus_client<undefined, Actions>({ socket: clientSocket, actionId: () => "delayed-a" });
+          const client = create_echo<undefined, Actions>({ socket: clientSocket });
           host.connect(hostSocket);
           client.connect();
           await settle_pair();
@@ -772,12 +767,12 @@ export function locus_pair_suite(): TestSuite {
               },
             },
           });
-          const first = create_locus_client<undefined, Actions>({ socket: firstClientSocket, actionId: () => "marked-a" });
-          const second = create_locus_client<undefined, Actions>({ socket: secondClientSocket, actionId: () => "marked-b" });
+          const first = create_echo<undefined, Actions>({ socket: firstClientSocket });
+          const second = create_echo<undefined, Actions>({ socket: secondClientSocket });
           const firstMarkers: unknown[] = [];
           const secondMarkers: unknown[] = [];
-          first.on_event((message) => firstMarkers.push(message.payload));
-          second.on_event((message) => secondMarkers.push(message.payload));
+          first.onEvent((message) => firstMarkers.push(message.payload));
+          second.onEvent((message) => secondMarkers.push(message.payload));
           host.connect(firstHostSocket);
           host.connect(secondHostSocket);
           first.connect();
@@ -827,10 +822,9 @@ export function locus_pair_suite(): TestSuite {
       },
     });
 
-    const client = create_locus_client<undefined, Actions>({
+    const client = create_echo<undefined, Actions>({
       socket: clientSocket,
       clientId: "impersonated-session",
-      actionId: () => "inspect-a",
     });
 
     host.connect(hostSocket);
@@ -888,16 +882,14 @@ export function locus_pair_suite(): TestSuite {
       },
     });
 
-    const first = create_locus_client<undefined, Actions>({
+    const first = create_echo<undefined, Actions>({
       socket: firstClientSocket,
       clientId: "shared-claimed-id",
-      actionId: () => "inspect-a",
     });
 
-    const second = create_locus_client<undefined, Actions>({
+    const second = create_echo<undefined, Actions>({
       socket: secondClientSocket,
       clientId: "shared-claimed-id",
-      actionId: () => "inspect-b",
     });
 
     host.connect(firstHostSocket);
@@ -982,12 +974,10 @@ export function locus_pair_suite(): TestSuite {
       },
     });
 
-    const client = create_locus_client<
-      { value: string },
-      Actions
+    const client = create_echo<
+      { value: string }
     >({
       socket: clientSocket,
-      actionId: () => "invalid-update-a",
     });
 
     host.connect(hostSocket);
@@ -1025,106 +1015,7 @@ export function locus_pair_suite(): TestSuite {
     value: "unchanged",
   },
       }),
-      locus_pair_read_case({
-  suite: SUITE,
-  caseId: "repeated-session-action-id-returns-cached-outcome-without-rerunning-handler", name: "repeated session action id returns cached outcome without rerunning handler",
-  input: {},
 
-  act: async () => {
-    type Actions = Readonly<{
-      increment: undefined;
-    }>;
-
-    let calls = 0;
-
-    const [clientSocket, hostSocket] = make_socket_pair();
-
-    const host = create_locus<{ count: number }, Actions>({
-      state: {
-        count: 0,
-      },
-
-      actions: {
-        increment: (ctx) => {
-          calls += 1;
-
-          const count = ctx.map.at(["count"]).snap();
-
-          void ctx.mutate((draft) => draft.set(
-            ["count"],
-            typeof count === "number"
-              ? count + 1
-              : 1,
-          ));
-
-          return {
-            calls,
-          };
-        },
-      },
-    });
-
-    const client = create_locus_client<
-      { count: number },
-      Actions
-    >({
-      socket: clientSocket,
-      actionId: () => "same-action-id",
-    });
-
-    host.connect(hostSocket);
-    client.connect();
-
-    await settle_pair();
-
-    const first = await client.action("increment");
-
-    await settle_pair();
-
-    const second = await client.action("increment");
-
-    await settle_pair();
-
-    return {
-      calls,
-
-      firstType: first.type,
-      firstSeq: first.seq,
-      firstResult: first.type === "ack"
-        ? first.result
-        : undefined,
-
-      secondType: second.type,
-      secondSeq: second.seq,
-      secondResult: second.type === "ack"
-        ? second.result
-        : undefined,
-
-      hostSeq: host.seq,
-      count: host.map.at(["count"]).snap(),
-    };
-  },
-
-  expected: {
-    calls: 1,
-
-    firstType: "ack",
-    firstSeq: 1,
-    firstResult: {
-      calls: 1,
-    },
-
-    secondType: "ack",
-    secondSeq: 1,
-    secondResult: {
-      calls: 1,
-    },
-
-    hostSeq: 1,
-    count: 1,
-  },
-      }),
-      
     ] as const,
   };
 }

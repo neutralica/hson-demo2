@@ -1,8 +1,5 @@
-import {
-  LocusClientRecoveryError,
-  LocusClientSessionError,
-  LocusDisconnectedError,
-} from "hson-live/locus";
+import { LocusDisconnectedError } from "hson-live/locus";
+import { EchoRecoveryError, EchoSessionError } from "hson-live/echo";
 import type {
   LocusDisposer,
   LocusSessionCredential,
@@ -264,23 +261,23 @@ export function towl_connection_suite(): TestSuite {
         SUITE,
         "structured-errors-distinguish-credential-transport-and-terminal-failures", "structured errors distinguish credential transport and terminal failures",
         () => ({
-          credential: classify_towl_connection_error(new LocusClientSessionError(
+          credential: classify_towl_connection_error(new EchoSessionError(
             "LOCUS_SESSION_CREDENTIAL_UNKNOWN",
             "unknown",
           )),
-          sessionTransport: classify_towl_connection_error(new LocusClientSessionError(
+          sessionTransport: classify_towl_connection_error(new EchoSessionError(
             "LOCUS_SESSION_DISCONNECTED",
             "disconnected",
           )),
-          recoveryTransport: classify_towl_connection_error(new LocusClientRecoveryError(
+          recoveryTransport: classify_towl_connection_error(new EchoRecoveryError(
             "LOCUS_RECOVERY_DISCONNECTED",
             "disconnected",
           )),
-          terminalSession: classify_towl_connection_error(new LocusClientSessionError(
+          terminalSession: classify_towl_connection_error(new EchoSessionError(
             "LOCUS_SESSION_ATTACHMENT_FENCED",
             "fenced",
           )),
-          terminalRecovery: classify_towl_connection_error(new LocusClientRecoveryError(
+          terminalRecovery: classify_towl_connection_error(new EchoRecoveryError(
             "REVISION_AHEAD_OF_AUTHORITY",
             "ahead",
           )),

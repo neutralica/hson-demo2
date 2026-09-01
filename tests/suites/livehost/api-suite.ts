@@ -92,7 +92,7 @@ export function locus_api_suite(): TestSuite {
         input: {},
         act: () => {
           const socket = make_api_socket();
-          const client = hson.locus.client<{ ready: boolean }>({ socket });
+          const client = hson.echo.create<{ ready: boolean }>({ socket });
 
           client.connect();
           socket.receive({
@@ -120,7 +120,7 @@ export function locus_api_suite(): TestSuite {
         input: {},
         act: () => {
           const socket = make_api_socket();
-          const client = hson.locus.client<{ count: number }>({ socket });
+          const client = hson.echo.create<{ count: number }>({ socket });
 
           client.connect();
           socket.receive({
@@ -152,7 +152,7 @@ export function locus_api_suite(): TestSuite {
         input: {},
         act: () => {
           const socket = make_api_socket();
-          const client = hson.locus.client({ socket });
+          const client = hson.echo.create({ socket });
 
           client.connect();
           client.subscribe(["count"]);
@@ -178,26 +178,25 @@ export function locus_api_suite(): TestSuite {
         input: {},
         act: () => {
           const socket = make_api_socket();
-          const client = hson.locus.client<undefined, { setCount: number }>({
+          const client = hson.echo.create<undefined, { setCount: number }>({
             socket,
-            actionId: () => "action-a",
           });
 
           client.connect();
-          void client.action("setCount", 4);
+          const pending = client.action("setCount", 4);
 
           const messages = socket.sent() as Array<Record<string, unknown>>;
 
           return {
             types: messages.map((message) => message.type),
-            id: messages[1]?.id,
+            requestMatches: messages[1]?.id === pending.request.requestId,
             name: messages[1]?.name,
             payload: messages[1]?.payload,
           };
         },
         expected: {
           types: ["hello", "action"],
-          id: "action-a",
+          requestMatches: true,
           name: "setCount",
           payload: 4,
         },

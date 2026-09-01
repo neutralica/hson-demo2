@@ -3,12 +3,12 @@ import {
   LOCUS_BOOTSTRAP_MEDIA_TYPE,
   capture_locus_bootstrap,
   create_locus,
-  create_locus_bootstrap_client,
   decode_locus_bootstrap,
   encode_locus_bootstrap,
   install_locus_bootstrap,
   type LocusSocketLike,
 } from "hson-live/locus";
+import { create_locus_bootstrap_echo } from "hson-live/echo";
 import { create_node_locus_socket } from "hson-live/locus/node";
 import type {
   LiveHostApplication,
@@ -129,10 +129,10 @@ try {
     websocket.once("open", resolve);
     websocket.once("error", reject);
   });
-  const mirror = create_locus_bootstrap_client(install_locus_bootstrap(bootstrap), {
+  const mirror = create_locus_bootstrap_echo(install_locus_bootstrap(bootstrap), {
     socket: create_node_locus_socket(websocket),
   });
-  assert.equal((await mirror.connect_and_recover()).strategy, "replay");
+  assert.equal((await mirror.connectAndRecover()).strategy, "replay");
   await authority.mutate((draft) => draft.set(["value"], 3));
   await new Promise((resolve) => setTimeout(resolve, 10));
   assert.deepEqual(mirror.map.capture(), authority.map.capture());

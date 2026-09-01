@@ -1,6 +1,7 @@
 import { Worker } from "node:worker_threads";
 import WebSocket from "ws";
-import { create_browser_locus_socket, create_locus_client, type BrowserWebSocketConstructor } from "hson-live/locus";
+import { create_browser_locus_socket, type BrowserWebSocketConstructor } from "hson-live/locus";
+import { create_echo } from "hson-live/echo";
 import { start_node_application_host } from "hson-live/livehost/node";
 import type { CircuitVerificationActions, CircuitVerificationResult } from "../../../src/shared/circuit-verification-contract";
 import { create_circuit_verification_service } from "../../harness/runtimes/node/circuit-verification-service";
@@ -130,7 +131,7 @@ let locusTotalMs = 0;
 let locusWorkerExecutionMs = 0;
 try {
   await transport.ready;
-  const client = create_locus_client<undefined, CircuitVerificationActions>({ socket: transport.socket });
+  const client = create_echo<undefined, CircuitVerificationActions>({ socket: transport.socket });
   client.connect();
   await new Promise<void>((resolve) => setTimeout(resolve, 10));
   const began = performance.now();
