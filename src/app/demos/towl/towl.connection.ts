@@ -1,10 +1,10 @@
 import {
-  LocusClientRecoveryError,
-  LocusClientSessionError,
+  EchoRecoveryError,
+  EchoSessionError,
   LocusDisconnectedError,
-} from "hson-live/locus";
+} from "hson-live";
+import type { EchoRecoveryCursor } from "hson-live/echo";
 import type {
-  LocusClientRecoveryCursor,
   LocusDisposer,
   LocusSessionCredential,
   LocusSocketLike,
@@ -137,13 +137,13 @@ function bounded_request<T>(request: Promise<T>, timeoutMs: number): Promise<T> 
 }
 
 export function classify_towl_connection_error(error: unknown): TowlConnectionErrorKind {
-  if (error instanceof LocusClientSessionError) {
+  if (error instanceof EchoSessionError) {
     if (DEFINITIVE_CREDENTIAL_REJECTIONS.has(error.code)) return "credential-rejected";
     if (error.code === "LOCUS_SESSION_DISCONNECTED") return "transport";
     return "terminal";
   }
   if (error instanceof LocusDisconnectedError) return "transport";
-  if (error instanceof LocusClientRecoveryError) {
+  if (error instanceof EchoRecoveryError) {
     return error.code === "LOCUS_RECOVERY_DISCONNECTED" ? "transport" : "terminal";
   }
   return "terminal";
@@ -151,9 +151,7 @@ export function classify_towl_connection_error(error: unknown): TowlConnectionEr
 
 function dispose_client(client: TowlClient | undefined): void {
   if (client === undefined) return;
-  client.disconnect();
-  client.livehost.session.dispose();
-  client.livehost.recovery.dispose();
+  client.livehost.dispose();
 }
 
 export function create_towl_connection_controller(
@@ -182,7 +180,7 @@ export function create_towl_connection_controller(
   let credentialLoaded = false;
   let credential: LocusSessionCredential | undefined;
   let logicalClientId = options.clientId;
-  let recoveryCursor: LocusClientRecoveryCursor | undefined;
+  let recoveryCursor: EchoRecoveryCursor | undefined;
   let activeClient: TowlClient | undefined;
   let activeTransport: TowlConnectionTransport | undefined;
   let stopActiveClose: LocusDisposer | undefined;
@@ -302,6 +300,8 @@ export function create_towl_connection_controller(
       if (closeBeforeInstall) throw new LocusDisconnectedError();
 
       const currentCredential = load_credential();
+      dispose_client(activeClient);
+      activeClient = undefined;
       nextClient = create_towl_client({
         socket: nextTransport.socket,
         logicalMapId: options.logicalMapId,

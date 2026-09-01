@@ -1,10 +1,11 @@
 import {
   create_browser_locus_socket,
-  create_locus_client,
   type BrowserLocusSocket,
   type BrowserWebSocketConstructor,
 } from "hson-live/locus";
-import type { LiveMap, LocusClient } from "hson-live/types";
+import { create_echo } from "hson-live";
+import type { Echo } from "hson-live/echo";
+import type { LiveMap } from "hson-live/types";
 import {
   CIRCUIT_VERIFICATION_ACTION,
   CIRCUIT_VERIFICATION_HOST_ID,
@@ -83,10 +84,10 @@ export function create_browser_circuit_verification_transport(
 ): ParsingVerificationTransport {
   let disposed = false;
   let transport: BrowserLocusSocket | undefined;
-  let client: LocusClient<LiveMap<undefined>, CircuitVerificationActions> | undefined;
-  let opening: Promise<LocusClient<LiveMap<undefined>, CircuitVerificationActions>> | undefined;
+  let client: Echo<LiveMap<undefined>, CircuitVerificationActions> | undefined;
+  let opening: Promise<Echo<LiveMap<undefined>, CircuitVerificationActions>> | undefined;
 
-  async function open(): Promise<LocusClient<LiveMap<undefined>, CircuitVerificationActions>> {
+  async function open(): Promise<Echo<LiveMap<undefined>, CircuitVerificationActions>> {
     if (disposed) throw new BrowserCircuitVerificationTransportError(
       "CIRCUIT_VERIFICATION_TRANSPORT_DISPOSED",
       "Parsing verification transport is disposed.",
@@ -107,15 +108,13 @@ export function create_browser_circuit_verification_transport(
           "CIRCUIT_VERIFICATION_TRANSPORT_DISPOSED",
           "Parsing verification transport was disposed while connecting.",
         );
-        const nextClient = create_locus_client<undefined, CircuitVerificationActions>({ socket: nextTransport.socket });
+        const nextClient = create_echo<undefined, CircuitVerificationActions>({ socket: nextTransport.socket });
         nextClient.connect();
         transport = nextTransport;
         client = nextClient;
         nextTransport.socket.onClose(() => {
           if (transport !== nextTransport) return;
-          nextClient.disconnect();
-          nextClient.session.dispose();
-          nextClient.recovery.dispose();
+          nextClient.dispose();
           client = undefined;
           transport = undefined;
           nextTransport.dispose();
@@ -139,7 +138,7 @@ export function create_browser_circuit_verification_transport(
       onProgress: (progress: CircuitVerificationProgress) => void,
     ): Promise<CircuitVerificationResult> {
       const current = await open();
-      const stopEvents = current.on_event((event) => {
+      const stopEvents = current.onEvent((event) => {
         if (event.event !== CIRCUIT_VERIFICATION_PROGRESS_EVENT) return;
         const decoded = decode_circuit_verification_progress(event.payload);
         if (!decoded.ok) return;
@@ -173,9 +172,7 @@ export function create_browser_circuit_verification_transport(
     dispose() {
       if (disposed) return;
       disposed = true;
-      client?.disconnect();
-      client?.session.dispose();
-      client?.recovery.dispose();
+      client?.dispose();
       client = undefined;
       transport?.dispose();
       transport = undefined;

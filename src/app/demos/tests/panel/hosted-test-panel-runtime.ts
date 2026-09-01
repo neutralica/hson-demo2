@@ -1,5 +1,6 @@
-import { create_locus_client, LocusDisconnectedError } from "hson-live/locus";
-import type { LiveMap, LocusActionId, LocusClient, LocusClientActionPromise, LiveMapCommitObservation } from "hson-live/types";
+import { create_echo, LocusDisconnectedError } from "hson-live";
+import type { Echo, EchoActionPromise } from "hson-live/echo";
+import type { LiveMap, LiveMapCommitObservation } from "hson-live/types";
 import type { HostedTestActions, HostedTestAnyRunResult, HostedTestCancelResult, HostedTestCaseDiagnostic, HostedTestInspectRequest, HostedTestSelectedRunResult } from "../../../../shared/hosted-tests/hosted-test-action.types";
 import {
   decode_hosted_test_discovery_response,
@@ -53,7 +54,7 @@ export type HostedTestPanelRuntimeStatus =
 
 export type HostedTestRemoteRun = Readonly<{
   association: HostedTestRunAssociation;
-  readonly client: LocusClient<LiveMap<HostedTestReportState>, HostedTestReportActions>;
+  readonly client: Echo<LiveMap<HostedTestReportState>, HostedTestReportActions>;
   actionResult: Promise<HostedTestAnyRunResult>;
   on_change(listener: (observation?: LiveMapCommitObservation) => void): () => void;
   ready(): Promise<void>;
@@ -63,7 +64,7 @@ export type HostedTestRemoteRun = Readonly<{
 }>;
 
 export type HostedTestPanelRuntime = Readonly<{
-  readonly client: LocusClient<LiveMap<HostedTestCoordinatorState>, HostedTestActions>;
+  readonly client: Echo<LiveMap<HostedTestCoordinatorState>, HostedTestActions>;
   readonly status: HostedTestPanelRuntimeStatus;
   readonly failure: Error | undefined;
   readonly discovery: TestExecutorDiscovery | undefined;
@@ -83,8 +84,6 @@ export type HostedTestPanelRuntimeOptions = Readonly<{
   reconnectDelaysMs?: readonly number[];
   /** Refresh-safe identity factory. Primarily injectable for deterministic tests. */
   makeClientId?: () => string;
-  /** Fresh-action identity factory. Primarily injectable for deterministic tests. */
-  makeActionId?: () => LocusActionId;
   timeline?: HostedTestTimelineObserver;
 }>;
 
@@ -144,7 +143,7 @@ function safe_hosted_test_error(error: unknown, depth = 0): Readonly<Record<stri
 }
 
 function association_from(
-  client: LocusClient<LiveMap<HostedTestCoordinatorState>, HostedTestActions>,
+  client: Echo<LiveMap<HostedTestCoordinatorState>, HostedTestActions>,
   requestId: string,
 ): HostedTestRunAssociation | undefined {
   const state = client.recovery.map.snap();
@@ -209,7 +208,7 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
   let discoveredExecutor: TestExecutorDiscovery | undefined;
   let disposed = false;
   let coordinatorTransport: HostedTestBrowserSocket | undefined;
-  let coordinatorClient: LocusClient<LiveMap<HostedTestCoordinatorState>, HostedTestActions>;
+  let coordinatorClient: Echo<LiveMap<HostedTestCoordinatorState>, HostedTestActions>;
   let stopCoordinatorClose: (() => void) | undefined;
   let stopCoordinatorChanges: (() => void) | undefined;
   let reconnecting: Promise<void> | undefined;
@@ -273,12 +272,12 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
 
   function bind_coordinator_changes(): void {
     stopCoordinatorChanges?.();
-    stopCoordinatorChanges = coordinatorClient.recovery.on_change(notify_associations);
+    stopCoordinatorChanges = coordinatorClient.recovery.onChange(notify_associations);
     notify_associations();
   }
 
   async function open_coordinator(
-    previous?: LocusClient<LiveMap<HostedTestCoordinatorState>, HostedTestActions>,
+    previous?: Echo<LiveMap<HostedTestCoordinatorState>, HostedTestActions>,
   ): Promise<void> {
     const transport = make_hosted_test_browser_websocket(
       hosted_test_host_url(configured_base_url(), HOSTED_TEST_COORDINATOR_HOST_ID),
@@ -289,26 +288,35 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
     const cursor = previous?.recovery.incarnationId !== undefined && previous.recovery.lastAppliedRev !== undefined
       ? { incarnationId: previous.recovery.incarnationId, lastAppliedRev: previous.recovery.lastAppliedRev }
       : undefined;
-    const next = create_locus_client<HostedTestCoordinatorState, HostedTestActions>({
+    const previousClientId = previous?.clientId;
+    const previousMap = previous?.recovery.map;
+    const previousCredential = previous?.session.credential;
+    previous?.dispose();
+    const next = create_echo<HostedTestCoordinatorState, HostedTestActions>({
       socket: transport.socket,
-      clientId: previous?.clientId ?? coordinatorClientId,
-      ...(options.makeActionId ? { actionId: options.makeActionId } : {}),
-      ...(previous ? { map: previous.recovery.map } : {}),
+      clientId: previousClientId ?? coordinatorClientId,
+      ...(previousMap ? { map: previousMap } : {}),
       recovery: {
         logicalMapId: HOSTED_TEST_COORDINATOR_HOST_ID,
         ...(cursor ? { cursor } : {}),
       },
-      session: previous?.session.credential ? { credential: previous.session.credential } : {},
+      session: previousCredential ? { credential: previousCredential } : {},
     });
-    next.connect();
-    if (previous?.session.credential) {
-      try { await next.session.reattach(); }
-      catch { await next.session.create(); }
-    } else {
-      await next.session.create();
+    try {
+      next.connect();
+      if (previousCredential) {
+        try { await next.session.reattach(); }
+        catch { await next.session.create(); }
+      } else {
+        await next.session.create();
+      }
+      status = "recovering";
+      await next.recovery.recover();
+    } catch (error) {
+      next.dispose();
+      transport.dispose();
+      throw error;
     }
-    status = "recovering";
-    await next.recovery.recover();
 
     stopCoordinatorClose?.();
     stopCoordinatorChanges?.();
@@ -320,8 +328,6 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
       if (disposed || coordinatorTransport !== transport) return;
       void ensure_reconnected().catch(() => undefined);
     }) ?? undefined;
-    previous?.recovery.dispose();
-    previous?.session.dispose();
     oldTransport?.dispose();
     status = "ready";
   }
@@ -391,7 +397,7 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
   }
 
   async function retry_safe_selected_result(
-    action: LocusClientActionPromise<HostedTestActions, "tests.runSelected">,
+    action: EchoActionPromise<HostedTestActions, "tests.runSelected">,
   ): Promise<HostedTestSelectedRunResult> {
     let response: unknown;
     try {
@@ -400,7 +406,7 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
       } catch (error) {
         if (disposed || !(error instanceof LocusDisconnectedError)) throw error;
         await ensure_reconnected();
-        response = await coordinatorClient.retry_action(action.request);
+        response = await coordinatorClient.retryAction(action.request);
       }
       return decode_selected_hosted_test_run_response(response);
     } catch (cause) {
@@ -417,7 +423,7 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
   }
 
   async function retry_safe_cancel_result(
-    action: LocusClientActionPromise<HostedTestActions, "tests.cancel">,
+    action: EchoActionPromise<HostedTestActions, "tests.cancel">,
     request: Readonly<{ runId: string; attemptId: HostedTestAttemptId }>,
   ): Promise<HostedTestCancelResult> {
     let response: unknown;
@@ -427,7 +433,7 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
       } catch (error) {
         if (disposed || !(error instanceof LocusDisconnectedError)) throw error;
         await ensure_reconnected();
-        response = await coordinatorClient.retry_action(action.request);
+        response = await coordinatorClient.retryAction(action.request);
       }
       return decode_hosted_test_cancel_response(response, request);
     } catch (cause) {
@@ -474,7 +480,7 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
     const reportClientId = makeClientId();
     if (!reportClientId) throw new Error("Hosted-test report client ID must be non-empty.");
     let reportTransport: HostedTestBrowserSocket | undefined;
-    let reportClient: LocusClient<LiveMap<HostedTestReportState>, HostedTestReportActions>;
+    let reportClient: Echo<LiveMap<HostedTestReportState>, HostedTestReportActions>;
     let stopReportClose: (() => void) | undefined;
     let stopReportChanges: (() => void) | undefined;
     let reportReconnecting: Promise<void> | undefined;
@@ -509,13 +515,16 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
       for (const listener of [...reportListeners]) listener(observation);
     }
 
-    async function open_report(previous?: LocusClient<LiveMap<HostedTestReportState>, HostedTestReportActions>): Promise<void> {
+    async function open_report(previous?: Echo<LiveMap<HostedTestReportState>, HostedTestReportActions>): Promise<void> {
       const nextTransport = make_hosted_test_browser_websocket(hosted_test_host_url(configured_base_url(), association.reportHostId), options.WebSocketConstructor);
       await nextTransport.ready;
       if (disposed || runDisposed) { nextTransport.dispose(); throw new Error("Hosted-test run was disposed while attaching its report."); }
       const cursor = previous?.recovery.incarnationId !== undefined && previous.recovery.lastAppliedRev !== undefined
         ? { incarnationId: previous.recovery.incarnationId, lastAppliedRev: previous.recovery.lastAppliedRev }
         : undefined;
+      const previousClientId = previous?.clientId;
+      const previousMap = previous?.recovery.map;
+      const previousCredential = previous?.session.credential;
       let firstReportFrameObserved = false;
       const stopTimeline = nextTransport.socket.onMessage((message) => {
         if (firstReportFrameObserved) return;
@@ -530,35 +539,40 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
         });
         stopTimeline?.();
       });
-      const next = create_locus_client<HostedTestReportState, HostedTestReportActions>({
+      previous?.dispose();
+      const next = create_echo<HostedTestReportState, HostedTestReportActions>({
         socket: nextTransport.socket,
-        clientId: previous?.clientId ?? reportClientId,
-        ...(previous ? { map: previous.recovery.map } : {}),
+        clientId: previousClientId ?? reportClientId,
+        ...(previousMap ? { map: previousMap } : {}),
         recovery: { logicalMapId: association.reportHostId, ...(cursor ? { cursor } : {}) },
-        session: previous?.session.credential ? { credential: previous.session.credential } : {},
+        session: previousCredential ? { credential: previousCredential } : {},
       });
-      next.connect();
-      if (previous?.session.credential) {
-        try { await next.session.reattach(); }
-        catch { await next.session.create(); }
-      } else {
-        await next.session.create();
+      try {
+        next.connect();
+        if (previousCredential) {
+          try { await next.session.reattach(); }
+          catch { await next.session.create(); }
+        } else {
+          await next.session.create();
+        }
+        status = "recovering";
+        await next.recovery.recover();
+      } catch (error) {
+        next.dispose();
+        nextTransport.dispose();
+        throw error;
       }
-      status = "recovering";
-      await next.recovery.recover();
       stopReportClose?.();
       stopReportChanges?.();
       const oldTransport = reportTransport;
       reportTransport = nextTransport;
       reportClient = next;
-      stopReportChanges = next.recovery.on_change(settle_report_if_terminal);
+      stopReportChanges = next.recovery.onChange(settle_report_if_terminal);
       const stopReportCommits = next.recovery.map.commits.observe(notify_report);
       stopReportClose = nextTransport.socket.onClose(() => {
         if (disposed || runDisposed || reportTransport !== nextTransport) return;
         void ensure_report_reconnected().catch(() => undefined);
       }) ?? undefined;
-      previous?.recovery.dispose();
-      previous?.session.dispose();
       oldTransport?.dispose();
       status = "ready";
       notify_report(Object.freeze({
@@ -673,7 +687,7 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
             catch (error) {
               if (disposed || runDisposed || !(error instanceof LocusDisconnectedError)) throw error;
               await ensure_report_reconnected();
-              await reportClient.retry_action(pending.request);
+              await reportClient.retryAction(pending.request);
             }
           } catch (cause) {
             if (!disposed && !runDisposed) {
@@ -698,7 +712,7 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
           catch (error) {
             if (disposed || runDisposed || !(error instanceof LocusDisconnectedError)) throw error;
             await ensure_report_reconnected();
-            response = await reportClient.retry_action(pending.request);
+            response = await reportClient.retryAction(pending.request);
           }
           return decode_hosted_test_inspect_response(response, request.caseKey);
         } catch (cause) {
@@ -732,9 +746,7 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
         reportListeners.clear();
         stopReportClose?.();
         stopReportChanges?.();
-        reportClient.disconnect();
-        reportClient.recovery.dispose();
-        reportClient.session.dispose();
+        reportClient.dispose();
         reportTransport?.dispose();
       },
     });
@@ -812,9 +824,7 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
       associationWaiters.clear();
       stopCoordinatorClose?.();
       stopCoordinatorChanges?.();
-      coordinatorClient?.disconnect();
-      coordinatorClient?.recovery.dispose();
-      coordinatorClient?.session.dispose();
+      coordinatorClient?.dispose();
       coordinatorTransport?.dispose();
     },
   });
