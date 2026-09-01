@@ -8,8 +8,6 @@ import type {
   LocusDisposer,
   LocusSessionCredential,
   LocusSocketLike,
-  LiveMap,
-  LiveMapPathHandle,
 } from "hson-live/types";
 import {
   create_towl_client,
@@ -17,7 +15,7 @@ import {
   type TowlClient,
   type TowlUncertainAction,
 } from "./towl.client";
-import type { TowlState } from "./towl.types";
+import type { TowlGovernedMap, TowlGovernedRoot, TowlState } from "./towl.types";
 
 export const TOWL_RECONNECT_DELAYS_MS = Object.freeze([0, 250, 1_000, 2_000, 5_000, 10_000] as const);
 
@@ -64,8 +62,8 @@ export type TowlConnectionTransport = Readonly<{
 }>;
 
 export type TowlConnectionController = Readonly<{
-  mirror: LiveMap<TowlState>;
-  root: LiveMapPathHandle<TowlState>;
+  mirror: TowlGovernedMap;
+  root: TowlGovernedRoot;
   readonly state: TowlConnectionState;
   readonly client: TowlClient | undefined;
   readonly uncertainAction: TowlUncertainAction | undefined;
@@ -92,7 +90,7 @@ export type TowlConnectionOptions = Readonly<{
   onConnection(state: TowlConnectionState): void;
   retryDelaysMs?: readonly number[];
   schedule?: (delayMs: number, callback: () => void) => LocusDisposer;
-  mirror?: LiveMap<TowlState>;
+  mirror?: TowlGovernedMap;
   clientId?: string;
   leaveRequestTimeoutMs?: number;
 }>;

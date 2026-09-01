@@ -11,10 +11,34 @@ export function are_canonical_widget_ids(widgets: readonly WidgetId[]): boolean 
   return true;
 }
 
-export const DEMO_LIVEMAP_SCHEMA: HsonSchema = Hson`
-  <type "data" content <ui <content <
-    currentView <union ["string", "null"]>
-    activeWidgets <array "string">
+export const DEMO_LIVEMAP_SCHEMA: HsonSchema<DEMO_LIVEMAP_SCHEMAType, "data"> = Hson`
+  <type "data" defs <
+    MainView <union [
+      <exact "about">,
+      <union [
+        <exact "test">,
+        <union [
+          <exact "parse">,
+          <union [
+            <exact "build">,
+            <union [
+              <exact "bar-bar">,
+              <union [
+                <exact "towl">,
+                <union [
+                  <exact "cells">,
+                  <union [<exact "fleurs">, <exact "color-sudoku">]>
+                ]>
+              ]>
+            ]>
+          ]>
+        ]>
+      ]>
+    ]>
+    Widget <union [<exact "point">, <union [<exact "oklch">, <exact "bling">]>]>
+  > content <ui <content <
+    currentView <union [<ref "MainView">, "null"]>
+    activeWidgets <array <ref "Widget">>
   >>>>
 `;
 

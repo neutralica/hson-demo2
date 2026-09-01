@@ -1,3 +1,5 @@
+// @hson-diagnostics-ignore-file
+
 import {
   assertCanonicalClosure,
   assertCanonicalRejection,

@@ -12,13 +12,13 @@ import type {
   LocusClientSessionResult,
   LocusDisposer,
   LocusSessionCredential,
-  LiveMap,
-  LiveMapPathHandle,
 } from "hson-live/types";
 import { TOWL_SCHEMA } from "./towl.schema";
 import { create_towl_state } from "./towl.transitions";
 import type {
   TowlActions,
+  TowlGovernedMap,
+  TowlGovernedRoot,
   TowlJoinResult,
   TowlLeaveResult,
   TowlPullResult,
@@ -31,24 +31,24 @@ import type {
 export type TowlSeat = TowlSeatId;
 export type TowlUncertainAction = LocusClientActionRequest<TowlActions>;
 
-export function create_towl_client_mirror(): LiveMap<TowlState> {
-  return hson.liveMap.fromJson(create_towl_state()).schema.use<TowlState>(TOWL_SCHEMA);
+export function create_towl_client_mirror(): TowlGovernedMap {
+  return hson.liveMap.fromJson(create_towl_state()).schema.use(TOWL_SCHEMA);
 }
 
 export type TowlClientOptions = Omit<
-  LocusClientOptions<LiveMap<TowlState>>,
+  LocusClientOptions<TowlGovernedMap>,
   "map" | "recovery" | "session"
 > & Readonly<{
   logicalMapId: string;
   credential?: LocusSessionCredential;
-  mirror?: LiveMap<TowlState>;
+  mirror?: TowlGovernedMap;
   recoveryCursor?: LocusClientRecoveryCursor;
   onUncertainAction?: (request: TowlUncertainAction) => void;
 }>;
 
 export type TowlClient = Readonly<{
-  livehost: LocusClient<LiveMap<TowlState>, TowlActions>;
-  root: LiveMapPathHandle<TowlState>;
+  livehost: LocusClient<TowlGovernedMap, TowlActions>;
+  root: TowlGovernedRoot;
 
   get state(): TowlState;
   get seat(): TowlSeat | undefined;
@@ -127,7 +127,7 @@ export function create_towl_client(
   } = options;
 
   const livehost = create_locus_client<
-    TowlState,
+    TowlGovernedMap,
     TowlActions
   >({
     ...clientOptions,

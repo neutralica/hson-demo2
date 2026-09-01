@@ -1,9 +1,10 @@
 import { create_locus } from "hson-live/locus";
 import { hson } from "hson-live";
-import type { LiveMap, LocusActionContext, LocusSessionLifecycleEvent, LocusActions, LocusSchema } from "hson-live/types";
+import type { LocusActionContext, LocusSessionLifecycleEvent, LocusActions, LocusSchema } from "hson-live/types";
 import { TOWL_SCHEMA } from "./towl.schema";
 import { reflect_towl_session_attached, reflect_towl_session_detached, remove_towl_session, join_towl_session, leave_towl_session, set_towl_ready, pull_towl_rope, reset_towl_round, create_towl_state } from "./towl.transitions";
-import type { TowlDomainError, TowlState, TowlJoinResult, TowlLeaveResult, TowlReadyResult, TowlPullResult, TowlResetResult, TowlTransitionResult, TowlRuntime, TowlRuntimeOptions, TowlActions } from "./towl.types";
+import type { TOWL_SCHEMAType } from "./towl.schema";
+import type { TowlDomainError, TowlGovernedMap, TowlJoinResult, TowlLeaveResult, TowlReadyResult, TowlPullResult, TowlResetResult, TowlTransitionResult, TowlRuntime, TowlRuntimeOptions, TowlActions } from "./towl.types";
 
 class TowlActionError extends Error {
   readonly code: TowlDomainError["code"];
@@ -32,7 +33,7 @@ function decode_ready(value: unknown) {
   return { ok: true as const, value: { ready: record.ready } };
 }
 
-function require_session(context: LocusActionContext<LiveMap<TowlState>>): string {
+function require_session(context: LocusActionContext<TowlGovernedMap>): string {
   if (context.origin.kind !== "session") {
     throw new TowlActionError({
       code: "TOWL_SESSION_REQUIRED",
@@ -50,7 +51,7 @@ function require_session(context: LocusActionContext<LiveMap<TowlState>>): strin
 
 async function apply_transition<TResult extends
   TowlJoinResult | TowlLeaveResult | TowlReadyResult | TowlPullResult | TowlResetResult>(
-  context: LocusActionContext<LiveMap<TowlState>>,
+  context: LocusActionContext<TowlGovernedMap>,
   transition: TowlTransitionResult<TResult>,
 ): Promise<TResult> {
   if (!transition.ok) throw new TowlActionError(transition.error);
@@ -91,7 +92,7 @@ function reflect_lifecycle(
 }
 
 export function create_towl_runtime(options: TowlRuntimeOptions = {}): TowlRuntime {
-  const actions: LocusActions<TowlActions, LiveMap<TowlState>> = {
+  const actions: LocusActions<TowlActions, TowlGovernedMap> = {
     join: (context) => apply_transition(context, join_towl_session(context.map.snap(), require_session(context))),
     leave: (context) => apply_transition(context, leave_towl_session(context.map.snap(), require_session(context))),
     set_ready: (context, payload) => apply_transition(
@@ -101,7 +102,7 @@ export function create_towl_runtime(options: TowlRuntimeOptions = {}): TowlRunti
     pull: (context) => apply_transition(context, pull_towl_rope(context.map.snap(), require_session(context))),
     reset_round: (context) => apply_transition(context, reset_towl_round(context.map.snap(), require_session(context))),
   };
-  const schema: LocusSchema<TowlState, TowlActions> = {
+  const schema: LocusSchema<TOWL_SCHEMAType, TowlActions> = {
     actions: {
       join: { payload: decode_empty },
       leave: { payload: decode_empty },
@@ -110,7 +111,7 @@ export function create_towl_runtime(options: TowlRuntimeOptions = {}): TowlRunti
       reset_round: { payload: decode_empty },
     },
   };
-  const map = hson.liveMap.fromJson(create_towl_state()).schema.use<TowlState>(TOWL_SCHEMA);
+  const map = hson.liveMap.fromJson(create_towl_state()).schema.use(TOWL_SCHEMA);
   const host = create_locus({
     map,
     actions,

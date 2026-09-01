@@ -1,4 +1,5 @@
 import type { LiveMapPathHandle } from "hson-live/livemap";
+import type { DEMO_LIVEMAP_SCHEMAType } from "./shell.schema";
 import type { MainViewId, WidgetId } from "./shell-ids";
 
 export type { MainViewId, WidgetId } from "./shell-ids";
@@ -10,8 +11,8 @@ export type DemoState = Readonly<{
 }>;
 
 export type DemoShellLocations = Readonly<{
-  currentView: LiveMapPathHandle<DemoView>;
-  activeWidgets: LiveMapPathHandle<readonly WidgetId[]>;
+  currentView: LiveMapPathHandle<DEMO_LIVEMAP_SCHEMAType["ui"]["currentView"]>;
+  activeWidgets: LiveMapPathHandle<DEMO_LIVEMAP_SCHEMAType["ui"]["activeWidgets"]>;
 }>;
 
 export type DemoStore = {

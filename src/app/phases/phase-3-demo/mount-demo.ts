@@ -608,7 +608,7 @@ export async function mount_demo(
 
   const stopView = currentView.watch(reconcileMain);
   const stopWidgets = activeWidgets.watch((next) => {
-    write_bling_preference(next.includes("bling"));
+    write_bling_preference(next.some((widget) => widget === "bling"));
     reconcileWidgets(next);
   });
   reconcileMain(initialView);

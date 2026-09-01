@@ -1,4 +1,5 @@
 import { demo_shell_locations } from "./store";
+import type { DEMO_LIVEMAP_SCHEMAType } from "./shell.schema";
 import type { DemoStore, MainViewId, WidgetId } from "./state.types";
 import type { MAIN_VIEW_IDS, WIDGET_IDS } from "./shell-ids";
 
@@ -12,8 +13,10 @@ type ActiveWidgetsSnap = ReturnType<typeof demo_shell_locations.activeWidgets.sn
 
 type _MainViewIdComesFromCatalog = Expect<Equal<MainViewId, typeof MAIN_VIEW_IDS[number]>>;
 type _WidgetIdComesFromCatalog = Expect<Equal<WidgetId, typeof WIDGET_IDS[number]>>;
-type _CurrentViewLocationSnap = Expect<Equal<CurrentViewSnap, MainViewId | null>>;
-type _ActiveWidgetsLocationSnap = Expect<Equal<ActiveWidgetsSnap, readonly WidgetId[]>>;
+type _CurrentViewLocationSnap = Expect<Equal<CurrentViewSnap, DEMO_LIVEMAP_SCHEMAType["ui"]["currentView"]>>;
+type _ActiveWidgetsLocationSnap = Expect<Equal<ActiveWidgetsSnap, DEMO_LIVEMAP_SCHEMAType["ui"]["activeWidgets"]>>;
+type _GeneratedViewFitsApplicationDto = Expect<CurrentViewSnap extends MainViewId | null ? true : false>;
+type _GeneratedWidgetsFitApplicationDto = Expect<ActiveWidgetsSnap extends readonly WidgetId[] ? true : false>;
 
 declare const store: DemoStore;
 

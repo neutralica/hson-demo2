@@ -2,7 +2,8 @@ import type {
   Locus,
   LocusSessionOptions,
 } from "hson-live/locus";
-import type { LiveMap } from "hson-live/types";
+import type { LiveMap, LiveMapPathHandle } from "hson-live/types";
+import type { TOWL_SCHEMAType } from "./towl.schema";
 
 export type TowlSeatId = "player1" | "player2";
 export type TowlPhase = "lobby" | "ready" | "playing" | "finished";
@@ -21,6 +22,9 @@ export type TowlState = Readonly<{
   winner: TowlSeatId | null;
   round: number;
 }>;
+
+export type TowlGovernedMap = LiveMap<TOWL_SCHEMAType>;
+export type TowlGovernedRoot = LiveMapPathHandle<TOWL_SCHEMAType>;
 
 export type TowlActions = Readonly<{
   join: undefined;
@@ -66,6 +70,6 @@ export type TowlRuntimeOptions = Readonly<{
 }>;
 
 export type TowlRuntime = Readonly<{
-  host: Locus<LiveMap<TowlState>, TowlActions>;
+  host: Locus<TowlGovernedMap, TowlActions>;
   dispose: () => void;
 }>;

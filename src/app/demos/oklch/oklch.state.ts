@@ -1,7 +1,7 @@
 import { Hson, hson, type HsonSchema } from "hson-live";
 import type { OklchValues } from "./oklch.types";
 
-export const OKLCH_SCHEMA: HsonSchema = Hson`
+export const OKLCH_SCHEMA: HsonSchema<OKLCH_SCHEMAType, "data"> = Hson`
   <type "data" content <
     activePath "string"
     tokens <array <content <
@@ -31,7 +31,7 @@ export function create_oklch_store(initial: OklchCanonicalState, targetPaths: re
   }
   const map = hson.liveMap
     .fromJson(JSON.stringify(initial))
-    .schema.use<OklchCanonicalState>(OKLCH_SCHEMA);
+    .schema.use(OKLCH_SCHEMA);
   const activePath = map.at(["activePath"]);
   const tokens = map.at(["tokens"]);
 

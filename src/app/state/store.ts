@@ -30,7 +30,7 @@ export function create_demo_store(
   }
   const demoState = hson.liveMap
     .fromJson(JSON.stringify(initial))
-    .schema.use<DemoState>(DEMO_LIVEMAP_SCHEMA);
+    .schema.use(DEMO_LIVEMAP_SCHEMA);
   const currentView = demoState.at(["ui", "currentView"]);
   const activeWidgets = demoState.at(["ui", "activeWidgets"]);
   const locations = { currentView, activeWidgets } as const;
@@ -44,7 +44,7 @@ export function create_demo_store(
   }
 
   function hasWidget(widget: WidgetId): boolean {
-    return getWidgets().includes(widget);
+    return getWidgets().some((active) => active === widget);
   }
 
   function setView(next: DemoView): void {

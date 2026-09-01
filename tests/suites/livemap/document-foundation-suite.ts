@@ -25,17 +25,17 @@ export function livemap_document_foundation_suite(): TestSuite {
     cases: [
       {
         suite: SUITE,
-        caseId: "flat-trusted-html-constructor-classifies-one-element", name: "flat trusted HTML constructor classifies one element",
+        caseId: "flat-trusted-html-constructor-places-one-element-under-document-root", name: "flat trusted HTML constructor places one element under the document root",
         run: () => {
           const map = hson.liveMap.fromTrustedHtml("<button>Save</button>");
-          const button = map.mode === "element" ? map.element.node() : undefined;
+          const button = map.document.content()[0];
           return {
             assertRows: [
-              equal_row("trusted element mode", map.mode, "element"),
-              equal_row("trusted element tag", button?.$_tag, "button"),
-              equal_row("trusted element remains unquidded", button?.$_meta?.quid, undefined),
-              equal_row("trusted element begins at revision zero", map.rev, 0),
-              equal_row("trusted element capture begins at revision zero", map.capture().rev, 0),
+              equal_row("trusted document mode", map.mode, "document"),
+              equal_row("trusted element tag", button !== undefined && is_node(button) ? button.$_tag : undefined, "button"),
+              equal_row("trusted element remains unquidded", button !== undefined && is_node(button) ? button.$_meta?.quid : undefined, undefined),
+              equal_row("trusted document begins at revision zero", map.rev, 0),
+              equal_row("trusted document capture begins at revision zero", map.capture().rev, 0),
               equal_row("document facade omits projected set", "set" in map, false),
             ],
           };
@@ -43,16 +43,16 @@ export function livemap_document_foundation_suite(): TestSuite {
       },
       {
         suite: SUITE,
-        caseId: "flat-trusted-html-constructor-classifies-repeated-elements-as-fragment", name: "flat trusted HTML constructor classifies repeated elements as fragment",
+        caseId: "flat-trusted-html-constructor-orders-repeated-elements-under-document-root", name: "flat trusted HTML constructor orders repeated elements under the document root",
         run: () => {
           const map = hson.liveMap.fromTrustedHtml("<div>One</div><div>Two</div>");
-          const content = map.mode === "fragment" ? map.document.content() : [];
+          const content = map.document.content();
           return {
             assertRows: [
-              equal_row("trusted fragment mode", map.mode, "fragment"),
-              equal_row("trusted fragment ordered tags", content.map((item) => is_node(item) ? item.$_tag : item), ["div", "div"]),
+              equal_row("trusted document mode", map.mode, "document"),
+              equal_row("trusted document ordered tags", content.map((item) => is_node(item) ? item.$_tag : item), ["div", "div"]),
               equal_row("trusted repeated elements remain unquidded", content.map((item) => is_node(item) ? item.$_meta?.quid : undefined), [undefined, undefined]),
-              equal_row("trusted fragment begins at revision zero", map.rev, 0),
+              equal_row("trusted document begins at revision zero", map.rev, 0),
             ],
           };
         },
@@ -80,16 +80,16 @@ export function livemap_document_foundation_suite(): TestSuite {
       },
       {
         suite: SUITE,
-        caseId: "mixed-top-level-html-remains-an-ordered-detached-fragment", name: "mixed top-level HTML remains an ordered detached fragment",
+        caseId: "mixed-top-level-html-remains-ordered-under-document-root", name: "mixed top-level HTML remains ordered under the document root",
         run: () => {
           const map = hson.liveMap.fromTrustedHtml("before <em>middle</em> after");
           const before = map.root();
-          const content = map.mode === "fragment" ? map.document.content() : [];
+          const content = map.document.content();
           const first = content[0];
           if (first !== undefined && is_node(first)) first.$_tag = "changed";
           return {
             assertRows: [
-              equal_row("mixed HTML fragment mode", map.mode, "fragment"),
+              equal_row("mixed HTML document mode", map.mode, "document"),
               equal_row("mixed HTML content tags", content.map((item) => is_node(item) ? item.$_tag : item), ["changed", "em", "_hson_str"]),
               equal_row("mixed read mutation detached", map.root(), before),
             ],
@@ -98,17 +98,17 @@ export function livemap_document_foundation_suite(): TestSuite {
       },
       {
         suite: SUITE,
-        caseId: "trusted-empty-and-text-only-html-classify-as-fragments", name: "trusted empty and text-only HTML classify as fragments",
+        caseId: "trusted-empty-and-text-only-html-use-document-roots", name: "trusted empty and text-only HTML use document roots",
         run: () => {
           const empty = hson.liveMap.fromTrustedHtml("");
           const text = hson.liveMap.fromTrustedHtml("text only");
-          const emptyContent = empty.mode === "fragment" ? empty.document.content() : [];
-          const textContent = text.mode === "fragment" ? text.document.content() : [];
+          const emptyContent = empty.document.content();
+          const textContent = text.document.content();
           return {
             assertRows: [
-              equal_row("empty HTML fragment mode", empty.mode, "fragment"),
-              equal_row("empty HTML fragment content", emptyContent, []),
-              equal_row("text-only HTML fragment mode", text.mode, "fragment"),
+              equal_row("empty HTML document mode", empty.mode, "document"),
+              equal_row("empty HTML document content", emptyContent, []),
+              equal_row("text-only HTML document mode", text.mode, "document"),
               equal_row("text-only HTML content tags", textContent.map((item) => is_node(item) ? item.$_tag : item), ["_hson_str"]),
             ],
           };

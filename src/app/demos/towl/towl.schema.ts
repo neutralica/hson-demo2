@@ -1,14 +1,17 @@
 import { Hson, type HsonSchema } from "hson-live";
 
-export const TOWL_SCHEMA: HsonSchema = Hson`
+export const TOWL_SCHEMA: HsonSchema<TOWL_SCHEMAType, "data"> = Hson`
   <type "data" defs <
     Seat <content <sessionId <union ["string", "null"]> connected "boolean" ready "boolean">>
   > content <
-    phase "string"
+    phase <union [
+      <exact "lobby">,
+      <union [<exact "ready">, <union [<exact "playing">, <exact "finished">]>]>
+    ]>
     player1 <ref "Seat">
     player2 <ref "Seat">
     position <number <int true min -10 max 10>>
-    winner <union ["string", "null"]>
+    winner <union [<union [<exact "player1">, <exact "player2">]>, "null"]>
     round <number <int true min 1>>
   >>
 `;

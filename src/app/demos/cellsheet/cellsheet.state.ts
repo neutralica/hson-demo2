@@ -1,6 +1,6 @@
 import { Hson, hson, type HsonSchema } from "hson-live";
 
-export const CELLSHEET_WORKBOOK_SCHEMA: HsonSchema = Hson`
+export const CELLSHEET_WORKBOOK_SCHEMA: HsonSchema<CELLSHEET_WORKBOOK_SCHEMAType, "data"> = Hson`
   <type "data" defs <
     Row <tuple ["string", "string", "string", "string", "string", "string", "string", "string"]>
   > content <cells <tuple [
@@ -56,7 +56,7 @@ export function create_empty_cellsheet_workbook(): CellsheetWorkbookInput {
 export function create_cellsheet_workbook_store(
   initial: CellsheetWorkbookInput = create_seeded_cellsheet_workbook(),
 ) {
-  const map = hson.liveMap.fromJson(initial).schema.use<CellsheetWorkbook>(CELLSHEET_WORKBOOK_SCHEMA);
+  const map = hson.liveMap.fromJson(initial).schema.use(CELLSHEET_WORKBOOK_SCHEMA);
   const cells = map.at(["cells"]);
   return Object.freeze({ map, locations: Object.freeze({ cells }) });
 }

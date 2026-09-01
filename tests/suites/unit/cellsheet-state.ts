@@ -6,6 +6,7 @@ import {
   create_cellsheet_workbook_store,
   create_empty_cellsheet_workbook,
   create_seeded_cellsheet_workbook,
+  type CELLSHEET_WORKBOOK_SCHEMAType,
   type CellsheetWorkbook,
 } from "../../../src/app/demos/cellsheet/cellsheet.state";
 import {
@@ -29,8 +30,11 @@ function typed_location_evidence(): void {
   const lastCell = cells.at([7, 7]);
   type _FirstRowIsExactTuple = Expect<Equal<
     Snap<typeof firstRow>,
-    CellsheetWorkbook["cells"][0]
+    CELLSHEET_WORKBOOK_SCHEMAType["cells"][0]
   >>;
+  type _GeneratedWorkbookFitsApplicationDto = Expect<
+    CELLSHEET_WORKBOOK_SCHEMAType extends CellsheetWorkbook ? true : false
+  >;
   type _FirstCellIsString = Expect<Equal<Snap<typeof firstCell>, string>>;
   type _LastCellIsString = Expect<Equal<Snap<typeof lastCell>, string>>;
   firstCell.set("authored");
