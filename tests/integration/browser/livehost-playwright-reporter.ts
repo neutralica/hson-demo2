@@ -1,4 +1,4 @@
-import { relative } from "node:path";
+import { dirname, join, relative } from "node:path";
 import { createRequire } from "node:module";
 import type {
   FullConfig,
@@ -15,10 +15,17 @@ function emit(event: Readonly<Record<string, unknown>>): void {
   process.stdout.write(`${LOCUS_BROWSER_EVENT_PREFIX}${JSON.stringify(event)}\n`);
 }
 
-function test_identity(test: TestCase): Readonly<{ path: string; title: string }> {
+function test_identity(test: TestCase, result?: TestResult): Readonly<{ path: string; title: string; titlePath: readonly string[]; project: string; line: number; column: number }> {
+  const titlePath = test.titlePath();
+  const specName = titlePath.find((part) => /\.spec\.[cm]?[jt]s$/.test(part));
+  const executableFile = specName === undefined ? test.location.file : join(dirname(test.location.file), specName);
   return Object.freeze({
-    path: relative(process.cwd(), test.location.file),
+    path: relative(process.cwd(), executableFile),
     title: test.title,
+    titlePath: Object.freeze(titlePath),
+    project: result?.projectName ?? test.parent.project()?.name ?? "",
+    line: test.location.line,
+    column: test.location.column,
   });
 }
 
@@ -36,16 +43,17 @@ export default class LocusPlaywrightReporter implements Reporter {
       nodeVersion: process.version,
       timestamp: Date.now(),
     });
+    for (const test of suite.allTests()) emit({ t: "discovered", ...test_identity(test) });
   }
 
   onTestBegin(test: TestCase, result: TestResult): void {
-    emit({ t: "case_started", ...test_identity(test), retry: result.retry, timestamp: Date.now() });
+    emit({ t: "case_started", ...test_identity(test, result), retry: result.retry, timestamp: Date.now() });
   }
 
   onTestEnd(test: TestCase, result: TestResult): void {
     emit({
       t: "case_finished",
-      ...test_identity(test),
+      ...test_identity(test, result),
       status: result.status,
       expectedStatus: test.expectedStatus,
       durationMs: result.duration,

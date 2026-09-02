@@ -344,6 +344,7 @@ function external_state_event(
     suite: target.id,
     name: target.displayName,
     subject: target.subject,
+    category: target.category,
     runtime: target.runtime,
     collections: target.collections,
     status,
@@ -357,6 +358,7 @@ function external_end_event(result: ExternalLibraryLauncherResult): TestEvent {
     suite: result.target.id,
     name: result.target.displayName,
     subject: result.target.subject,
+    category: result.target.category,
     runtime: result.target.runtime,
     collections: result.target.collections,
     status: result.cancelled ? "cancelled" : result.ok ? "pass" : "fail",
@@ -376,6 +378,7 @@ function external_end_event(result: ExternalLibraryLauncherResult): TestEvent {
     ...(result.spawnError === undefined ? {} : { spawnError: result.spawnError }),
     ...(result.completion === undefined ? {} : { completion: result.completion }),
     ...(result.completionError === undefined ? {} : { completionError: result.completionError }),
+    ...(result.terminalStatus === undefined ? {} : { terminalStatus: result.terminalStatus }),
     ...(result.completionAcceptedBeforeCancellation === undefined ? {} : { completionAcceptedBeforeCancellation: true }),
   });
 }
@@ -474,7 +477,7 @@ export async function run_node_selected_verifications(
     return descriptor;
   });
   const opaqueTargets = aggregateDescriptors
-    .filter((descriptor) => descriptor.executionShape === "opaque-aggregate")
+    .filter((descriptor) => descriptor.provenance === "hson-live")
     .map((descriptor) => resolve_external_launcher_binding(availability, descriptor));
   const commandDescriptors = aggregateDescriptors.filter((descriptor) => descriptor.executionShape === "certification-aggregate");
   if (commandDescriptors.length > 0 && configuration.commandAvailability === undefined) {
@@ -490,6 +493,9 @@ export async function run_node_selected_verifications(
   let externalPhaseMs = 0;
   let externalPass = 0;
   let externalFail = 0;
+  let externalSkip = 0;
+  let externalCases = 0;
+  let externalSuiteErrors = 0;
   let externalCompleted = 0;
   let commandPass = 0;
   let commandFail = 0;
@@ -544,17 +550,28 @@ export async function run_node_selected_verifications(
         externalScheduling,
         {
           started(target) {
-            onEvent(Object.freeze({ t: "suite_begin", suite: target.id, totalPlanned: 1 }));
+            onEvent(Object.freeze({ t: "suite_begin", suite: target.id, title: target.displayName, category: target.category }));
             onEvent(external_state_event(target, "running"));
           },
           finished(target, launcherResult) {
+            for (const event of launcherResult.events ?? []) {
+              if (event.t === "case_begin") onEvent(Object.freeze({ t: "case_begin", suite: target.id, caseId: event.caseId, name: event.name }));
+              else if (event.t === "diagnostic") onEvent(Object.freeze({ t: "evidence", suite: target.id, caseId: event.caseId, kind: "runtime_warning", name: event.kind, content: event.message }));
+              else if (event.t === "case_end") {
+                externalCases += 1;
+                if (event.status === "pass") externalPass += 1;
+                else if (event.status === "fail") externalFail += 1;
+                else if (event.status === "skip" || event.status === "unsupported") externalSkip += 1;
+                if (event.status === "cancelled") onEvent(Object.freeze({ t: "case_cancelled", suite: target.id, caseId: event.caseId, name: event.name, ms: 0 }));
+                else onEvent(Object.freeze({ t: "case_end", suite: target.id, caseId: event.caseId, name: event.name, status: event.status === "unsupported" ? "skip" : event.status, ms: 0 }));
+              }
+            }
             if (launcherResult.cancelled) {
               // Cancellation is control truth, never an assertion failure.
             } else if (launcherResult.ok) {
-              externalPass += 1;
               externalCompleted += 1;
             } else {
-              externalFail += 1;
+              externalSuiteErrors += 1;
               externalCompleted += 1;
               externalFailures.push(Object.freeze({
                 suite: launcherResult.target.id,
@@ -667,14 +684,14 @@ export async function run_node_selected_verifications(
   else configuration.recordMetrics(completedMetrics);
   const fail = canonical.summary.fail + externalFail + commandFail + browserResult.summary.fail;
   return Object.freeze({
-    ok: options.signal?.aborted !== true && fail === 0,
+    ok: options.signal?.aborted !== true && fail === 0 && externalSuiteErrors === 0,
     ...(options.signal?.aborted ? { cancelled: true as const } : {}),
     summary: Object.freeze({
       suites: canonical.summary.suites + externalCompleted + commandCompleted + browserResult.summary.suites,
-      cases: canonical.summary.cases + externalCompleted + commandCompleted + browserResult.summary.cases,
+      cases: canonical.summary.cases + externalCases + commandCompleted + browserResult.summary.cases,
       pass: canonical.summary.pass + externalPass + commandPass + browserResult.summary.pass,
       fail,
-      skip: canonical.summary.skip + browserResult.summary.skip,
+      skip: canonical.summary.skip + externalSkip + browserResult.summary.skip,
       msTotal: overlappedTotalMs,
       failures: Object.freeze([...canonical.summary.failures, ...externalFailures, ...browserResult.summary.failures]),
     }),

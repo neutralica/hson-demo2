@@ -1,13 +1,10 @@
-import { access, readFile, realpath } from "node:fs/promises";
-import { dirname, join, parse } from "node:path";
+import { access, readFile, realpath, readdir } from "node:fs/promises";
+import { dirname, join, parse, relative } from "node:path";
 import { StringDecoder } from "node:string_decoder";
 import { fileURLToPath } from "node:url";
-import {
-  hson_live_test_launchers,
-  type HsonLiveTestLauncher,
-} from "hson-live/test-launchers";
+import ts from "typescript";
 import type { TestCapability, TestCollection, TestSubject } from "../../../../src/shared/testing/test-contracts";
-import type { ExternalLibraryLauncherTarget } from "../../../../src/shared/testing/external-launcher-contract";
+import type { ExternalLibraryLauncherTarget, HsonLiveExecutableRuntime } from "../../../../src/shared/testing/external-launcher-contract";
 import type { TestSuiteDescriptor } from "../../../../src/shared/testing/test-contracts";
 import { validate_test_suite_id } from "../../../../src/shared/testing/test-identity";
 import {
@@ -22,6 +19,8 @@ export const EXTERNAL_LIBRARY_LAUNCHER_TERMINATION_GRACE_MS = 1_000;
 export const EXTERNAL_LIBRARY_LAUNCHER_STDOUT_LIMIT_BYTES = 256 * 1024;
 export const EXTERNAL_LIBRARY_LAUNCHER_STDERR_LIMIT_BYTES = 256 * 1024;
 export const EXTERNAL_LIBRARY_LAUNCHER_TRUNCATION_MARKER = "<HSON_LIVE_TEST_OUTPUT_TRUNCATED>";
+export const HSON_LIVE_TEST_EVENT_PREFIX = "<HSON_TEST_EVENT>";
+/** Kept only while the upstream compatibility emitter is physically present. */
 export const HSON_LIVE_TEST_COMPLETION_PREFIX = "<HSON_LIVE_TEST_COMPLETION>";
 export const HSON_LIVE_TEST_COMPLETION_VERSION = 1;
 const COMPLETION_LINE_LIMIT = 16 * 1024;
@@ -60,6 +59,8 @@ export type ExternalLibraryLauncherResult = Readonly<{
   timedOut: boolean;
   spawnError?: string;
   completion?: ExternalLibraryLauncherCompletion;
+  events?: readonly ExternalLibraryChildEvent[];
+  terminalStatus?: "pass" | "fail" | "skip" | "unsupported" | "cancelled";
   completionError?: string;
   forceKilled?: boolean;
   cancelled?: boolean;
@@ -68,13 +69,13 @@ export type ExternalLibraryLauncherResult = Readonly<{
   ok: boolean;
 }>;
 
-export type ExternalLibraryLauncherCompletion = Readonly<{
-  version: 1;
-  launcherId: string;
-  executed: number;
-  passed: number;
-  failed: number;
-}>;
+export type ExternalLibraryChildEvent = Readonly<
+  | { t: "case_begin"; caseId: string; name: string }
+  | { t: "diagnostic"; caseId: string; kind: string; message: string }
+  | { t: "case_end"; caseId: string; name: string; status: "pass" | "fail" | "skip" | "unsupported" | "cancelled" }
+  | { t: "terminal"; suiteId: string; status: "pass" | "fail" | "skip" | "unsupported" | "cancelled" }
+>;
+export type ExternalLibraryLauncherCompletion = Readonly<{ version: 1; launcherId: string; executed: number; passed: number; failed: number }>;
 
 type ExternalLibraryLauncherState = {
   readonly processSupervisor: NodeProcessSupervisor;
@@ -153,26 +154,18 @@ function make_external_library_launcher_state(): ExternalLibraryLauncherState {
   };
 }
 
-const SUBJECTS: Readonly<Record<HsonLiveTestLauncher["subject"], TestSubject>> = Object.freeze({
-  Transform: "transform",
-  LiveTree: "livetree",
-  LiveMap: "livemap",
-  Reflect: "reflect",
-  LiveHost: "livehost",
-  Locus: "livehost",
-  Core: "integration",
-});
+const SUBJECTS: Readonly<Record<string, TestSubject>> = Object.freeze({ Transform: "transform", LiveTree: "livetree", LiveMap: "livemap", Reflect: "reflect", LiveHost: "livehost", Locus: "livehost", Core: "integration" });
 
 const SEMANTIC_SUBJECT_OVERRIDES: Readonly<Record<string, TestSubject>> = Object.freeze({
   "core.hson-number": "transform",
   "core.canonical-hson-equality": "transform",
 });
 
-function tsx_invocation(launcher: HsonLiveTestLauncher): ExternalLibraryLauncherInvocation {
+function tsx_invocation(launcher: ExternalLibraryLauncherTarget): ExternalLibraryLauncherInvocation {
   return Object.freeze({
     kind: "direct",
     command: process.execPath,
-    args: Object.freeze(["--import", NODE_TSX_IMPORT_PATH, launcher.repositoryModule]),
+    args: Object.freeze(["--import", NODE_TSX_IMPORT_PATH, launcher.sourceFile]),
     env: Object.freeze({ TS_NODE_TRANSPILE_ONLY: "true" }),
   });
 }
@@ -183,79 +176,46 @@ const SEMANTIC_SUITE_OVERRIDES: Readonly<Record<string, string>> = Object.freeze
   "core.public-boundaries": "integration/public-boundaries",
 });
 
-function semantic_suite_id(launcher: HsonLiveTestLauncher): string {
-  const explicit = SEMANTIC_SUITE_OVERRIDES[launcher.id];
+function semantic_suite_id(metadata: Readonly<{ id: string; category: string }>): string {
+  const explicit = SEMANTIC_SUITE_OVERRIDES[metadata.id];
   if (explicit !== undefined) return validate_test_suite_id(explicit);
-  const subject = SUBJECTS[launcher.subject];
-  const pieces = launcher.id.split(".");
+  const subject = SUBJECTS[metadata.category] ?? "integration";
+  const pieces = metadata.id.split(".");
   const leaf = pieces[0] === subject || pieces[0] === "core" || pieces[0] === "diagnostics"
     ? pieces.slice(1)
     : pieces;
   return validate_test_suite_id([subject, ...leaf].join("/"));
 }
-
-function semantic_subject(launcher: HsonLiveTestLauncher): TestSubject {
-  return SEMANTIC_SUBJECT_OVERRIDES[launcher.id] ?? SUBJECTS[launcher.subject];
-}
+function semantic_subject(metadata: Readonly<{ id: string; category: string }>): TestSubject { return SEMANTIC_SUBJECT_OVERRIDES[metadata.id] ?? SUBJECTS[metadata.category] ?? "integration"; }
 
 export function external_library_target_id(launcherId: string): string {
-  const launcher = hson_live_test_launchers.find((candidate) => candidate.id === launcherId);
-  if (launcher === undefined) throw new Error(`Unknown hson-live launcher ID: ${launcherId}`);
-  return semantic_suite_id(launcher);
+  return semantic_suite_id({ id: launcherId, category: launcherId.split(".")[0] === "livetree" ? "LiveTree" : launcherId.split(".")[0] === "livemap" ? "LiveMap" : launcherId.split(".")[0] === "reflect" ? "Reflect" : launcherId.split(".")[0] === "locus" ? "Locus" : launcherId.split(".")[0] === "transform" ? "Transform" : "Core" });
 }
 
-function launcher_requirements(runtime: HsonLiveTestLauncher["runtime"]): readonly TestCapability[] {
+function launcher_requirements(runtime: HsonLiveExecutableRuntime): readonly TestCapability[] {
   if (runtime === "node") return Object.freeze(["javascript", "node"]);
   if (runtime === "node-synthetic-dom") return Object.freeze(["javascript", "node", "synthetic-dom"]);
   return Object.freeze(["javascript", "node", "websocket"]);
 }
 
-function target(launcher: HsonLiveTestLauncher, order: number): ExternalLibraryLauncherTarget {
+function target(launcher: Readonly<{ id: string; title: string; category: string; runtime: HsonLiveExecutableRuntime; tags: readonly string[]; sourceFile: string }>, order: number): ExternalLibraryLauncherTarget {
   return Object.freeze({
-    id: external_library_target_id(launcher.id),
+    id: semantic_suite_id(launcher),
     launcherId: launcher.id,
-    sourceRef: `hson-live:${launcher.id}`,
+    sourceRef: `hson-live:${launcher.sourceFile}`,
+    category: launcher.category,
     subject: semantic_subject(launcher),
-    displayName: launcher.displayName,
+    displayName: launcher.title,
     runtime: launcher.runtime,
-    collections: Object.freeze(launcher.id === "core.public-boundaries" ? ["dev"] as const : []),
-    tags: Object.freeze([...launcher.collections]),
+    collections: Object.freeze([]), tags: Object.freeze([...launcher.tags]), sourceFile: launcher.sourceFile,
     requirements: launcher_requirements(launcher.runtime),
     order,
   });
 }
 
-export function classify_external_library_launcher_invocation(
-  launcher: HsonLiveTestLauncher,
-  packageCommand: string,
-): ExternalLibraryLauncherInvocation {
-  const segments = packageCommand.split("&&").map((segment) => segment.trim()).filter(Boolean);
-  const command = segments.at(-1)?.split(/\s+/) ?? [];
-  const safeBuildPrelude = segments.slice(0, -1).every((segment) => /^npm\s+run\s+build$/.test(segment));
-  const importsTsx = (command.length === 3 && command[0] === "node" && command[1] === "--import=tsx" && command[2] === launcher.repositoryModule)
-    || (command.length === 4 && command[0] === "node" && command[1] === "--import" && command[2] === "tsx" && command[3] === launcher.repositoryModule);
-  if (safeBuildPrelude && importsTsx) {
-    return tsx_invocation(launcher);
-  }
-  const legacy = command.length === 5
-    && command[0] === "TS_NODE_TRANSPILE_ONLY=true"
-    && command[1] === "node"
-    && command[2] === "--loader"
-    && command[3] === "ts-node/esm"
-    && command[4] === launcher.repositoryModule;
-  return safeBuildPrelude && legacy
-    ? Object.freeze({
-      kind: "direct",
-      command: process.execPath,
-      args: Object.freeze(["--loader", "ts-node/esm", launcher.repositoryModule]),
-      env: Object.freeze({ TS_NODE_TRANSPILE_ONLY: "true" }),
-    })
-    : Object.freeze({
-      kind: "package-script",
-      command: "npm",
-      args: Object.freeze(["run", "--silent", launcher.packageScript]),
-      env: Object.freeze({}),
-    });
+/** Transitional compatibility helper; normal discovery never reads package scripts. */
+export function classify_external_library_launcher_invocation(launcher: Readonly<{ repositoryModule: string }>, _packageCommand: string): ExternalLibraryLauncherInvocation {
+  return Object.freeze({ kind: "direct", command: process.execPath, args: Object.freeze(["--import", NODE_TSX_IMPORT_PATH, launcher.repositoryModule]), env: Object.freeze({ TS_NODE_TRANSPILE_ONLY: "true" }) });
 }
 
 async function exists(path: string): Promise<boolean> {
@@ -285,73 +245,80 @@ async function find_package_root(start: string): Promise<string | undefined> {
   }
 }
 
+export type HsonLiveSourceMetadata = Readonly<{ id: string; title: string; category: string; runtime: HsonLiveExecutableRuntime; tags: readonly string[]; sourceFile: string }>;
+const RUNTIMES = new Set<HsonLiveExecutableRuntime>(["node", "node-synthetic-dom", "node-websocket", "node-real-websocket" as HsonLiveExecutableRuntime, "node-real-websocket-process" as HsonLiveExecutableRuntime]);
+async function source_files(root: string): Promise<string[]> { const entries = await readdir(root, { withFileTypes: true }); const nested = await Promise.all(entries.map(async entry => entry.isDirectory() ? source_files(join(root, entry.name)) : /\.(?:m?[jt]s)$/.test(entry.name) ? [join(root, entry.name)] : [])); return nested.flat(); }
+function frozen_argument(node: ts.Expression): ts.Expression | undefined {
+  return ts.isCallExpression(node)
+    && node.arguments.length === 1
+    && ts.isPropertyAccessExpression(node.expression)
+    && ts.isIdentifier(node.expression.expression)
+    && node.expression.expression.text === "Object"
+    && node.expression.name.text === "freeze"
+    ? node.arguments[0]
+    : undefined;
+}
+function literal_string_property(object: ts.ObjectLiteralExpression, name: string, sourceFile: string): string {
+  const property = object.properties.find((entry): entry is ts.PropertyAssignment => ts.isPropertyAssignment(entry)
+    && ((ts.isIdentifier(entry.name) || ts.isStringLiteral(entry.name)) && entry.name.text === name));
+  if (property === undefined || !ts.isStringLiteral(property.initializer) || property.initializer.text.length === 0) {
+    throw new Error(`HSON_LIVE_TEST_METADATA_INVALID:${sourceFile}: ${name} must be a non-empty string literal.`);
+  }
+  return property.initializer.text;
+}
+export function parse_hson_live_test_metadata_source(source: string, sourceFile: string): HsonLiveSourceMetadata | undefined {
+  const tree = ts.createSourceFile(sourceFile, source, ts.ScriptTarget.Latest, true);
+  const declarations = tree.statements.flatMap((statement) => {
+    if (!ts.isVariableStatement(statement)
+      || !statement.modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword)
+      || (statement.declarationList.flags & ts.NodeFlags.Const) === 0) return [];
+    return statement.declarationList.declarations.filter((declaration) => ts.isIdentifier(declaration.name)
+      && declaration.name.text === "HSON_LIVE_TEST_METADATA");
+  });
+  if (declarations.length === 0) return undefined;
+  if (declarations.length !== 1) throw new Error(`HSON_LIVE_TEST_METADATA_INVALID:${sourceFile}: metadata must be exported exactly once.`);
+  const initializer = declarations[0]!.initializer;
+  const object = initializer === undefined ? undefined : frozen_argument(initializer);
+  if (object === undefined || !ts.isObjectLiteralExpression(object)) {
+    throw new Error(`HSON_LIVE_TEST_METADATA_INVALID:${sourceFile}: metadata must be a literal Object.freeze object.`);
+  }
+  const id = literal_string_property(object, "id", sourceFile);
+  const title = literal_string_property(object, "title", sourceFile);
+  const category = literal_string_property(object, "category", sourceFile);
+  const runtime = literal_string_property(object, "runtime", sourceFile) as HsonLiveExecutableRuntime;
+  const tagsProperty = object.properties.find((entry): entry is ts.PropertyAssignment => ts.isPropertyAssignment(entry)
+    && ((ts.isIdentifier(entry.name) || ts.isStringLiteral(entry.name)) && entry.name.text === "tags"));
+  const tagsArgument = tagsProperty === undefined ? undefined : frozen_argument(tagsProperty.initializer);
+  if (tagsArgument === undefined || !ts.isArrayLiteralExpression(tagsArgument)
+    || tagsArgument.elements.length === 0 || tagsArgument.elements.some((entry) => !ts.isStringLiteral(entry) || entry.text.length === 0)) {
+    throw new Error(`HSON_LIVE_TEST_METADATA_INVALID:${sourceFile}: tags must be a non-empty frozen string-literal array.`);
+  }
+  if (!RUNTIMES.has(runtime)) throw new Error(`HSON_LIVE_TEST_METADATA_INVALID:${sourceFile}: unsupported runtime ${runtime}.`);
+  return Object.freeze({ id, title, category, runtime, tags: Object.freeze(tagsArgument.elements.map((entry) => (entry as ts.StringLiteral).text)), sourceFile });
+}
 export async function resolve_external_library_launchers(
-  resolvedManifestUrl: string = import.meta.resolve("hson-live/test-launchers"),
+  resolvedPackageUrl: string = import.meta.resolve("hson-live"),
 ): Promise<ExternalLibraryLauncherAvailability> {
-  let manifestPath: string;
+  let packagePath: string;
   try {
-    manifestPath = await realpath(new URL(resolvedManifestUrl));
+    packagePath = await realpath(new URL(resolvedPackageUrl));
   } catch (error) {
-    return Object.freeze({
-      targets: Object.freeze([]),
-      unavailable: Object.freeze(hson_live_test_launchers.map((launcher) => Object.freeze({
-        launcherId: launcher.id,
-        reason: `manifest resolution failed: ${error instanceof Error ? error.message : String(error)}`,
-      }))),
-      invocations: Object.freeze({}),
-    });
+    return Object.freeze({ targets: Object.freeze([]), unavailable: Object.freeze([{ launcherId: "hson-live", reason: `package resolution failed: ${error instanceof Error ? error.message : String(error)}` }]), invocations: Object.freeze({}) });
   }
-  const repositoryRoot = await find_package_root(dirname(manifestPath));
+  const repositoryRoot = await find_package_root(dirname(packagePath));
   if (repositoryRoot === undefined) {
-    return Object.freeze({
-      targets: Object.freeze([]),
-      unavailable: Object.freeze(hson_live_test_launchers.map((launcher) => Object.freeze({
-        launcherId: launcher.id,
-        reason: "hson-live package root was not found",
-      }))),
-      invocations: Object.freeze({}),
-    });
+    return Object.freeze({ targets: Object.freeze([]), unavailable: Object.freeze([{ launcherId: "hson-live", reason: "hson-live package root was not found" }]), invocations: Object.freeze({}) });
   }
-  let scripts: Readonly<Record<string, unknown>> = {};
-  try {
-    const packageJson = JSON.parse(await readFile(join(repositoryRoot, "package.json"), "utf8")) as {
-      scripts?: Readonly<Record<string, unknown>>;
-    };
-    scripts = packageJson.scripts ?? {};
-  } catch {
-    // Per-target diagnostics below keep ordinary Node discovery usable.
-  }
+  const sources = await source_files(join(repositoryRoot, "tests"));
+  const metadata = (await Promise.all(sources.map(async source => parse_hson_live_test_metadata_source(await readFile(source, "utf8"), relative(repositoryRoot, source))))).filter((entry): entry is HsonLiveSourceMetadata => entry !== undefined);
+  const ids = new Set<string>(); for (const entry of metadata) { if (ids.has(entry.id)) throw new Error(`HSON_LIVE_TEST_METADATA_DUPLICATE_ID:${entry.id}`); ids.add(entry.id); }
   const targets: ExternalLibraryLauncherTarget[] = [];
-  const unavailable: { launcherId: string; reason: string }[] = [];
   const invocations: Record<string, ExternalLibraryLauncherInvocation> = {};
-  for (const [order, launcher] of hson_live_test_launchers.entries()) {
-    const moduleExists = await exists(join(repositoryRoot, launcher.repositoryModule));
-    const scriptExists = typeof scripts[launcher.packageScript] === "string";
-    if (moduleExists && scriptExists) {
-      const packageCommand = scripts[launcher.packageScript] as string;
-      const verifiedInvocation = classify_external_library_launcher_invocation(
-        launcher,
-        packageCommand,
-      );
-      if (verifiedInvocation.kind === "direct") {
-        const selectedTarget = target(launcher, order);
-        targets.push(selectedTarget);
-        invocations[selectedTarget.id] = verifiedInvocation;
-      } else {
-        unavailable.push({ launcherId: launcher.id, reason: "package script is not a mechanically verified direct launcher" });
-      }
-    }
-    else unavailable.push({
-      launcherId: launcher.id,
-      reason: !moduleExists
-        ? `repository module is absent: ${launcher.repositoryModule}`
-        : `package script is absent: ${launcher.packageScript}`,
-    });
-  }
+  for (const [order, entry] of metadata.sort((a, b) => a.id.localeCompare(b.id)).entries()) { const selectedTarget = target(entry, order); targets.push(selectedTarget); invocations[selectedTarget.id] = tsx_invocation(selectedTarget); }
   return Object.freeze({
     repositoryRoot,
     targets: Object.freeze(targets),
-    unavailable: Object.freeze(unavailable.map((entry) => Object.freeze(entry))),
+    unavailable: Object.freeze([]),
     invocations: Object.freeze(invocations),
   });
 }
@@ -360,7 +327,7 @@ export function resolve_external_launcher_binding(
   availability: ExternalLibraryLauncherAvailability,
   descriptor: TestSuiteDescriptor,
 ): ExternalLibraryLauncherTarget {
-  if (descriptor.executionShape !== "opaque-aggregate" || descriptor.provenance !== "hson-live"
+  if (descriptor.executionShape !== "cases" || descriptor.provenance !== "hson-live"
     || descriptor.sourceRef === undefined || !descriptor.sourceRef.startsWith("hson-live:")) {
     throw new Error(`HOSTED_TEST_OPAQUE_DESCRIPTOR_INVALID: ${descriptor.id} has no valid hson-live sourceRef binding.`);
   }
@@ -528,6 +495,143 @@ export function reconcile_external_launcher_completion(
   return Object.freeze({ completion });
 }
 
+type ExternalTestEventScan = Readonly<{
+  events?: readonly ExternalLibraryChildEvent[];
+  ordinaryStdout: string;
+  error?: string;
+}>;
+
+function child_status(value: unknown): ExternalLibraryChildEvent extends infer _T
+  ? "pass" | "fail" | "skip" | "unsupported" | "cancelled" | undefined
+  : never {
+  return value === "pass" || value === "fail" || value === "skip" || value === "unsupported" || value === "cancelled"
+    ? value
+    : undefined;
+}
+
+function derived_child_status(statuses: readonly ("pass" | "fail" | "skip" | "unsupported" | "cancelled")[]): "pass" | "fail" | "skip" | "unsupported" | "cancelled" | undefined {
+  if (statuses.includes("fail")) return "fail";
+  if (statuses.includes("cancelled")) return "cancelled";
+  if (statuses.includes("pass")) return "pass";
+  if (statuses.length > 0 && statuses.every((status) => status === "skip")) return "skip";
+  if (statuses.includes("unsupported")) return "unsupported";
+  return undefined;
+}
+
+class ExternalTestEventScanner {
+  readonly #decoder = new StringDecoder("utf8");
+  readonly #events: ExternalLibraryChildEvent[] = [];
+  readonly #active = new Map<string, string>();
+  readonly #completed = new Map<string, "pass" | "fail" | "skip" | "unsupported" | "cancelled">();
+  readonly #ordinary = new BoundedOutputCapture(EXTERNAL_LIBRARY_LAUNCHER_STDOUT_LIMIT_BYTES, EXTERNAL_LIBRARY_LAUNCHER_TRUNCATION_MARKER);
+  #pending = "";
+  #discardingLongLine = false;
+  #terminal: "pass" | "fail" | "skip" | "unsupported" | "cancelled" | undefined;
+  #error: string | undefined;
+
+  constructor(readonly target: ExternalLibraryLauncherTarget) {}
+
+  add(chunk: Buffer): void { this.#consume(this.#decoder.write(chunk)); }
+
+  snapshot(): ExternalTestEventScan { return this.#result(false); }
+
+  finish(): ExternalTestEventScan {
+    this.#consume(this.#decoder.end());
+    if (!this.#discardingLongLine && this.#pending.length > 0) {
+      if (this.#pending.startsWith(HSON_LIVE_TEST_EVENT_PREFIX)) this.#fail("External launcher emitted a truncated control frame.");
+      else this.#ordinary.add(Buffer.from(this.#pending, "utf8"));
+    }
+    this.#pending = "";
+    return this.#result(true);
+  }
+
+  #result(final: boolean): ExternalTestEventScan {
+    const error = this.#error ?? (final && this.#terminal === undefined ? "External launcher emitted no terminal test event." : undefined);
+    return Object.freeze({
+      ...(error === undefined && this.#terminal !== undefined ? { events: Object.freeze([...this.#events]) } : {}),
+      ordinaryStdout: this.#ordinary.snapshot().text,
+      ...(error === undefined ? {} : { error }),
+    });
+  }
+
+  #fail(message: string): void { this.#error ??= message; }
+
+  #consume(text: string): void {
+    let remaining = text;
+    while (remaining.length > 0) {
+      if (this.#discardingLongLine) {
+        const newline = remaining.indexOf("\n");
+        if (newline < 0) return;
+        this.#discardingLongLine = false;
+        remaining = remaining.slice(newline + 1);
+        continue;
+      }
+      const newline = remaining.indexOf("\n");
+      if (newline < 0) {
+        this.#pending += remaining;
+        if (this.#pending.length > COMPLETION_LINE_LIMIT) {
+          if (this.#pending.startsWith(HSON_LIVE_TEST_EVENT_PREFIX)) this.#fail("External launcher emitted an oversized or truncated control frame.");
+          else this.#ordinary.add(Buffer.from(this.#pending, "utf8"));
+          this.#pending = "";
+          this.#discardingLongLine = true;
+        }
+        return;
+      }
+      this.#pending += remaining.slice(0, newline);
+      this.#line(this.#pending.replace(/\r$/, ""));
+      this.#pending = "";
+      remaining = remaining.slice(newline + 1);
+    }
+  }
+
+  #line(line: string): void {
+    if (!line.startsWith(HSON_LIVE_TEST_EVENT_PREFIX)) {
+      if (!line.startsWith(HSON_LIVE_TEST_COMPLETION_PREFIX)) this.#ordinary.add(Buffer.from(`${line}\n`, "utf8"));
+      return;
+    }
+    if (this.#error !== undefined) return;
+    if (this.#terminal !== undefined) { this.#fail("External launcher emitted control data after terminal."); return; }
+    let value: Record<string, unknown>;
+    try {
+      const parsed = JSON.parse(line.slice(HSON_LIVE_TEST_EVENT_PREFIX.length)) as unknown;
+      if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) throw new Error("not an object");
+      value = parsed as Record<string, unknown>;
+    } catch { this.#fail("External launcher emitted malformed test event JSON/control frame."); return; }
+    const caseId = typeof value.caseId === "string" && value.caseId.length > 0 ? value.caseId : undefined;
+    if (value.t === "case_begin") {
+      if (caseId === undefined || typeof value.title !== "string" || value.title.length === 0) { this.#fail("External launcher emitted invalid case_begin."); return; }
+      if (this.#active.has(caseId) || this.#completed.has(caseId)) { this.#fail(`External launcher emitted duplicate case ID: ${caseId}.`); return; }
+      this.#active.set(caseId, value.title); this.#events.push(Object.freeze({ t: "case_begin", caseId, name: value.title })); return;
+    }
+    if (value.t === "diagnostic") {
+      if (caseId === undefined || !this.#active.has(caseId) || typeof value.kind !== "string" || value.kind.length === 0 || typeof value.message !== "string" || value.message.length === 0) { this.#fail("External launcher emitted diagnostic for an impossible case identity."); return; }
+      this.#events.push(Object.freeze({ t: "diagnostic", caseId, kind: value.kind, message: value.message })); return;
+    }
+    if (value.t === "case_end") {
+      const status = child_status(value.status);
+      if (caseId !== undefined && this.#completed.has(caseId)) { this.#fail(`External launcher emitted duplicate case_end: ${caseId}.`); return; }
+      const name = caseId === undefined ? undefined : this.#active.get(caseId);
+      if (caseId === undefined || name === undefined || status === undefined) { this.#fail("External launcher emitted case_end without a matching case_begin."); return; }
+      this.#active.delete(caseId); this.#completed.set(caseId, status); this.#events.push(Object.freeze({ t: "case_end", caseId, name, status })); return;
+    }
+    if (value.t === "terminal") {
+      const status = child_status(value.status);
+      if (value.suiteId !== this.target.launcherId) { this.#fail(`External launcher terminal suite ID mismatch: received ${String(value.suiteId)}, expected ${this.target.launcherId}.`); return; }
+      if (status === undefined || this.#active.size > 0) { this.#fail("External launcher emitted invalid terminal with unfinished cases."); return; }
+      if (status !== derived_child_status([...this.#completed.values()])) { this.#fail("External launcher terminal status contradicts emitted cases."); return; }
+      this.#terminal = status; this.#events.push(Object.freeze({ t: "terminal", suiteId: this.target.launcherId, status })); return;
+    }
+    this.#fail("External launcher emitted unknown test event discriminator.");
+  }
+}
+
+/** Validates the child protocol independently of process supervision. */
+export function parse_external_test_events(stdout: string, target: ExternalLibraryLauncherTarget): ExternalTestEventScan {
+  const scanner = new ExternalTestEventScanner(target);
+  scanner.add(Buffer.from(stdout, "utf8"));
+  return scanner.finish();
+}
+
 async function run_supervised_node_command_with_state(
   state: ExternalLibraryLauncherState,
   invocation: SupervisedNodeCommand,
@@ -577,38 +681,26 @@ async function run_external_library_launcher_with_state(
   if (availability.repositoryRoot === undefined) throw new Error("External hson-live repository is unavailable.");
   const selectedTarget = availability.targets.find((entry) => entry.id === targetId);
   if (selectedTarget === undefined) throw new Error(`External library launcher is unavailable: ${targetId}`);
-  const launcher = hson_live_test_launchers.find((entry) => entry.id === selectedTarget.launcherId);
-  if (launcher === undefined) throw new Error(`External library launcher manifest identity changed: ${targetId}`);
   const timeoutMs = options.timeoutMs ?? EXTERNAL_LIBRARY_LAUNCHER_TIMEOUT_MS;
   const active = state.activeLaunchers.get(targetId);
   if (active !== undefined) return active;
   const configuredInvocation = availability.invocations?.[targetId];
   let resolvedInvocation: ExternalLibraryLauncherInvocation;
   if (options.forcePackageScript) {
-    resolvedInvocation = Object.freeze({
-      kind: "package-script" as const,
-      command: "npm",
-      args: Object.freeze(["run", "--silent", launcher.packageScript]),
-      env: Object.freeze({}),
-    });
+    throw new Error("External executable discovery does not use package scripts.");
   } else if (options.forceTsx) {
-    resolvedInvocation = tsx_invocation(launcher);
+    resolvedInvocation = tsx_invocation(selectedTarget);
   } else if (options.forcePlainNode) {
     resolvedInvocation = Object.freeze({
       kind: "direct",
       command: process.execPath,
-      args: Object.freeze([launcher.repositoryModule]),
+      args: Object.freeze([selectedTarget.sourceFile]),
       env: Object.freeze({ TS_NODE_TRANSPILE_ONLY: "true" }),
     });
   } else {
     resolvedInvocation = (
       configuredInvocation
-    ) ?? Object.freeze({
-      kind: "package-script" as const,
-      command: "npm",
-      args: Object.freeze(["run", "--silent", launcher.packageScript]),
-      env: Object.freeze({}),
-    });
+    ) ?? tsx_invocation(selectedTarget);
   }
   const invocation = options.command === undefined
     ? resolvedInvocation
@@ -617,9 +709,11 @@ async function run_external_library_launcher_with_state(
   else state.packageScriptStarts += 1;
 
   const completionScanner = new CompletionScanner();
+  const eventScanner = new ExternalTestEventScanner(selectedTarget);
   let cancelled = false;
   let terminationRequested = false;
-  let completionAcceptedBeforeCancellation: ExternalLibraryLauncherCompletion | undefined;
+  let terminalAcceptedBeforeCancellation = false;
+  let eventsAcceptedBeforeCancellation: readonly ExternalLibraryChildEvent[] | undefined;
   const processExecution = state.processSupervisor.start({
     cwd: availability.repositoryRoot,
     command: invocation.command,
@@ -629,13 +723,15 @@ async function run_external_library_launcher_with_state(
   }, {
     observeStdoutChunk(chunk) {
       completionScanner.add(chunk);
+      eventScanner.add(chunk);
       options.observeStdoutChunk?.(chunk.toString("utf8"));
     },
   });
   const abort = (): void => {
-    const observed = reconcile_external_launcher_completion(completionScanner.snapshot(), selectedTarget);
-    if (observed.error === undefined && observed.completion !== undefined) {
-      completionAcceptedBeforeCancellation = observed.completion;
+    const eventSnapshot = eventScanner.snapshot();
+    if (eventSnapshot.error === undefined && eventSnapshot.events !== undefined) {
+      eventsAcceptedBeforeCancellation = eventSnapshot.events;
+      terminalAcceptedBeforeCancellation = true;
     } else {
       cancelled = true;
     }
@@ -647,13 +743,17 @@ async function run_external_library_launcher_with_state(
   const execution = processExecution.result.then((processResult): ExternalLibraryLauncherResult => {
     options.signal?.removeEventListener("abort", abort);
     const completionScan = completionScanner.finish();
-    const completionResult: Readonly<{ completion?: ExternalLibraryLauncherCompletion; error?: string }> = completionAcceptedBeforeCancellation === undefined
-      ? reconcile_external_launcher_completion(completionScan, selectedTarget)
-      : Object.freeze({ completion: completionAcceptedBeforeCancellation });
+    const completionResult = reconcile_external_launcher_completion(completionScan, selectedTarget);
+    const finishedEvents = eventScanner.finish();
+    const eventResult: ExternalTestEventScan = eventsAcceptedBeforeCancellation === undefined
+      ? finishedEvents
+      : Object.freeze({ events: eventsAcceptedBeforeCancellation, ordinaryStdout: finishedEvents.ordinaryStdout });
+    const eventTerminal = eventResult.events?.at(-1);
+    const eventFailed = eventResult.events?.some((event) => event.t === "case_end" && event.status === "fail") === true;
     return Object.freeze({
       target: selectedTarget,
       stdout: processResult.stdout,
-      ordinaryStdout: completionScan.ordinaryStdout,
+      ordinaryStdout: eventResult.ordinaryStdout,
       stderr: processResult.stderr,
       stdoutBytes: processResult.stdoutBytes,
       stderrBytes: processResult.stderrBytes,
@@ -665,20 +765,20 @@ async function run_external_library_launcher_with_state(
       timedOut: processResult.timedOut,
       ...(processResult.spawnError === undefined ? {} : { spawnError: processResult.spawnError }),
       ...(completionResult.completion === undefined ? {} : { completion: completionResult.completion }),
-      ...(completionResult.error === undefined ? {} : { completionError: completionResult.error }),
+      ...(eventResult.events === undefined ? { completionError: eventResult.error ?? completionResult.error ?? "External launcher protocol rejected." } : { events: eventResult.events }),
+      ...(eventTerminal?.t === "terminal" ? { terminalStatus: eventTerminal.status } : {}),
+      ...(processResult.outputLimitExceeded ? { completionError: "External launcher output limit exceeded." } : {}),
       ...(processResult.forceKilled ? { forceKilled: true } : {}),
       ...(cancelled ? { cancelled: true } : {}),
-      ...(completionAcceptedBeforeCancellation === undefined ? {} : { completionAcceptedBeforeCancellation: true }),
+      ...(terminalAcceptedBeforeCancellation ? { completionAcceptedBeforeCancellation: true } : {}),
       invocationKind: invocation.kind,
-      ok: completionAcceptedBeforeCancellation !== undefined
-        ? completionAcceptedBeforeCancellation.failed === 0
-        : processResult.exitCode === 0
-        && processResult.signal === null
-        && processResult.spawnError === undefined
-        && !processResult.timedOut
-        && !terminationRequested
-        && completionResult.error === undefined
-        && completionResult.completion?.failed === 0,
+      ok: eventResult.events !== undefined
+        ? processResult.spawnError === undefined && !processResult.timedOut
+          && !processResult.outputLimitExceeded
+          && ((eventsAcceptedBeforeCancellation !== undefined) || (processResult.exitCode === 0 && processResult.signal === null && !terminationRequested))
+          && !eventFailed && eventTerminal?.t === "terminal"
+          && (eventTerminal.status === "pass" || eventTerminal.status === "skip" || eventTerminal.status === "unsupported")
+        : false,
     });
   });
   state.activeLaunchers.set(targetId, execution);

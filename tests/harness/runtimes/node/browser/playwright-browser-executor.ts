@@ -7,7 +7,12 @@ import type { TestExecutorDescriptor } from "../../../../../src/shared/testing/t
 import type { TestFailure } from "../../../../../src/shared/testing/test-contracts";
 import type { RunOptions, RunResult, TestEvent } from "../../../core/test-contracts";
 import type { NodeProcessResult, NodeProcessSupervisor } from "../node-process-supervisor";
-import { ALL_BROWSER_SUITE_MANIFEST } from "./browser-test-manifest";
+import {
+  normalize_playwright_source_path,
+  playwright_case_id,
+  playwright_suite_id,
+  type PlaywrightDiscoveredTest,
+} from "./playwright-test-discovery";
 
 export const LOCAL_PLAYWRIGHT_BROWSER_EXECUTOR = Object.freeze({
   id: "local-playwright-chromium",
@@ -124,6 +129,13 @@ function case_status(value: unknown): "pass" | "fail" | "skip" {
   return "fail";
 }
 
+function suite_source(sourceRef: string | undefined): Readonly<{ path: string; project: string }> {
+  if (sourceRef === undefined || !sourceRef.startsWith("playwright:")) throw new Error(`BROWSER_EXECUTOR_SOURCE_INVALID:${sourceRef ?? "missing"}`);
+  const separator = sourceRef.lastIndexOf("#");
+  if (separator < "playwright:".length) throw new Error(`BROWSER_EXECUTOR_SOURCE_INVALID:${sourceRef}`);
+  return Object.freeze({ path: normalize_playwright_source_path(sourceRef.slice("playwright:".length, separator)), project: sourceRef.slice(separator + 1) });
+}
+
 function empty_metrics(): BrowserExecutorMetrics {
   return Object.freeze({
     launches: 0,
@@ -172,17 +184,9 @@ export function create_playwright_browser_executor(
         }
         return Object.freeze({ descriptor, suite });
       });
-      const byIdentity = new Map<string, Readonly<{ suite: typeof ALL_BROWSER_SUITE_MANIFEST[number]; journey: typeof ALL_BROWSER_SUITE_MANIFEST[number]["journeys"][number] }>>(ALL_BROWSER_SUITE_MANIFEST.flatMap((suite) => suite.journeys.map((journey) => [
-        `${suite.reportPath ?? suite.path}\u0000${journey.title}`,
-        Object.freeze({ suite, journey }),
-      ] as const)));
-      const selectedKeys = new Set(descriptors.map(({ descriptor, suite }) => {
-        const manifest = ALL_BROWSER_SUITE_MANIFEST.find((candidate) => candidate.id === suite.id);
-        if (manifest === undefined) throw new Error(`BROWSER_EXECUTOR_MANIFEST_MISSING: ${suite.id}`);
-        return `${manifest.reportPath ?? manifest.path}\u0000${descriptor.title}`;
-      }));
+      const selectedKeys = new Set(descriptors.map(({ descriptor }) => descriptor.id));
       const selectedTitles = descriptors.map(({ descriptor }) => descriptor.title);
-      const selectedPaths = [...new Set(descriptors.map(({ suite }) => suite.sourceRef!))];
+      const selectedPaths = [...new Set(descriptors.map(({ suite }) => suite_source(suite.sourceRef).path))];
       const selectedTitlePattern = `(?:${selectedTitles.map((title) => title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})$`;
       const suiteStarted = new Set<string>();
       const suiteStartedAt = new Map<string, number>();
@@ -222,23 +226,31 @@ export function create_playwright_browser_executor(
           return;
         }
         if (event.t === "executor_finished") return;
-        const path = typeof event.path === "string" ? event.path : "";
+        const path = typeof event.path === "string" ? normalize_playwright_source_path(event.path) : "";
         const title = typeof event.title === "string" ? event.title : "";
-        const binding = byIdentity.get(`${path}\u0000${title}`);
-        if (binding === undefined || !selectedKeys.has(`${path}\u0000${title}`)) return;
-        const id = `${binding.suite.id}::${binding.journey.id}`;
+        const project = typeof event.project === "string" ? event.project : "";
+        const titlePath = string_array(event.titlePath);
+        if (path.length === 0 || title.length === 0 || project.length === 0 || titlePath.length === 0) return;
+        const evidence: PlaywrightDiscoveredTest = Object.freeze({ path, title, project, titlePath, line: Number(event.line) || 0, column: Number(event.column) || 0 });
+        const id = `${playwright_suite_id(evidence)}::${playwright_case_id(evidence)}`;
+        if (!selectedKeys.has(id)) return;
+        const descriptor = catalog.tests.find((candidate) => candidate.id === id);
+        const suite = catalog.suites.find((candidate) => candidate.id === descriptor?.suiteId);
+        if (descriptor === undefined || suite?.executionShape !== "browser-journeys" || descriptor.title !== title) return;
+        const source = suite_source(suite.sourceRef);
+        if (source.path !== path || source.project !== project) return;
         if (event.t === "case_started") {
-          if (suiteStarted.has(binding.suite.id) === false) {
-            suiteStarted.add(binding.suite.id);
-            suiteStartedAt.set(binding.suite.id, performance.now());
-            emit({ t: "suite_begin", suite: binding.suite.id, totalPlanned: suiteRemaining.get(binding.suite.id) ?? 0 });
+          if (suiteStarted.has(suite.id) === false) {
+            suiteStarted.add(suite.id);
+            suiteStartedAt.set(suite.id, performance.now());
+            emit({ t: "suite_begin", suite: suite.id, title: suite.title, category: suite.subject, totalPlanned: suiteRemaining.get(suite.id) ?? 0 });
           }
           metrics = Object.freeze({
             ...metrics,
             activeJourneys: metrics.activeJourneys + 1,
             maximumActiveJourneys: Math.max(metrics.maximumActiveJourneys, metrics.activeJourneys + 1),
           });
-          emit({ t: "case_begin", suite: binding.suite.id, caseId: binding.journey.id, name: binding.journey.title });
+          emit({ t: "case_begin", suite: suite.id, caseId: descriptor.caseId, name: descriptor.title });
           return;
         }
         if (event.t !== "case_finished" || terminalIds.has(id)) return;
@@ -253,18 +265,18 @@ export function create_playwright_browser_executor(
         const error = reporter_error(event);
         if (status === "fail") {
           failures.push(Object.freeze({
-            suite: binding.suite.id,
-            caseId: binding.journey.id,
-            name: binding.journey.title,
+            suite: suite.id,
+            caseId: descriptor.caseId,
+            name: descriptor.title,
             err: error ?? "Playwright journey failed.",
             ms: durationMs,
           }));
         }
         emit({
           t: "case_end",
-          suite: binding.suite.id,
-          caseId: binding.journey.id,
-          name: binding.journey.title,
+          suite: suite.id,
+          caseId: descriptor.caseId,
+          name: descriptor.title,
           status,
           ms: durationMs,
           ...(error === undefined ? {} : { err: error }),
@@ -286,10 +298,10 @@ export function create_playwright_browser_executor(
             } catch { ordinaryLines.push(line); }
           }
           const ordinary = ordinaryLines.join("");
-          if (ordinary.length > 0) emit({ t: "evidence", suite: binding.suite.id, caseId: binding.journey.id, kind: "stdout", name: "Playwright stdout", content: ordinary });
+          if (ordinary.length > 0) emit({ t: "evidence", suite: suite.id, caseId: descriptor.caseId, kind: "stdout", name: "Playwright stdout", content: ordinary });
         }
         for (const content of string_array(event.stderr)) {
-          emit({ t: "evidence", suite: binding.suite.id, caseId: binding.journey.id, kind: "stderr", name: "Playwright stderr", content });
+          emit({ t: "evidence", suite: suite.id, caseId: descriptor.caseId, kind: "stderr", name: "Playwright stderr", content });
         }
         if (Array.isArray(event.attachments)) {
           for (const value of event.attachments) {
@@ -298,8 +310,8 @@ export function create_playwright_browser_executor(
             artifactCount += 1;
             emit({
               t: "evidence",
-              suite: binding.suite.id,
-              caseId: binding.journey.id,
+              suite: suite.id,
+              caseId: descriptor.caseId,
               kind: "artifact",
               name: typeof attachment.name === "string" ? attachment.name : "Playwright artifact",
               content: typeof attachment.body === "string" ? attachment.body : "",
@@ -308,13 +320,13 @@ export function create_playwright_browser_executor(
             });
           }
         }
-        const remaining = (suiteRemaining.get(binding.suite.id) ?? 1) - 1;
-        suiteRemaining.set(binding.suite.id, remaining);
+        const remaining = (suiteRemaining.get(suite.id) ?? 1) - 1;
+        suiteRemaining.set(suite.id, remaining);
         if (remaining === 0) {
           emit({
             t: "suite_end",
-            suite: binding.suite.id,
-            ms: performance.now() - (suiteStartedAt.get(binding.suite.id) ?? performance.now()),
+            suite: suite.id,
+            ms: performance.now() - (suiteStartedAt.get(suite.id) ?? performance.now()),
           });
         }
       };

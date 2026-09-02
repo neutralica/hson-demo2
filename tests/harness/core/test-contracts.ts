@@ -25,7 +25,7 @@ export type TestExpectedError = Readonly<{
 type TestEventExecutor = Readonly<{ executorId?: string }>;
 
 export type TestEvent = (
-  | { t: "suite_begin"; suite: string; totalPlanned?: number }
+  | { t: "suite_begin"; suite: string; totalPlanned?: number; title?: string; category?: string }
   | { t: "suite_end"; suite: string; ms: number }
   | { t: "case_begin"; suite: string; caseId: string; name: string; meta?: Record<string, string> }
   | {
@@ -54,6 +54,7 @@ export type TestEvent = (
     suite: string;
     name: string;
     subject: TestSubject;
+    category?: string;
     runtime: string;
     collections: readonly string[];
     status: "queued" | "running";
@@ -64,6 +65,7 @@ export type TestEvent = (
     suite: string;
     name: string;
     subject: TestSubject;
+    category?: string;
     runtime: string;
     collections: readonly string[];
     status: "pass" | "fail" | "cancelled";
@@ -84,6 +86,7 @@ export type TestEvent = (
       failed: number;
     }>;
     completionError?: string;
+    terminalStatus?: "pass" | "fail" | "skip" | "unsupported" | "cancelled";
     completionAcceptedBeforeCancellation?: boolean;
     ordinaryStdout?: string;
     stdoutBytes?: number;

@@ -52,14 +52,15 @@ assert.equal(workerResult.ok, true);
 assert.equal(nodeResult.summary.cases, 1);
 assert.equal(workerResult.summary.cases, 1);
 
-const opaqueId = node.catalog.suites.find((suite) => suite.executionShape === "opaque-aggregate")?.id;
-assert.ok(opaqueId);
-const opaquePlan = make_test_run_plan({ ...nodePlan, runId: "stage4a-opaque", catalog: node.catalog, selectedIds: [opaqueId] });
-assert.equal(opaquePlan.suites[0]?.id, opaqueId);
-assert.equal(opaquePlan.suites[0]?.cases.length, 0);
-assert.equal(typeof opaquePlan.suites[0]?.sourceRef, "string");
+const externalId = node.catalog.suites.find((suite) => suite.provenance === "hson-live")?.id;
+assert.ok(externalId);
+const externalPlan = make_test_run_plan({ ...nodePlan, runId: "stage4a-external", catalog: node.catalog, selectedIds: [externalId] });
+assert.equal(externalPlan.suites[0]?.id, externalId);
+assert.equal(externalPlan.suites[0]?.cases.length, 0, "child cases are discovered truthfully during execution");
+assert.equal(externalPlan.suites[0]?.executionShape, "cases");
+assert.equal(typeof externalPlan.suites[0]?.sourceRef, "string");
 
 assert.throws(() => make_test_run_plan({ ...nodePlan, runId: "stage4a-invalid", catalog: node.catalog, selectedIds: ["livehost/missing::case"] }));
 assert.throws(() => make_test_run_plan({ ...nodePlan, runId: "stage4a-retired-route", catalog: node.catalog, selectedIds: ["category/livehost"] }));
 
-console.log(JSON.stringify({ certificate: "stage-4a-selected", selectionId: sharedId, node: nodeResult.summary, worker: workerResult.summary, opaqueId }));
+console.log(JSON.stringify({ certificate: "stage-4a-selected", selectionId: sharedId, node: nodeResult.summary, worker: workerResult.summary, externalId }));

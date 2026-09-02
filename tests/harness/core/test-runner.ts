@@ -272,6 +272,8 @@ export async function run_test_suites(
       t: "suite_begin",
       suite: suite.suite,
       totalPlanned: selectedCases.length,
+      ...(suite.descriptor?.title === undefined ? {} : { title: suite.descriptor.title }),
+      ...(suite.descriptor?.subject === undefined ? {} : { category: suite.descriptor.subject }),
     });
 
     await yield_to_event_loop();

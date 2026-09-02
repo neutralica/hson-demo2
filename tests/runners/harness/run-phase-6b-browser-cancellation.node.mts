@@ -25,7 +25,8 @@ try {
   await runtime.ready();
   const discovery = await runtime.discover();
   const browserCase = discovery.catalog.tests.find((entry) => (
-    entry.suiteId === "livedemo/browser/towl-direct-entry" && entry.caseId === "journey-01"
+    entry.suiteId === "livedemo/browser/towl-direct-entry"
+      && entry.title === "two fresh phones share, play, recover, resume, and explicitly Leave one TOWL room"
   ))!;
   const run = await runtime.start_selected([browserCase.id]);
   await run.ready();

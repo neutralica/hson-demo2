@@ -1,79 +1,54 @@
 import assert from "node:assert/strict";
-import WebSocket from "ws";
-import type { BrowserWebSocketConstructor } from "../../../src/app/demos/tests/hosted-client/browser-websocket-socket";
-import { make_remote_hosted_test_runtime } from "../../../src/app/demos/tests/panel/hosted-test-panel-runtime";
-import { LOCAL_PLAYWRIGHT_BROWSER_EXECUTOR } from "../../harness/runtimes/node/browser/playwright-browser-executor";
-import { NODE_LIVEHOST_HOSTED_TEST_EXECUTOR } from "../../harness/runtimes/node/livehost-node-executor";
-import { start_hosted_test_server } from "../../harness/runtimes/node/server/hosted-test-server";
+import { mkdtemp } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { LocalRunReporter } from "../../harness/reporting/local/run-reporter";
+import { create_playwright_browser_executor } from "../../harness/runtimes/node/browser/playwright-browser-executor";
+import { discover_direct_report_executables, select_direct_report_executable_ids } from "../../harness/runtimes/node/direct-report-discovery";
+import { create_external_library_launcher_service } from "../../harness/runtimes/node/external-library-launchers";
+import { run_node_selected_verifications } from "../../harness/runtimes/node/run-node-selected-verifications";
 
-const server = await start_hosted_test_server({ port: 0 });
-const runtime = make_remote_hosted_test_runtime({
-  url: server.url,
-  environment: { DEV: true, PROD: false },
-  WebSocketConstructor: WebSocket as unknown as BrowserWebSocketConstructor,
-  reconnectDelaysMs: [0, 5, 20],
+const discovered = await discover_direct_report_executables();
+const native = discovered.catalog.tests.find((entry) => entry.id === "unit/test-harness::elapsed-budget-yields-between-fast-cases");
+const external = discovered.external.targets.find((entry) => entry.launcherId === "core.hson-number");
+const browser = discovered.catalog.tests.find((entry) => entry.suiteId === "livedemo/browser/small-state-surfaces");
+assert.ok(native && external && browser, "mixed proof requires one executable from each runtime");
+const selectedIds = select_direct_report_executable_ids(discovered.catalog, [browser.id, external.id, native.id]);
+assert.deepEqual(selectedIds, select_direct_report_executable_ids(discovered.catalog, [native.id, browser.id, external.id]), "selection order derives from executable discovery");
+
+const baseService = create_external_library_launcher_service();
+const launcherService = Object.freeze({
+  async run(...args: Parameters<typeof baseService.run>) {
+    const result = await baseService.run(...args);
+    return Object.freeze({ ...result, completion: Object.freeze({ version: 1 as const, launcherId: result.target.launcherId, executed: 999_999, passed: 0, failed: 999_999 }) });
+  },
+  runCommand: baseService.runCommand,
+  terminationGeneration: baseService.terminationGeneration,
 });
-
+const browserExecutor = create_playwright_browser_executor(baseService.processSupervisor);
+const reportRoot = await mkdtemp(join(tmpdir(), "hson-phase2b-mixed-"));
+const reporter = new LocalRunReporter(reportRoot, { profile: "phase-2b-mixed", ids: selectedIds });
 try {
-  await runtime.ready();
-  const discovery = await runtime.discover();
-  const canonicalSuiteIds = new Set(discovery.catalog.suites
-    .filter((suite) => suite.executionShape === "cases")
-    .map((suite) => suite.id));
-  const canonical = ["transform", "livetree", "livemap", "livehost"].map((subject) => (
-    discovery.catalog.tests.find((entry) => canonicalSuiteIds.has(entry.suiteId) && entry.subject === subject)!
-  ));
-  assert.equal(discovery.catalog.tests.some((entry) => canonicalSuiteIds.has(entry.suiteId) && entry.subject === "reflect"), false);
-  const opaque = discovery.catalog.suites.find((suite) => (
-    suite.executionShape === "opaque-aggregate" && suite.subject === "reflect"
-  ))!;
-  const command = discovery.catalog.suites.find((suite) => (
-    suite.sourceRef === "node-command:hson-demo2:test:hosted-test-timing-node"
-  ))!;
-  const browser = discovery.catalog.tests.find((entry) => entry.suiteId === "livedemo/browser/small-state-surfaces")!;
-  const raster = discovery.catalog.tests.find((entry) => entry.suiteId === "livetree/browser-raster-fidelity"
-    && entry.caseId === "canvas-plot")!;
-  const selection = [...canonical.map((entry) => entry.id), opaque.id, command.id, browser.id, raster.id];
-  const run = await runtime.start_selected(selection);
-  await run.ready();
-  const result = await run.actionResult;
-  assert.equal(result.ok, true);
-  const report = run.client.recovery.map.snap();
-  assert.equal(report.run.status, "passed");
-  assert.equal(report.suiteRuns.length, 8);
-  assert.deepEqual(report.suiteRuns.map((suite) => suite.id), run.association.acceptedPlan.suites.map((suite) => suite.id));
-  assert.deepEqual(report.plan.selectionIds, run.association.acceptedPlan.selectionIds);
-  assert.equal(run.association.acceptedPlan.suites.filter((suite) => suite.executorId === LOCAL_PLAYWRIGHT_BROWSER_EXECUTOR.id).length, 2);
-  assert.equal(run.association.acceptedPlan.suites.filter((suite) => suite.executorId === NODE_LIVEHOST_HOSTED_TEST_EXECUTOR.id).length, 6);
-  assert.equal(report.suiteRuns.filter((suite) => suite.executionShape === "browser-journeys")
-    .every((suite) => suite.executorIds.includes(LOCAL_PLAYWRIGHT_BROWSER_EXECUTOR.id)), true);
-  assert.equal(report.suiteRuns.filter((suite) => suite.executionShape !== "browser-journeys")
-    .every((suite) => suite.executorIds.includes(NODE_LIVEHOST_HOSTED_TEST_EXECUTOR.id)), true);
-
-  const recovered = await runtime.recover_run(run.association.runId, run.association.attemptId);
-  assert.equal(recovered.client.recovery.map.snap().run.status, "passed");
-  assert.deepEqual(recovered.client.recovery.map.snap().plan.selectionIds, report.plan.selectionIds);
-  assert.equal(server.browserMetrics!().activeProcesses, 0);
-  assert.equal(server.browserMetrics!().activeJourneys, 0);
-
-  console.log(JSON.stringify({
-    certificate: "phase6b-mixed-run",
-    oneRunPlan: true,
-    oneReportAuthority: true,
-    canonicalCases: canonical.length,
-    reflectCanonicalCases: 0,
-    reflectOpaqueLaunchers: 1,
-    opaqueLaunchers: 1,
-    commandCertifications: 1,
-    browserJourneys: 1,
-    rasterCases: 1,
-    stableOrder: true,
-    reportRecovery: true,
-    browserMetrics: server.browserMetrics!(),
-  }));
-  recovered.dispose();
-  run.dispose();
+  const result = await run_node_selected_verifications(
+    discovered.registry, discovered.catalog, discovered.external, selectedIds,
+    (event) => reporter.event(event), {}, { launcherService, browserExecutor },
+  );
+  const report = await reporter.finalize();
+  assert.equal(result.ok, true); assert.equal(report.status, "pass"); assert.equal(report.suites.length, 3);
+  const nativeReport = report.suites.find((suite) => suite.id === native.suiteId)!;
+  const externalReport = report.suites.find((suite) => suite.id === external.id)!;
+  const browserReport = report.suites.find((suite) => suite.id === browser.suiteId)!;
+  assert.equal(nativeReport.cases.length, 1); assert.equal(nativeReport.cases[0]?.id, native.caseId);
+  assert.ok(externalReport.cases.length > 1, "external case_end records are inspectable child cases");
+  assert.equal(browserReport.cases.length, 1); assert.equal(browserReport.cases[0]?.id, browser.caseId);
+  assert.equal(nativeReport.category, native.subject);
+  assert.equal(externalReport.category, external.category);
+  assert.equal(browserReport.category, browser.subject);
+  const actualCases = nativeReport.cases.length + externalReport.cases.length + browserReport.cases.length;
+  assert.equal(report.totals.cases, actualCases); assert.equal(result.summary.cases, actualCases);
+  assert.notEqual(externalReport.cases.length, 999_999, "legacy aggregate completion is not reconciled with real cases");
+  console.log(JSON.stringify({ certificate: "phase2b-mixed-direct-report", selectedIds, totals: report.totals, categories: report.suites.map((suite) => suite.category), externalCases: externalReport.cases.length }));
 } finally {
-  runtime.dispose();
-  await server.stop();
+  await browserExecutor.dispose();
+  baseService.terminate();
 }

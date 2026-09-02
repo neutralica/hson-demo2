@@ -21,18 +21,19 @@ assert.equal(decode_test_executor_discovery(JSON.parse(JSON.stringify(worker))).
 assert.equal(Object.hasOwn(node, "externalTargets"), false);
 assert.equal(Object.hasOwn(worker, "externalTargets"), false);
 
-const opaque = node.catalog.suites.filter((suite) => suite.executionShape === "opaque-aggregate");
-assert.deepEqual(opaque.map((suite) => suite.id), availability.targets.map((target) => target.id));
-assert.equal(worker.catalog.suites.some((suite) => suite.executionShape === "opaque-aggregate"), false);
+const external = node.catalog.suites.filter((suite) => suite.provenance === "hson-live");
+assert.deepEqual(external.map((suite) => suite.id), availability.targets.map((target) => target.id));
+assert.equal(external.every((suite) => suite.executionShape === "cases"), true);
+assert.equal(worker.catalog.suites.some((suite) => suite.provenance === "hson-live"), false);
 assert.equal(worker.catalog.suites.every((suite) => suite.provenance === "hson-demo2"), true);
 assert.equal(node.catalog.suites.some((suite) => suite.provenance === "hson-live"), true);
 assert.notEqual(node.catalogVersion, worker.catalogVersion);
 
-for (const descriptor of opaque) {
+for (const descriptor of external) {
   const binding = resolve_external_launcher_binding(availability, descriptor);
   assert.equal(binding.id, descriptor.id);
-  assert.equal(descriptor.sourceRef, `hson-live:${binding.launcherId}`);
-  assert.equal(descriptor.declaredChecks, undefined, "opaque discovery must not project mutable check inventory");
+  assert.equal(descriptor.sourceRef, `hson-live:${binding.sourceFile}`);
+  assert.equal(descriptor.declaredChecks, undefined, "executable discovery must not project mutable check inventory");
 }
 
 const withRemovedField = { ...JSON.parse(JSON.stringify(node)), externalTargets: [] };
@@ -68,6 +69,6 @@ assert.equal(JSON.stringify(diagnostic).includes(legacySecret), false);
 
 console.log(JSON.stringify({
   certificate: "stage-3-discovery",
-  node: { executor: node.executor.id, cases: node.catalog.tests.length, suites: node.catalog.suites.length, opaque: opaque.length, fingerprint: node.catalogVersion },
+  node: { executor: node.executor.id, cases: node.catalog.tests.length, suites: node.catalog.suites.length, external: external.length, fingerprint: node.catalogVersion },
   worker: { executor: worker.executor.id, cases: worker.catalog.tests.length, suites: worker.catalog.suites.length, opaque: 0, fingerprint: worker.catalogVersion },
 }));

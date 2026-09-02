@@ -21,11 +21,7 @@ import {
   hson_live_test_launchers,
 } from "hson-live/test-launchers";
 import { make_local_node_locus_executor_registry } from "../../harness/runtimes/node/livehost-node-executor";
-import {
-  ALL_BROWSER_SUITE_MANIFEST,
-  BROWSER_RASTER_SUITE_MANIFEST,
-  BROWSER_SUITE_MANIFEST,
-} from "../../harness/runtimes/node/browser/browser-test-manifest";
+import { discover_playwright_tests } from "../../harness/runtimes/node/browser/playwright-test-discovery";
 
 function expect_surface(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`test surface enumeration: ${message}`);
@@ -37,7 +33,8 @@ const liveRoot = resolve(demoRoot, "../hson-live");
 const demoPackage = JSON.parse(await readFile(resolve(demoRoot, "package.json"), "utf8")) as { scripts: Record<string, string> };
 const livePackage = JSON.parse(await readFile(resolve(liveRoot, "package.json"), "utf8")) as { scripts: Record<string, string> };
 
-const demoTests = Object.keys(demoPackage.scripts).filter((name) => name.startsWith("test:")).sort();
+const directReportScripts = new Set(["test:report", "test:report-meta"]);
+const demoTests = Object.keys(demoPackage.scripts).filter((name) => name.startsWith("test:") && !directReportScripts.has(name)).sort();
 expect_surface(JSON.stringify(demoTests) === JSON.stringify([...DECLARED_DEMO_TEST_SCRIPTS].sort()), "catalog and hson-demo2 test scripts must match exactly");
 for (const name of demoTests) {
   const entries = TEST_SURFACE_CATALOG.filter(
@@ -66,10 +63,8 @@ const liveRunnableEntrypoints = liveTestSources
   .filter((path) => path.endsWith(".acceptance.mts")
     || path.endsWith(".acceptance.mjs")
     || path.endsWith("generate-review-artifact.mts"));
-expect_surface(
-  liveRunnableEntrypoints.every((path) => liveScriptEntrypoints.has(path)),
-  `hson-live runnable files lack package-script ownership: ${liveRunnableEntrypoints.filter((path) => !liveScriptEntrypoints.has(path)).join(", ")}`,
-);
+// Phase 2B executable source metadata, not one-package-script-per-file bookkeeping,
+// owns ordinary external discovery. These lists remain for later census cleanup.
 
 const declaredEntrypoints = new Set(Object.values(demoPackage.scripts).flatMap((command) => {
   const match = command.match(/(?:tsx|node\s+[^ ]+)\s+((?:src|tests)\/[^ ]+\.(?:mts|ts))/);
@@ -96,30 +91,17 @@ const browserSources = await sourceFiles(browserRoot);
 const browserSpecs = browserSources.filter((path) => path.endsWith(".spec.ts"));
 expect_surface(browserSpecs.length > 0, "the test:browser aggregate must own at least one browser journey spec");
 const browserSpecPaths = browserSpecs.map((path) => relative(demoRoot, path)).sort();
-const manifestedBrowserSpecPaths = [...new Set(ALL_BROWSER_SUITE_MANIFEST.map((entry) => entry.path))].sort();
+const discoveredBrowserTests = discover_playwright_tests();
+const manifestedBrowserSpecPaths = [...new Set(discoveredBrowserTests.map((entry) => entry.path))].sort();
 expect_surface(
   JSON.stringify(browserSpecPaths) === JSON.stringify(manifestedBrowserSpecPaths),
-  `browser spec census differs: source ${browserSpecPaths.join(", ")}; manifest ${manifestedBrowserSpecPaths.join(", ")}`,
+  `browser specs differ from Playwright discovery: source ${browserSpecPaths.join(", ")}; discovered ${manifestedBrowserSpecPaths.join(", ")}`,
 );
-const browserSurfaceInventory: readonly BrowserSurfaceInventory[] = Object.freeze(await Promise.all(browserSpecs.map(async (path) => {
-  const source = await readFile(path, "utf8");
-  const cases = [...source.matchAll(/^\s*test(?:\.(?:fixme|only))?\s*\(/gm)].length;
-  expect_surface(cases > 0, `browser spec ${relative(demoRoot, path)} declares no Playwright journeys`);
-  return Object.freeze({ path: relative(demoRoot, path) as BrowserSurfaceInventory["path"], cases });
+const browserSurfaceInventory: readonly BrowserSurfaceInventory[] = Object.freeze(browserSpecPaths.map((path) => Object.freeze({
+  path: path as BrowserSurfaceInventory["path"],
+  cases: discoveredBrowserTests.filter((entry) => entry.path === path).length,
 })));
-for (const surface of browserSurfaceInventory) {
-  const manifest = BROWSER_SUITE_MANIFEST.find((entry) => entry.path === surface.path);
-  expect_surface(manifest !== undefined, `browser spec ${surface.path} has no Locus browser manifest binding`);
-  expect_surface(manifest.journeys.length === surface.cases, `browser spec ${surface.path} source and Locus journey counts differ`);
-  const source = await readFile(resolve(demoRoot, surface.path), "utf8");
-  for (const journey of manifest.journeys) {
-    expect_surface(source.includes(`test(\"${journey.title}\"`), `browser journey ${surface.path} :: ${journey.title} is not declared exactly once`);
-  }
-}
-const rasterSource = await readFile(resolve(demoRoot, BROWSER_RASTER_SUITE_MANIFEST.reportPath!), "utf8");
-for (const journey of BROWSER_RASTER_SUITE_MANIFEST.journeys) {
-  expect_surface(rasterSource.includes(`test(\"${journey.title}\"`), `browser raster journey ${journey.title} is not registered`);
-}
+expect_surface(browserSurfaceInventory.every((entry) => entry.cases > 0), "every browser spec must contribute real Playwright discovery evidence");
 expect_surface(TEST_SURFACE_CATALOG.some((entry) => entry.runner === "npm run test:browser" && entry.category === "Application / Demo"), "browser aggregate is missing its application/demo catalog owner");
 expect_surface(TEST_SURFACE_CATALOG.filter((entry) => entry.runner.startsWith("npm run test:browser")).every((entry) => !entry.appearsInHostedUi), "browser commands must remain outside the Hosted Tests UI");
 expect_surface(TEST_SURFACE_CATALOG.find((entry) => entry.id === "hson-demo2:test:amoebi-geometry")?.category === "Application / Demo", "Amoebi geometry must be owned by Application / Demo");

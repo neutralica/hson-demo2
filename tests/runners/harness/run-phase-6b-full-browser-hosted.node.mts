@@ -3,11 +3,12 @@ import WebSocket from "ws";
 import type { BrowserWebSocketConstructor } from "../../../src/app/demos/tests/hosted-client/browser-websocket-socket";
 import { make_remote_hosted_test_runtime } from "../../../src/app/demos/tests/panel/hosted-test-panel-runtime";
 import { hosted_test_report_cases } from "../../../src/shared/hosted-tests/hosted-test-report.types";
-import { BROWSER_JOURNEY_COUNT, BROWSER_RASTER_SUITE_MANIFEST } from "../../harness/runtimes/node/browser/browser-test-manifest";
+import { discover_playwright_tests } from "../../harness/runtimes/node/browser/playwright-test-discovery";
 import { LOCAL_PLAYWRIGHT_BROWSER_EXECUTOR } from "../../harness/runtimes/node/browser/playwright-browser-executor";
 import { start_hosted_test_server } from "../../harness/runtimes/node/server/hosted-test-server";
 
 const startedAt = performance.now();
+const executableBrowserTests = discover_playwright_tests();
 const server = await start_hosted_test_server({ port: 0 });
 const runtime = make_remote_hosted_test_runtime({
   url: server.url,
@@ -23,7 +24,7 @@ try {
     .filter((suite) => suite.executionShape === "browser-journeys")
     .map((suite) => suite.id));
   const browserIds = discovery.catalog.tests.filter((entry) => browserSuiteIds.has(entry.suiteId)).map((entry) => entry.id);
-  assert.equal(browserIds.length, BROWSER_JOURNEY_COUNT + BROWSER_RASTER_SUITE_MANIFEST.journeys.length);
+  assert.equal(browserIds.length, executableBrowserTests.length);
   const run = await runtime.start_selected(browserIds);
   await run.ready();
   const result = await run.actionResult;
@@ -40,8 +41,8 @@ try {
   assert.equal(hosted_test_report_cases(report).length, browserIds.length);
   assert.equal(hosted_test_report_cases(report).every((entry) => entry.status === "pass"), true);
   assert.equal(report.suiteRuns.every((suite) => suite.executorIds.includes(LOCAL_PLAYWRIGHT_BROWSER_EXECUTOR.id)), true);
-  assert.equal(report.suiteRuns.filter((suite) => suite.id === BROWSER_RASTER_SUITE_MANIFEST.id)[0]?.counts.passed,
-    BROWSER_RASTER_SUITE_MANIFEST.journeys.length);
+  const rasterCases = executableBrowserTests.filter((entry) => entry.title.startsWith("browser raster:")).length;
+  assert.equal(hosted_test_report_cases(report).filter((entry) => entry.title.startsWith("browser raster:")).length, rasterCases);
 
   const recovered = await runtime.recover_run(run.association.runId, run.association.attemptId);
   assert.equal(recovered.client.recovery.map.snap().run.status, "passed");
@@ -54,8 +55,8 @@ try {
 
   console.log(JSON.stringify({
     certificate: "phase6b-full-browser-hosted",
-    browserJourneys: BROWSER_JOURNEY_COUNT,
-    rasterCases: BROWSER_RASTER_SUITE_MANIFEST.journeys.length,
+    browserJourneys: executableBrowserTests.length,
+    rasterCases,
     failures: 0,
     reportRecovery: true,
     metrics,

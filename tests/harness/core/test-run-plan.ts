@@ -39,7 +39,8 @@ export function make_test_run_plan(options: MakeTestRunPlanOptions): TestRunPlan
     }
     if (!is_test_suite_id(id)) throw new Error(`Malformed Test RunPlan selection identity: ${id}`);
     const suite = suiteById.get(id);
-    if (suite === undefined || suite.executionShape === "cases" || suite.executionShape === "browser-journeys") {
+    if (suite === undefined || suite.executionShape === "browser-journeys"
+      || (suite.executionShape === "cases" && suite.provenance !== "hson-live")) {
       throw new SelectedTestResolutionError(id, options.executorId);
     }
     aggregateSuites.add(id);
@@ -73,7 +74,7 @@ export function make_test_run_plan(options: MakeTestRunPlanOptions): TestRunPlan
   });
   Object.freeze(suites);
   const selectionIds = Object.freeze(suites.flatMap((suite) => (
-    suite.executionShape !== "cases" && suite.executionShape !== "browser-journeys"
+    suite.provenance === "hson-live" || (suite.executionShape !== "cases" && suite.executionShape !== "browser-journeys")
       ? [suite.id]
       : suite.cases.map((testCase) => testCase.id)
   )));
