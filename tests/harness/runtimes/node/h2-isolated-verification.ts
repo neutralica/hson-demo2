@@ -397,7 +397,13 @@ async function prepare_dependencies(sourceLive: string, sourceDemo: string, snap
     const staging = join(preparedRoot, `${key}.staging-${randomUUID()}`);
     try {
       await mkdir(staging, { recursive: true });
-      await cp(join(sourceDemo, "node_modules"), join(staging, "node_modules"), { recursive: true, dereference: true, filter: (path) => basename(path) !== "hson-live" });
+      await cp(join(sourceDemo, "node_modules"), join(staging, "node_modules"), {
+        recursive: true,
+        dereference: true,
+        // Both are reconstructed below.  Copying .bin with dereference can
+        // follow a launcher into the deliberately excluded paired package.
+        filter: (path) => !["hson-live", ".bin"].includes(basename(path)),
+      });
       const copied = join(staging, "node_modules");
       const sourceBin = join(sourceDemo, "node_modules", ".bin");
       await rm(join(copied, ".bin"), { recursive: true, force: true });
@@ -425,25 +431,18 @@ async function prepare_dependencies(sourceLive: string, sourceDemo: string, snap
   // The prepared tree is a reusable template only.  Every verification gets
   // one writable copy.  The paired library uses that same run-owned tree so a
   // run does not spend its 1 GiB budget on two identical dependency graphs.
-  await cp(prepared, join(snapshotDemo, "node_modules"), { recursive: true, dereference: true });
-  // Opaque hson-live launchers execute the library's declared test runtime.
-  // Keep that small, explicit closure in the run-owned graph instead of
-  // resolving it through the developer checkout.
-  const liveLock = JSON.parse(await readFile(join(sourceLive, "package-lock.json"), "utf8")) as {
-    packages?: Readonly<Record<string, Readonly<{ dependencies?: Readonly<Record<string, string>> }>>>;
-  };
-  const livePackages = liveLock.packages ?? {};
-  const copy_live_dependency = async (name: string): Promise<void> => {
-    const lockPath = `node_modules/${name}`;
-    const dependency = livePackages[lockPath];
-    if (dependency === undefined) throw new Error(`H2_LIVE_DEPENDENCY_LOCK_MISSING: ${name}`);
-    const source = join(sourceLive, "node_modules", name);
-    const target = join(snapshotDemo, "node_modules", name);
-    await mkdir(dirname(target), { recursive: true });
-    await cp(source, target, { recursive: true, dereference: true });
-    for (const child of Object.keys(dependency.dependencies ?? {})) await copy_live_dependency(child);
-  };
-  await copy_live_dependency("ts-node");
+  // Bin links may target the paired hson-live package, which is intentionally
+  // absent from the reusable dependency template and linked into the run only
+  // after this copy.  Clone package contents first, then restore the bin links
+  // below without dereferencing them while their run-local targets are absent.
+  await cp(prepared, join(snapshotDemo, "node_modules"), {
+    recursive: true,
+    dereference: true,
+    filter: (path) => {
+      const preparedPath = relative(prepared, path);
+      return preparedPath !== ".bin" && !preparedPath.startsWith(`.bin${sep}`);
+    },
+  });
   // `cp(..., dereference)` is required for a self-contained tree, but it turns
   // .bin links into copied launcher files whose relative imports are wrong.
   // Restore those links from the prepared template; they point only within the
@@ -457,7 +456,28 @@ async function prepare_dependencies(sourceLive: string, sourceDemo: string, snap
     if (info.isSymbolicLink()) await symlink(await readlink(templateEntry), join(runBin, entry));
     else await copyFile(templateEntry, join(runBin, entry));
   }
-  await symlink(join("..", "hson-demo2", "node_modules"), join(snapshotLive, "node_modules"), "dir");
+  // The repositories intentionally use different dependency versions (most
+  // notably their Node type libraries).  Giving the library the demo graph can
+  // make an isolated build fail even when the ordinary library build passes.
+  const liveDependencies = join(snapshotLive, "node_modules");
+  await cp(join(sourceLive, "node_modules"), liveDependencies, {
+    recursive: true,
+    dereference: true,
+    filter: (path) => basename(path) !== ".bin",
+  });
+  const liveBin = join(liveDependencies, ".bin");
+  await mkdir(liveBin);
+  for (const entry of await readdir(join(sourceLive, "node_modules", ".bin"))) {
+    const sourceEntry = join(sourceLive, "node_modules", ".bin", entry);
+    const info = await lstat(sourceEntry);
+    if (info.isSymbolicLink()) await symlink(await readlink(sourceEntry), join(liveBin, entry));
+    else await copyFile(sourceEntry, join(liveBin, entry));
+  }
+  if ((await stat(join(runBin, "tsx")).catch(() => undefined))?.isFile() === true) {
+    await rm(join(liveBin, "tsx"), { force: true });
+    await copyFile(join(runBin, "tsx"), join(liveBin, "tsx"));
+    await chmod(join(liveBin, "tsx"), 0o755);
+  }
   await symlink(snapshotLive, join(snapshotDemo, "node_modules", "hson-live"), "dir");
   const resolved = await realpath(join(snapshotDemo, "node_modules", "hson-live"));
   if (!inside(await realpath(snapshotLive), resolved)) throw new Error("DEPENDENCY_RESOLUTION_ESCAPES_SNAPSHOT");

@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto";
 import { access, readFile, realpath } from "node:fs/promises";
 import { dirname, join, parse } from "node:path";
 import { StringDecoder } from "node:string_decoder";
@@ -35,7 +34,6 @@ type ExternalLibraryLauncherInvocation = Readonly<{
   command: string;
   args: readonly string[];
   env: Readonly<Record<string, string>>;
-  fallback?: ExternalLibraryLauncherInvocation;
 }>;
 
 export type ExternalLibraryLauncherAvailability = Readonly<{
@@ -170,28 +168,12 @@ const SEMANTIC_SUBJECT_OVERRIDES: Readonly<Record<string, TestSubject>> = Object
   "core.canonical-hson-equality": "transform",
 });
 
-const TSX_PARITY_MANIFEST_FINGERPRINT =
-  "d27efe6f38ae90e0f9c37a530114b87c2d5ab3fa1856baa214ea02e31963039a";
-
-function launcher_manifest_fingerprint(): string {
-  return createHash("sha256").update(hson_live_test_launchers.map((launcher) => [
-    launcher.id,
-    launcher.repositoryModule,
-    launcher.packageScript,
-    launcher.runtime,
-  ].join("|")).join("\n")).digest("hex");
-}
-
-function tsx_invocation(
-  launcher: HsonLiveTestLauncher,
-  fallback?: ExternalLibraryLauncherInvocation,
-): ExternalLibraryLauncherInvocation {
+function tsx_invocation(launcher: HsonLiveTestLauncher): ExternalLibraryLauncherInvocation {
   return Object.freeze({
     kind: "direct",
     command: process.execPath,
     args: Object.freeze(["--import", NODE_TSX_IMPORT_PATH, launcher.repositoryModule]),
     env: Object.freeze({ TS_NODE_TRANSPILE_ONLY: "true" }),
-    ...(fallback === undefined ? {} : { fallback }),
   });
 }
 
@@ -247,14 +229,21 @@ export function classify_external_library_launcher_invocation(
   launcher: HsonLiveTestLauncher,
   packageCommand: string,
 ): ExternalLibraryLauncherInvocation {
-  const expectedTsxShape = `node --import=tsx ${launcher.repositoryModule}`;
-  const expectedTsxWithBuildShape = `npm run build && ${expectedTsxShape}`;
-  if (packageCommand === expectedTsxShape || packageCommand === expectedTsxWithBuildShape) {
+  const segments = packageCommand.split("&&").map((segment) => segment.trim()).filter(Boolean);
+  const command = segments.at(-1)?.split(/\s+/) ?? [];
+  const safeBuildPrelude = segments.slice(0, -1).every((segment) => /^npm\s+run\s+build$/.test(segment));
+  const importsTsx = (command.length === 3 && command[0] === "node" && command[1] === "--import=tsx" && command[2] === launcher.repositoryModule)
+    || (command.length === 4 && command[0] === "node" && command[1] === "--import" && command[2] === "tsx" && command[3] === launcher.repositoryModule);
+  if (safeBuildPrelude && importsTsx) {
     return tsx_invocation(launcher);
   }
-  const expectedLegacyDirectShape =
-    `TS_NODE_TRANSPILE_ONLY=true node --loader ts-node/esm ${launcher.repositoryModule}`;
-  return packageCommand === expectedLegacyDirectShape
+  const legacy = command.length === 5
+    && command[0] === "TS_NODE_TRANSPILE_ONLY=true"
+    && command[1] === "node"
+    && command[2] === "--loader"
+    && command[3] === "ts-node/esm"
+    && command[4] === launcher.repositoryModule;
+  return safeBuildPrelude && legacy
     ? Object.freeze({
       kind: "direct",
       command: process.execPath,
@@ -335,21 +324,22 @@ export async function resolve_external_library_launchers(
   const targets: ExternalLibraryLauncherTarget[] = [];
   const unavailable: { launcherId: string; reason: string }[] = [];
   const invocations: Record<string, ExternalLibraryLauncherInvocation> = {};
-  const tsxParityVerified = launcher_manifest_fingerprint() === TSX_PARITY_MANIFEST_FINGERPRINT;
   for (const [order, launcher] of hson_live_test_launchers.entries()) {
     const moduleExists = await exists(join(repositoryRoot, launcher.repositoryModule));
     const scriptExists = typeof scripts[launcher.packageScript] === "string";
     if (moduleExists && scriptExists) {
-      const selectedTarget = target(launcher, order);
-      targets.push(selectedTarget);
       const packageCommand = scripts[launcher.packageScript] as string;
       const verifiedInvocation = classify_external_library_launcher_invocation(
         launcher,
         packageCommand,
       );
-      invocations[selectedTarget.id] = tsxParityVerified && verifiedInvocation.kind === "direct"
-        ? tsx_invocation(launcher, verifiedInvocation)
-        : verifiedInvocation;
+      if (verifiedInvocation.kind === "direct") {
+        const selectedTarget = target(launcher, order);
+        targets.push(selectedTarget);
+        invocations[selectedTarget.id] = verifiedInvocation;
+      } else {
+        unavailable.push({ launcherId: launcher.id, reason: "package script is not a mechanically verified direct launcher" });
+      }
     }
     else unavailable.push({
       launcherId: launcher.id,
@@ -612,9 +602,7 @@ async function run_external_library_launcher_with_state(
     });
   } else {
     resolvedInvocation = (
-      options.forceVerifiedDirect
-        ? configuredInvocation?.fallback ?? configuredInvocation
-        : configuredInvocation
+      configuredInvocation
     ) ?? Object.freeze({
       kind: "package-script" as const,
       command: "npm",

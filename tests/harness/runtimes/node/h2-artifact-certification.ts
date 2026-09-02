@@ -124,6 +124,7 @@ async function allowed_typescript_outputs(root: string, artifactRoot: string): P
     const output = join(artifactRoot, path.slice("src/".length, -".ts".length));
     for (const suffix of [".js", ".js.map", ".d.ts", ".d.ts.map"]) allowed.add(`${output}${suffix}`);
   }
+  for (const target of await package_export_targets(root)) allowed.add(target);
   return allowed;
 }
 
@@ -238,13 +239,13 @@ export async function verify_h2_artifact_manifest(root: string, expected: readon
 }
 
 async function package_export_targets(root: string): Promise<readonly string[]> {
-  const pkg = JSON.parse(await readFile(join(root, "package.json"), "utf8")) as { main?: unknown; types?: unknown; exports?: unknown };
+  const pkg = JSON.parse(await readFile(join(root, "package.json"), "utf8")) as { main?: unknown; types?: unknown; exports?: unknown; bin?: unknown };
   const targets = new Set<string>();
   const visit = (value: unknown): void => {
     if (typeof value === "string" && value.startsWith("./dist/")) targets.add(value.slice(2));
     else if (typeof value === "object" && value !== null) for (const nested of Object.values(value)) visit(nested);
   };
-  visit(pkg.main); visit(pkg.types); visit(pkg.exports);
+  visit(pkg.main); visit(pkg.types); visit(pkg.exports); visit(pkg.bin);
   if (targets.size === 0) throw new Error("H2C_PACKAGE_EXPORT_TARGETS_MISSING");
   return Object.freeze([...targets].sort());
 }

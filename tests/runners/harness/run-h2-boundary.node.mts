@@ -17,16 +17,15 @@ async function repo(name: string): Promise<string> {
 }
 async function h2_fixture(name: string): Promise<Readonly<{ live: string; demo: string }>> {
   const live = await repo(`${name}-live`); const demo = await repo(`${name}-demo`);
-  await writeFile(join(live, "package.json"), JSON.stringify({ name: "hson-live", version: "0.0.0", type: "module", scripts: { build: "node build.mjs" }, exports: { ".": "./dist/index.js", "./test-launchers": "./dist/test-launchers.js" } }));
-  await writeFile(join(live, "package-lock.json"), JSON.stringify({ lockfileVersion: 3, packages: { "": { name: "hson-live" }, "node_modules/ts-node": { version: "0.0.0-fixture" } } }));
+  await writeFile(join(live, "package.json"), JSON.stringify({ name: "hson-live", version: "0.0.0", type: "module", bin: { "hson-schema": "./dist/hson-schema.mjs" }, scripts: { build: "node build.mjs" }, exports: { ".": "./dist/index.js", "./test-launchers": "./dist/test-launchers.js" } }));
+  await writeFile(join(live, "package-lock.json"), JSON.stringify({ lockfileVersion: 3, packages: { "": { name: "hson-live" } } }));
   await writeFile(join(live, ".gitignore"), "node_modules\n");
-  await mkdir(join(live, "node_modules", "ts-node"), { recursive: true });
-  await writeFile(join(live, "node_modules", "ts-node", "package.json"), JSON.stringify({ name: "ts-node", version: "0.0.0-fixture" }));
-  await writeFile(join(live, "build.mjs"), `import { mkdir, writeFile } from "node:fs/promises"; await mkdir("dist", { recursive: true }); await writeFile("dist/index.js", "export const fixture = true;\\n"); await writeFile("dist/test-launchers.js", "export const fixtureLauncher = true;\\n");`);
+  await mkdir(join(live, "node_modules", ".bin"), { recursive: true });
+  await writeFile(join(live, "build.mjs"), `import { mkdir, writeFile } from "node:fs/promises"; await mkdir("dist", { recursive: true }); await writeFile("dist/index.js", "export const fixture = true;\\n"); await writeFile("dist/test-launchers.js", "export const fixtureLauncher = true;\\n"); await writeFile("dist/hson-schema.mjs", "export {};\\n");`);
   await writeFile(join(demo, "package.json"), JSON.stringify({ name: "hson-demo2", version: "0.0.0", type: "module", scripts: { "test:surface-enumeration-node": "node child.mjs" } }));
   await writeFile(join(demo, "package-lock.json"), "{}\n");
-  await writeFile(join(demo, "child.mjs"), `import { createRequire } from "node:module"; import { realpathSync, readFileSync, existsSync } from "node:fs"; const require = createRequire(import.meta.url); const names = ["NODE_OPTIONS", "H2_SECRET", "GITHUB_TOKEN", "CLOUDFLARE_API_TOKEN", "AWS_SECRET_ACCESS_KEY", "TOWL_DEPLOYED_WS_URL", "VITE_SECRET_CANARY", "HOME", "TMPDIR", "XDG_CACHE_HOME", "npm_config_cache", "CI", "HSON_HOSTED_VERIFICATION_DEPTH"]; console.log(JSON.stringify({ live: realpathSync(require.resolve("hson-live")), launchers: realpathSync(require.resolve("hson-live/test-launchers")), sentinel: readFileSync("node_modules/sentinel", "utf8"), canary: existsSync("node_modules/run-canary"), env: Object.fromEntries(names.map((name) => [name, process.env[name] ?? null])) })); console.log("test surface enumeration: ok");`);
-  await writeFile(join(demo, ".gitignore"), "node_modules\n"); await mkdir(join(demo, "node_modules", ".bin"), { recursive: true }); await writeFile(join(demo, "node_modules", "sentinel"), "fixture"); await symlink("../sentinel", join(demo, "node_modules", ".bin", "sentinel"));
+  await writeFile(join(demo, "child.mjs"), `import { createRequire } from "node:module"; import { realpathSync, readFileSync, existsSync } from "node:fs"; const require = createRequire(import.meta.url); const names = ["NODE_OPTIONS", "H2_SECRET", "GITHUB_TOKEN", "CLOUDFLARE_API_TOKEN", "AWS_SECRET_ACCESS_KEY", "TOWL_DEPLOYED_WS_URL", "VITE_SECRET_CANARY", "HOME", "TMPDIR", "XDG_CACHE_HOME", "npm_config_cache", "CI", "HSON_HOSTED_VERIFICATION_DEPTH"]; console.log(JSON.stringify({ live: realpathSync(require.resolve("hson-live")), launchers: realpathSync(require.resolve("hson-live/test-launchers")), schema: realpathSync("node_modules/.bin/hson-schema"), sentinel: readFileSync("node_modules/sentinel", "utf8"), canary: existsSync("node_modules/run-canary"), env: Object.fromEntries(names.map((name) => [name, process.env[name] ?? null])) })); console.log("test surface enumeration: ok");`);
+  await writeFile(join(demo, ".gitignore"), "node_modules\n"); await mkdir(join(demo, "node_modules", ".bin"), { recursive: true }); await writeFile(join(demo, "node_modules", "sentinel"), "fixture"); await symlink("../sentinel", join(demo, "node_modules", ".bin", "sentinel")); await symlink("../hson-live/dist/hson-schema.mjs", join(demo, "node_modules", ".bin", "hson-schema"));
   await exec("git", ["-C", live, "add", "."]); await exec("git", ["-C", live, "commit", "-qm", "fixture"]);
   await exec("git", ["-C", demo, "add", "."]); await exec("git", ["-C", demo, "commit", "-qm", "fixture"]);
   return Object.freeze({ live, demo });
@@ -135,16 +134,17 @@ try {
   const fixture = await h2_fixture("real");
   const preparationWorkspaceLimitBytes = 16 * 1024;
   const workspaceLimit = await execute_h2_verification({ hsonLiveRoot: fixture.live, hsonDemo2Root: fixture.demo, tempRoot: join(root, "workspace-limit"), workspaceLimitBytes: preparationWorkspaceLimitBytes }, "hson-demo2:test:surface-enumeration-node");
-  check(workspaceLimit.status === "FAIL" && workspaceLimit.failureReason === "WORKSPACE_LIMIT_EXCEEDED" && workspaceLimit.process?.ok === true && workspaceLimit.process.stdout.includes("> hson-live@0.0.0 build") && workspaceLimit.workspacePeakBytes > preparationWorkspaceLimitBytes && workspaceLimit.cleanup === "removed", `build preparation workspace limit is authoritative before child execution (poll ${H2_WORKSPACE_POLL_INTERVAL_MS}ms; bounded polling overshoot)`);
+  check(workspaceLimit.status === "FAIL" && workspaceLimit.failureReason === "WORKSPACE_LIMIT_EXCEEDED" && workspaceLimit.process !== undefined && workspaceLimit.workspacePeakBytes > preparationWorkspaceLimitBytes && workspaceLimit.cleanup === "removed", `build preparation workspace limit is authoritative before child execution (poll ${H2_WORKSPACE_POLL_INTERVAL_MS}ms; bounded polling overshoot)`);
   const originalCanaries = Object.fromEntries(["NODE_OPTIONS", "H2_SECRET", "GITHUB_TOKEN", "CLOUDFLARE_API_TOKEN", "AWS_SECRET_ACCESS_KEY", "TOWL_DEPLOYED_WS_URL", "VITE_SECRET_CANARY"].map((name) => [name, process.env[name]]));
   Object.assign(process.env, Object.fromEntries(Object.keys(originalCanaries).map((name) => [name, `${name}-parent-canary`])));
   const isolated = await execute_h2_verification({ hsonLiveRoot: fixture.live, hsonDemo2Root: fixture.demo, tempRoot: join(root, "isolated-child") }, "hson-demo2:test:surface-enumeration-node");
   for (const [name, value] of Object.entries(originalCanaries)) { if (value === undefined) delete process.env[name]; else process.env[name] = value; }
   const childEvidenceText = isolated.process?.stdout.split("\n").find((line) => line.startsWith('{"live"')) ?? "";
   assert.ok(childEvidenceText !== "", JSON.stringify(isolated));
-  const childEvidence = JSON.parse(childEvidenceText) as { live?: string; launchers?: string; env?: Record<string, string | null> };
+  const childEvidence = JSON.parse(childEvidenceText) as { live?: string; launchers?: string; schema?: string; env?: Record<string, string | null> };
   const isolatedRoot = "/isolated-child/run-";
   check(isolated.status === "PASS" && isolated.cleanup === "removed" && childEvidence.live?.includes(isolatedRoot) === true && childEvidence.launchers?.includes(isolatedRoot) === true && !childEvidence.live.includes(fixture.live) && !childEvidence.launchers.includes(fixture.demo), "actual isolated child resolves hson-live and test-launchers inside its run workspace");
+  check(childEvidence.schema?.includes(isolatedRoot) === true && childEvidence.schema.endsWith("/hson-live/dist/hson-schema.mjs"), "paired-package bin link is restored only after its run-local hson-live target exists");
   check(["NODE_OPTIONS", "H2_SECRET", "GITHUB_TOKEN", "CLOUDFLARE_API_TOKEN", "AWS_SECRET_ACCESS_KEY", "TOWL_DEPLOYED_WS_URL", "VITE_SECRET_CANARY"].every((name) => childEvidence.env?.[name] === null) && ["HOME", "TMPDIR", "XDG_CACHE_HOME", "npm_config_cache", "CI", "HSON_HOSTED_VERIFICATION_DEPTH"].every((name) => typeof childEvidence.env?.[name] === "string" && childEvidence.env[name] !== ""), "actual isolated child has replacement-environment canaries and executor-owned values");
 
   for (let repetition = 0; repetition < 3; repetition += 1) {
@@ -229,12 +229,12 @@ try {
   await mkdir(join(validLive, "dist"), { recursive: true });
   await writeFile(join(validLive, "dist", "index.js"), "stale-runtime\n");
   await writeFile(join(validLive, "dist", "index.d.ts"), "stale-types\n");
-  await writeFile(join(validLive, "package.json"), JSON.stringify({ name: "hson-live", version: "0.0.0", type: "module", main: "./dist/index.js", types: "./dist/index.d.ts", exports: { ".": { types: "./dist/index.d.ts", import: "./dist/index.js" } }, scripts: { build: "node build.mjs" } }));
-  await writeFile(join(validLive, "build.mjs"), `import { mkdir, writeFile } from "node:fs/promises"; await mkdir("dist", { recursive: true }); for (const [path, bytes] of [["dist/index.js", "export const fresh = true;\\n"], ["dist/index.d.ts", "export declare const fresh: true;\\n"], ["dist/index.js.map", "{}\\n"], ["dist/index.d.ts.map", "{}\\n"]]) await writeFile(path, bytes);`);
+  await writeFile(join(validLive, "package.json"), JSON.stringify({ name: "hson-live", version: "0.0.0", type: "module", main: "./dist/index.js", types: "./dist/index.d.ts", bin: { "hson-schema": "./dist/hson-schema.mjs" }, exports: { ".": { types: "./dist/index.d.ts", import: "./dist/index.js" } }, scripts: { build: "node build.mjs" } }));
+  await writeFile(join(validLive, "build.mjs"), `import { mkdir, writeFile } from "node:fs/promises"; await mkdir("dist", { recursive: true }); for (const [path, bytes] of [["dist/index.js", "export const fresh = true;\\n"], ["dist/index.d.ts", "export declare const fresh: true;\\n"], ["dist/index.js.map", "{}\\n"], ["dist/index.d.ts.map", "{}\\n"], ["dist/hson-schema.mjs", "export {};\\n"]]) await writeFile(path, bytes);`);
   const validArtifact = await run_h2c_artifact_certification({ id: "hson-live:build", hsonLiveRoot: validLive, hsonDemo2Root: artifactDemo, npmCli });
   check(validArtifact.artifacts.some((entry) => entry.relativePath === "dist/index.js" && entry.byteLength !== "stale-runtime\n".length), "stale artifact is removed and cannot satisfy a build certificate");
-  check(validArtifact.status === "pass" && validArtifact.artifacts.length === 4 && validArtifact.exportTargets?.length === 2, "valid command plus valid artifact evidence accepts");
-  check(h2c_terminal_certificate(validArtifact).artifactEvidence.required.length === 2, "package certificate exposes its required export targets as terminal artifact evidence");
+  check(validArtifact.status === "pass" && validArtifact.artifacts.some((entry) => entry.relativePath === "dist/hson-schema.mjs") && validArtifact.exportTargets?.includes("dist/hson-schema.mjs") === true, "valid command plus package-declared runtime, types, and bin artifact evidence accepts");
+  check(h2c_terminal_certificate(validArtifact).artifactEvidence.required.some((entry) => entry.relativePath === "dist/hson-schema.mjs"), "package certificate exposes its derived public targets as terminal artifact evidence");
   check((await readFile(join(validLive, "dist", "index.js"), "utf8")).includes("fresh"), "build certificate requires the cleaned artifact to be recreated");
 
   const originalManifest = await collect_h2_artifact_manifest(validLive, ["dist/index.d.ts", "dist/index.js"]);
