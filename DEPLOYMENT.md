@@ -73,6 +73,13 @@ npm run pack
 npm run dev
 ```
 
+For ordinary local packaging, `npm run pack` and `npm run certify` need no
+runtime-origin environment prefix. Both default `VITE_LIVEHOST_WS_URL` to the
+established local production-simulation origin `ws://127.0.0.1:8787`. Supplying
+`VITE_LIVEHOST_WS_URL` explicitly overrides that default and validates the
+supplied origin before capture. This local default does not change the separate
+public deployment requirement for an appropriate public `wss://` origin.
+
 `pack` writes the generated `.env.frozen-local.local` pointer. Vite reads that
 local-only file and serves the matching evidence directory from the packed
 static artifact. No manual copy or environment export is required.

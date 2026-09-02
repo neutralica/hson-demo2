@@ -14,6 +14,30 @@ export const PACK_STAGES = Object.freeze([
 
 export const CERTIFICATION_RECEIPT = "certification-receipt.json";
 export const CERTIFICATION_AUTHORITY = "npm run capture:deployment-tests:certification";
+export const LOCAL_PACK_LIVEHOST_WS_URL = "ws://127.0.0.1:8787";
+
+function is_local_livehost_websocket_origin(url) {
+  return url.hostname === "localhost" || url.hostname === "127.0.0.1" || url.hostname === "[::1]";
+}
+
+export function resolve_pack_environment(environment = process.env) {
+  const supplied = environment.VITE_LIVEHOST_WS_URL?.trim();
+  const configured = supplied === undefined || supplied === "" ? LOCAL_PACK_LIVEHOST_WS_URL : supplied;
+  let endpoint;
+  try { endpoint = new URL(configured); }
+  catch { throw new Error("VITE_LIVEHOST_WS_URL must be a valid WebSocket URL."); }
+  if (endpoint.protocol !== "ws:" && endpoint.protocol !== "wss:") {
+    throw new Error("VITE_LIVEHOST_WS_URL must use ws:// or wss://.");
+  }
+  if (endpoint.hostname === "") throw new Error("VITE_LIVEHOST_WS_URL must include a host.");
+  if (endpoint.pathname !== "/") {
+    throw new Error("VITE_LIVEHOST_WS_URL must identify an origin and must not include an application path.");
+  }
+  if (endpoint.protocol !== "wss:" && !is_local_livehost_websocket_origin(endpoint)) {
+    throw new Error("VITE_LIVEHOST_WS_URL must use wss:// except for explicit localhost production simulation.");
+  }
+  return Object.freeze({ ...environment, VITE_LIVEHOST_WS_URL: configured });
+}
 
 function is_deployment_root(path) {
   if (!existsSync(join(path, "package.json")) || !existsSync(join(path, "scripts", "capture-deployment-tests.mts"))) return false;
@@ -145,9 +169,10 @@ export function combine_certification_capture({ deploymentRoot, normalCandidate,
 
 export function execute_pack({ deploymentRoot, applicationRoot, run = run_command, environment = process.env, certificationCandidate, combineCapture = combine_certification_capture }) {
   const locations = canonical_package_locations(deploymentRoot);
+  const packEnvironment = resolve_pack_environment(environment);
   const verifiedEnvironment = applicationRoot === undefined
-    ? environment
-    : { ...environment, HSON_INVOKING_APPLICATION_ROOT: resolve(applicationRoot) };
+    ? packEnvironment
+    : { ...packEnvironment, HSON_INVOKING_APPLICATION_ROOT: resolve(applicationRoot) };
   let stage = PACK_STAGES[0];
   let captureCandidate;
   let evidencePackage;
@@ -236,7 +261,7 @@ export function write_certification_receipt(result, completedAt = new Date().toI
 
 export function execute_certification(options) {
   const run = options.run ?? run_command;
-  const environment = options.environment ?? process.env;
+  const environment = resolve_pack_environment(options.environment ?? process.env);
   const locations = canonical_package_locations(options.deploymentRoot);
   const verifiedEnvironment = options.applicationRoot === undefined
     ? environment
@@ -253,7 +278,7 @@ export function execute_certification(options) {
     console.error(JSON.stringify({ pass: false, stage, outputDirectory: locations.explorerArtifact, evidencePackage: null, failureLocation: locations.workRoot }, null, 2));
     throw cause;
   }
-  const packed = execute_pack({ ...options, certificationCandidate });
+  const packed = execute_pack({ ...options, environment, certificationCandidate });
   const receipt = (options.writeReceipt ?? write_certification_receipt)(packed);
   const result = Object.freeze({ ...packed, certified: true, certificationCaptureCandidate: certificationCandidate, certificationReceipt: receipt });
   console.log(JSON.stringify(result, null, 2));
