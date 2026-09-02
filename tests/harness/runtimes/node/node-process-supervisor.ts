@@ -143,7 +143,7 @@ export function create_node_process_supervisor(configuration: Readonly<{
   stderrLimitBytes: number;
   truncationMarker: string;
   terminationGraceMs: number;
-  /** Existing launchers inherit; H2 uses an allow-list environment. */
+  /** Existing launchers inherit; isolated commands use an allow-list environment. */
   environmentMode?: "inherit" | "replace";
 }>): NodeProcessSupervisor {
   const activeChildren = new Map<ChildProcess, () => void>();

@@ -106,11 +106,15 @@ case. Setup and teardown restore every installed global and patched prototype,
 including failure paths. No separate canvas execution context or public canvas
 capability is needed.
 
-Opaque hson-live launchers and independent Node command certifications use one
-general supervised-process service with bounded concurrency/output, process-
-group termination, cancellation, and normalized terminal evidence. Command
-entrypoints that repeat already-hosted cases/checks are descriptive semantic
-aliases and are not executed twice.
+External hson-live launchers and isolated Node command tests use neutral process
+supervision with bounded concurrency/output, process-group termination,
+cancellation, and normalized terminal evidence. Isolated command tests add an
+owned copied workspace, source-change detection during copying, byte limits,
+stale-workspace cleanup, and cleanup-before-settlement. Build/static tests
+validate required runtime, declaration, and bin files plus the reachable Vite
+asset graph. These are local execution and artifact correctness properties; no
+certificate, persisted source digest, cross-run dependency cache, or artifact
+hash receipt is produced.
 
 Some original factories keep mutable closure state. The hosted Node boundary
 therefore reconstructs original suites for each selected request, then verifies

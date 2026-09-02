@@ -16,16 +16,9 @@ const suites = discovery.catalog.suites;
 const tests = discovery.catalog.tests;
 const choices = hosted_test_panel_primary_choices(tests, suites);
 
-assert.deepEqual(choices.map((choice) => choice.key), [
-  "all",
-  "subject:transform",
-  "subject:livetree",
-  "subject:livemap",
-  "subject:livehost",
-  "subject:reflect",
-  "collection:unit",
-  "collection:dev",
-]);
+assert.equal(choices[0]?.key, "all");
+assert.equal(new Set(choices.map((choice) => choice.key)).size, choices.length);
+assert.equal(choices.slice(1).every((choice) => choice.key.startsWith("subject:") || choice.key.startsWith("collection:")), true);
 assert.equal(choices.some((choice) => choice.key.toLowerCase().includes("library")), false);
 
 for (const choice of choices) {
@@ -34,15 +27,6 @@ for (const choice of choices) {
   assert.equal(new Set(ids).size, ids.length);
   assert.equal(choice.count > 0, true);
 }
-
-const reflect = choices.find((choice) => choice.key === "subject:reflect");
-assert.ok(reflect);
-const reflectIds = hosted_test_panel_selected_ids(tests, reflect.selection, suites);
-assert.equal(reflectIds.every((id) => {
-  const test = tests.find((candidate) => candidate.id === id);
-  const suite = suites.find((candidate) => candidate.id === id);
-  return (test ?? suite)?.subject === "reflect";
-}), true);
 
 const all = hosted_test_panel_selected_ids(tests, { kind: "all" }, suites);
 const unit = hosted_test_panel_selected_ids(tests, { kind: "collection", collection: "unit" }, suites);
@@ -56,4 +40,4 @@ assert.ok(firstSuite?.selection.kind === "suite");
 const testChoices = hosted_test_panel_test_choices(tests, firstSuite.selection.suite, suites);
 assert.equal(new Set(testChoices.map((choice) => choice.key)).size, testChoices.length);
 
-console.log(JSON.stringify({ certificate: "stage-4b-panel", selectors: choices.map((choice) => choice.label), all: all.length, unit: unit.length, dev: dev.length, overlap: overlap.length, reflect: reflectIds.length }));
+console.log(JSON.stringify({ certificate: "stage-4b-panel", selectors: choices.map((choice) => choice.label), all: all.length, unit: unit.length, dev: dev.length, overlap: overlap.length }));

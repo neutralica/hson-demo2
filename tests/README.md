@@ -16,6 +16,8 @@ The canonical harness entry is [`harness/index.ts`](./harness/index.ts). It inte
 | Case execution, timeouts, cleanup, and events | [`harness/core/test-runner.ts`](./harness/core/test-runner.ts) |
 | Event normalization | [`harness/core/test-run-events.ts`](./harness/core/test-run-events.ts) |
 | Reports and report protocol | [`harness/reporting/`](./harness/reporting) |
+| Isolated command execution and workspace safety | [`harness/runtimes/node/isolated-command-runner.ts`](./harness/runtimes/node/isolated-command-runner.ts) |
+| Build/static output validation | [`harness/runtimes/node/build-static-artifact-validator.ts`](./harness/runtimes/node/build-static-artifact-validator.ts) |
 | Hosted application protocol and suite registration | [`harness/hosted/`](./harness/hosted) |
 | Node, DOM, Cloudflare, and socket implementations | [`harness/runtimes/`](./harness/runtimes) |
 
@@ -66,6 +68,28 @@ Run the environment-specific integrations:
 npm run test:browser
 npm run test:hosted-cloudflare
 ```
+
+Run the permanent Node infrastructure suites directly:
+
+```sh
+npm run test:direct-selection-discovery
+npm run test:reporter-lifecycle
+npm run test:node-process-supervisor
+npm run test:external-command-scheduler
+npm run test:isolated-command-runner
+npm run test:build-static-artifacts
+npm run test:production-dependency-boundary
+npm run test:server-lifecycle
+npm run test:playwright-adapter
+npm run test:playwright-cancellation
+npm run test:mixed-direct-report
+```
+
+These suites are intentionally Node-only because they exercise operating-system
+processes, isolated filesystem workspaces, build trees, loopback servers, or a
+real Chromium child. They are semantic owners of those runtime guarantees; they
+do not mint certificates, establish expected corpus totals, or participate in
+browser/Worker discovery.
 
 The file-by-file old-to-new record is in [`docs/migration-inventory.md`](./docs/migration-inventory.md). Native suite descriptors, hson-live suite-owned metadata, and Playwright discovery own executable identity. Reports count actual emitted case terminals; package scripts are invocation conveniences rather than inventory authority.
 

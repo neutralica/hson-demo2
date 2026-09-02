@@ -3,14 +3,6 @@ import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { create_node_process_supervisor } from "../../harness/runtimes/node/node-process-supervisor";
-import { H2_VERIFICATION_IDS, resolve_h2_verification } from "../../harness/runtimes/node/h2-isolated-verification";
-
-assert.deepEqual(
-  H2_VERIFICATION_IDS.map((id) => resolve_h2_verification(id).id),
-  H2_VERIFICATION_IDS,
-  "every registered H2 verification identity resolves to its fixed descriptor",
-);
-assert.throws(() => resolve_h2_verification("forged-command"), /UNKNOWN_H2_VERIFICATION_ID/);
 
 const supervisor = create_node_process_supervisor({
   stdoutLimitBytes: 256,
@@ -46,8 +38,8 @@ const isolatedSupervisor = create_node_process_supervisor({
   environmentMode: "replace",
 });
 const replacedEnvironment = await isolatedSupervisor.start({
-  ...invocation("process.stdout.write([process.env.NODE_OPTIONS ?? 'absent', process.env.H2_SECRET ?? 'absent', process.env.H2_ALLOWED ?? 'absent'].join('|'))"),
-  environment: Object.freeze({ PATH: process.env.PATH ?? "/usr/bin:/bin", H2_ALLOWED: "present" }),
+  ...invocation("process.stdout.write([process.env.NODE_OPTIONS ?? 'absent', process.env.PRIVATE_VALUE ?? 'absent', process.env.ALLOWED_VALUE ?? 'absent'].join('|'))"),
+  environment: Object.freeze({ PATH: process.env.PATH ?? "/usr/bin:/bin", ALLOWED_VALUE: "present" }),
 }).result;
 assert.equal(replacedEnvironment.stdout, "absent|absent|present");
 
@@ -219,7 +211,7 @@ assert.equal(disposed.ok, false);
 assert.equal(supervisor.metrics().activeChildren, 0);
 
 console.log(JSON.stringify({
-  certificate: "node-process-supervisor",
+  suite: "node-process-supervisor",
   outputBounded: bounded.stdoutTruncated,
   timeout: timedOut.timedOut,
   cooperativeCancellation: cooperativelyCancelled.cancelled && !cooperativelyCancelled.forceKilled,
