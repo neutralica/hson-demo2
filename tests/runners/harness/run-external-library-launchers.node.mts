@@ -170,6 +170,29 @@ assert.equal(
   "package-script",
   "unsupported script shapes retain package-script semantics",
 );
+const directShapeLauncher = hson_live_test_launchers[0]!;
+assert.equal(
+  classify_external_library_launcher_invocation(
+    directShapeLauncher,
+    `node --import=tsx ${directShapeLauncher.repositoryModule}`,
+  ).kind,
+  "direct",
+  "current node --import=tsx launcher scripts retain direct execution",
+);
+const analyzerLauncher = hson_live_test_launchers.find((launcher) => launcher.id === analyzerLauncherId)!;
+assert.equal(
+  classify_external_library_launcher_invocation(
+    analyzerLauncher,
+    `npm run build && node --import=tsx ${analyzerLauncher.repositoryModule}`,
+  ).kind,
+  "direct",
+  "the analyzer's validated build prelude is omitted during direct hosted execution",
+);
+assert.equal(
+  availability.targets.every((target) => availability.invocations?.[target.id]?.kind === "direct"),
+  true,
+  "the current verified manifest has no package-script fallback that can mutate hson-live during canonical execution",
+);
 assert.deepEqual(
   [...new Set(availability.targets.map((target) => target.runtime))].sort(),
   [...new Set(hson_live_test_launchers.map((launcher) => launcher.runtime))].sort(),

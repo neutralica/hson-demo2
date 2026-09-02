@@ -171,7 +171,7 @@ const SEMANTIC_SUBJECT_OVERRIDES: Readonly<Record<string, TestSubject>> = Object
 });
 
 const TSX_PARITY_MANIFEST_FINGERPRINT =
-  "f3ed6b6a64676c54b8b0f39a8829d5b2040ebdfe9c5d4b1d8f65aa492693b164";
+  "d27efe6f38ae90e0f9c37a530114b87c2d5ab3fa1856baa214ea02e31963039a";
 
 function launcher_manifest_fingerprint(): string {
   return createHash("sha256").update(hson_live_test_launchers.map((launcher) => [
@@ -247,9 +247,14 @@ export function classify_external_library_launcher_invocation(
   launcher: HsonLiveTestLauncher,
   packageCommand: string,
 ): ExternalLibraryLauncherInvocation {
-  const expectedDirectShape =
+  const expectedTsxShape = `node --import=tsx ${launcher.repositoryModule}`;
+  const expectedTsxWithBuildShape = `npm run build && ${expectedTsxShape}`;
+  if (packageCommand === expectedTsxShape || packageCommand === expectedTsxWithBuildShape) {
+    return tsx_invocation(launcher);
+  }
+  const expectedLegacyDirectShape =
     `TS_NODE_TRANSPILE_ONLY=true node --loader ts-node/esm ${launcher.repositoryModule}`;
-  return packageCommand === expectedDirectShape
+  return packageCommand === expectedLegacyDirectShape
     ? Object.freeze({
       kind: "direct",
       command: process.execPath,
