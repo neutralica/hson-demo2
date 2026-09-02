@@ -1,5 +1,5 @@
 import { createReadStream, existsSync, statSync } from "node:fs";
-import { resolve, sep } from "node:path";
+import { extname, resolve, sep } from "node:path";
 import { defineConfig, loadEnv } from "vite";
 
 function process_exists(pid) {
@@ -42,7 +42,7 @@ function local_frozen_evidence_plugin(environment) {
     apply: "serve",
     configureServer(server) {
       if (publicRoot === undefined || evidenceDirectory === undefined) return;
-      if (!/^\/test-evidence\/[0-9a-f]{40}$/.test(publicRoot)) throw new Error("LOCAL_FROZEN_EVIDENCE_ROOT_INVALID");
+      if (!/^\/test-evidence\/[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(publicRoot)) throw new Error("LOCAL_FROZEN_EVIDENCE_ROOT_INVALID");
       const exactDirectory = resolve(evidenceDirectory);
       if (!existsSync(resolve(exactDirectory, "index.json"))) throw new Error("LOCAL_FROZEN_EVIDENCE_INDEX_MISSING");
       server.middlewares.use((request, response, next) => {
@@ -51,8 +51,10 @@ function local_frozen_evidence_plugin(environment) {
         const relative = pathname === publicRoot ? "index.json" : pathname.slice(publicRoot.length + 1);
         const file = resolve(exactDirectory, relative);
         if (!file.startsWith(`${exactDirectory}${sep}`) || !existsSync(file) || !statSync(file).isFile()) return next();
+        const contentType = ({ ".json": "application/json; charset=utf-8", ".txt": "text/plain; charset=utf-8", ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp" })[extname(file).toLowerCase()];
+        if (contentType === undefined) return next();
         response.statusCode = 200;
-        response.setHeader("Content-Type", "application/json; charset=utf-8");
+        response.setHeader("Content-Type", contentType);
         if (request.method === "HEAD") return response.end();
         createReadStream(file).pipe(response);
       });

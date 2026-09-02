@@ -1,101 +1,22 @@
+import { decode_frozen_test_category_listing, decode_frozen_test_evidence_index, decode_frozen_test_suite_listing, make_frozen_test_evidence_client, validate_frozen_test_evidence_root } from "../../../src/app/demos/tests/panel/frozen-test-evidence-client";
+import { serialize_frozen_index_summary, serialize_frozen_row_artifact } from "../../../src/app/demos/tests/panel/frozen-test-presentation";
+import { FROZEN_TEST_EVIDENCE_ROOT, FROZEN_TEST_EVIDENCE_RUN_ID, frozen_test_evidence_package_fixture } from "../../fixtures/app/frozen-test-evidence-index";
 import type { TestCase, TestSuite } from "../../harness/core/test-contracts";
-import {
-  decode_frozen_test_evidence_index,
-  frozen_test_explorer_category_from_suite_id,
-  make_frozen_test_evidence_client,
-  validate_frozen_test_evidence_root,
-} from "../../../src/app/demos/tests/panel/frozen-test-evidence-client";
-import { format_frozen_evidence_size, serialize_frozen_index_summary } from "../../../src/app/demos/tests/panel/frozen-test-presentation";
-import { test_panel_acquisition_mode } from "../../../src/app/demos/tests/panel/mount-test-panels";
-import {
-  FROZEN_TEST_EVIDENCE_COMMIT,
-  FROZEN_TEST_EVIDENCE_ROOT,
-  frozen_test_evidence_package_fixture,
-} from "../../fixtures/app/frozen-test-evidence-index";
-
-const SUITE = "unit/frozen-test-evidence-client";
-function expect(condition: unknown, message: string): asserts condition { if (!condition) throw new Error(message); }
-async function rejects(run: () => unknown | Promise<unknown>, includes: string): Promise<void> {
-  try { await run(); } catch (error) { expect(error instanceof Error && error.message.includes(includes), `expected ${includes}, received ${String(error)}`); return; }
-  throw new Error(`expected rejection containing ${includes}`);
-}
-function response(body: string, status = 200): Pick<Response, "ok" | "status" | "text"> { return { ok: status >= 200 && status < 300, status, text: async () => body }; }
-function fixtureClient(requests: string[] = []) {
-  const fixture = frozen_test_evidence_package_fixture();
-  const client = make_frozen_test_evidence_client({ root: FROZEN_TEST_EVIDENCE_ROOT, fetch: async (url) => {
-    requests.push(url);
-    if (url.endsWith("/index.json")) return response(JSON.stringify(fixture.index));
-    const relative = url.slice(FROZEN_TEST_EVIDENCE_ROOT.length + 1);
-    const body = fixture.artifacts.get(relative);
-    return response(body ?? "missing", body === undefined ? 404 : 200);
-  } });
-  return { fixture, client };
-}
-
-export function frozen_test_evidence_client_suite(): TestSuite {
-  const cases: readonly TestCase[] = [
-    { suite: SUITE, caseId: "development-production-composition-parity", name: "development and production select the same frozen acquisition path", run: () => {
-      expect(test_panel_acquisition_mode(false) === "frozen" && test_panel_acquisition_mode(true) === "frozen", "both compositions must use frozen evidence");
-    } },
-    { suite: SUITE, caseId: "root-loads-once-without-descendant-fetch", name: "root loads once and contains only category summaries", run: async () => {
-      const requests: string[] = []; const { client } = fixtureClient(requests);
-      const first = await client.loadIndex(); const second = await client.loadIndex();
-      expect(first === second, "root should be cached by identity");
-      expect(first.categories.length === 9 && first.overall.suites === 3, "root category and aggregate inventory should decode");
-      expect(requests.length === 1 && requests[0]?.endsWith("/index.json"), "root open must not fetch descendants");
-      expect(client.snapshot().categoryRequests === 0 && client.snapshot().suiteRequests === 0 && client.snapshot().rowEvidenceRequests === 0, "descendant request counters must remain zero");
-    } },
-    { suite: SUITE, caseId: "category-suite-case-fetch-chain", name: "category, suite, and case artifacts load only when requested", run: async () => {
-      const requests: string[] = []; const { client } = fixtureClient(requests); const root = await client.loadIndex();
-      const category = root.categories.find((entry) => entry.id === "transform")!;
-      const listing = await client.loadCategory(category); const suite = listing.suites[0]!;
-      const suiteListing = await client.loadSuite(suite); const item = suiteListing.cases[0]!;
-      expect(client.snapshot().categoryRequests === 1 && client.snapshot().suiteRequests === 1 && client.snapshot().rowEvidenceRequests === 0, "listing fetches should remain distinct from detail fetches");
-      const artifact = await client.loadRowEvidence({ category: suite.category, suite, testCase: item, reference: item.evidence! });
-      expect(artifact.owner === "case" && artifact.caseId === item.id, "case artifact should validate against suite listing identity");
-      expect(requests.length === 4, "exact root-category-suite-case path should use four requests");
-      client.releaseRowEvidence(); expect(client.snapshot().retainedRowArtifacts === 0, "case close should release current detail");
-    } },
-    { suite: SUITE, caseId: "suite-detail-is-owned-by-suite-envelope", name: "suite-owned evidence arrives in the already loaded suite envelope", run: async () => {
-      const { client } = fixtureClient(); const root = await client.loadIndex();
-      const category = await client.loadCategory(root.categories.find((entry) => entry.id === "certification")!);
-      const listing = await client.loadSuite(category.suites[0]!);
-      expect(listing.detail?.owner === "suite" && listing.detail.evidence[0]?.content.includes("certification") === true, "suite detail should be embedded in its listing envelope");
-      expect(client.snapshot().rowEvidenceRequests === 0, "suite detail must not cause another request");
-    } },
-    { suite: SUITE, caseId: "rejects-size-and-identity-mismatch", name: "category and suite bytes and identities reject locally", run: async () => {
-      const fixture = frozen_test_evidence_package_fixture(); const root = decode_frozen_test_evidence_index(fixture.index, FROZEN_TEST_EVIDENCE_COMMIT);
-      const category = root.categories.find((entry) => entry.id === "transform")!;
-      const client = make_frozen_test_evidence_client({ root: FROZEN_TEST_EVIDENCE_ROOT, fetch: async (url) => url.endsWith("index.json")
-        ? response(JSON.stringify(fixture.index)) : response("{}") });
-      await client.loadIndex();
-      await rejects(() => client.loadCategory(category), "SIZE_MISMATCH");
-      const wrong = JSON.parse(fixture.artifacts.get(category.listing.path!)!); wrong.categoryId = "unit";
-      const body = JSON.stringify(wrong); fixture.index.categories.find((entry: any) => entry.id === "transform").listing.rawBytes = Buffer.byteLength(body);
-      const identityClient = make_frozen_test_evidence_client({ root: FROZEN_TEST_EVIDENCE_ROOT, fetch: async (url) => url.endsWith("index.json") ? response(JSON.stringify(fixture.index)) : response(body) });
-      const decoded = await identityClient.loadIndex();
-      await rejects(() => identityClient.loadCategory(decoded.categories.find((entry) => entry.id === "transform")!), "RELATIONSHIP");
-    } },
-    { suite: SUITE, caseId: "routing-invariant", name: "suite ids route deterministically without a root lookup table", run: async () => {
-      const routes = [["transform/a", "transform"], ["livehost/locus/a", "locus"], ["livetree-browser", "livetree"], ["livedemo/browser/a", "browser"], ["verification/a", "certification"], ["integration/public-boundaries", "unit"]] as const;
-      for (const [id, expected] of routes) expect(frozen_test_explorer_category_from_suite_id(id) === expected, `${id} should route to ${expected}`);
-      await rejects(() => frozen_test_explorer_category_from_suite_id("transform/a::case"), "PRESENTATION_CATEGORY");
-      await rejects(() => frozen_test_explorer_category_from_suite_id("integration/anything-else"), "PRESENTATION_CATEGORY");
-    } },
-    { suite: SUITE, caseId: "copy-reports-root-summary-only", name: "Copy Reports serializes root and category summaries without hidden inventory", run: async () => {
-      const { client } = fixtureClient(); const root = await client.loadIndex(); const copied = serialize_frozen_index_summary(root);
-      expect(copied.includes("TRANSFORM") && copied.includes("CERTIFICATION") && !copied.includes("transform/frozen-client"), "copy should expose category summaries but no hidden suite names");
-      expect(client.snapshot().categoryRequests === 0 && client.snapshot().suiteRequests === 0, "copy must not fan out");
-    } },
-    { suite: SUITE, caseId: "rejects-invalid-roots-and-index", name: "immutable roots, deployment binding, and JSON remain strict", run: async () => {
-      for (const root of [undefined, "", `/test-evidence/latest`, `/test-evidence/../${FROZEN_TEST_EVIDENCE_COMMIT}`, "/test-evidence/abc"]) await rejects(() => validate_frozen_test_evidence_root(root), "FROZEN_EVIDENCE_ROOT");
-      const fixture = frozen_test_evidence_package_fixture().index; fixture.deployment.hsonDeployCommit = "f".repeat(40);
-      await rejects(() => decode_frozen_test_evidence_index(fixture, FROZEN_TEST_EVIDENCE_COMMIT), "DEPLOYMENT_MISMATCH");
-      await rejects(() => make_frozen_test_evidence_client({ root: FROZEN_TEST_EVIDENCE_ROOT, fetch: async () => response("{") }).loadIndex(), "FROZEN_EVIDENCE_JSON");
-    } },
-    { suite: SUITE, caseId: "formats-raw-byte-sizes", name: "frozen evidence sizes use raw decimal units", run: () => {
-      expect(format_frozen_evidence_size(999) === "999 B" && format_frozen_evidence_size(3_400) === "3.4 kB" && format_frozen_evidence_size(2_500_000) === "2.5 MB", "raw-byte formatting");
-    } },
-  ];
-  return Object.freeze({ suite: SUITE, cases });
-}
+const SUITE="unit/frozen-test-evidence-client";
+const expect=(condition:unknown,message:string)=>{if(!condition)throw new Error(message);};
+const response=(body:string,status=200)=>({ok:status>=200&&status<300,status,text:async()=>body});
+const rejects=async(run:()=>unknown,code:string)=>{try{await run();}catch(error){expect(String(error).includes(code),`expected ${code}: ${String(error)}`);return;}throw new Error(`expected ${code}`);};
+const fixtureClient=()=>{const fixture=frozen_test_evidence_package_fixture();const requests:string[]=[];const client=make_frozen_test_evidence_client({root:FROZEN_TEST_EVIDENCE_ROOT,fetch:async(url)=>{requests.push(url);const relative=url.slice(FROZEN_TEST_EVIDENCE_ROOT.length+1);if(relative==="index.json")return response(JSON.stringify(fixture.index));const body=fixture.artifacts.get(relative);return response(body??"missing",body===undefined?404:200);}});return{fixture,requests,client};};
+export function frozen_test_evidence_client_suite():TestSuite{const cases:TestCase[]=[
+ {suite:SUITE,caseId:"index-only",name:"root loads once without descendants",run:async()=>{const{client,requests}=fixtureClient();const index=await client.loadIndex();await client.loadIndex();expect(index.categories.map(item=>item.id).join(",")==="transform,unit,livehost,browser,infrastructure","dynamic category order");expect(index.status==="error"&&requests.length===1,"non-pass root remains browsable and cached");}},
+ {suite:SUITE,caseId:"lazy-chain",name:"category suite and case load only when requested",run:async()=>{const{client,requests}=fixtureClient();const index=await client.loadIndex();const category=await client.loadCategory(index.categories[0]!);const suite=category.suites[0]!;const listing=await client.loadSuite(suite);expect(requests.length===3&&client.snapshot().rowEvidenceRequests===0,"case detail is not preloaded");const detail=await client.loadRowEvidence({suite,testCase:listing.cases[1]!,reference:listing.cases[1]!.evidence});expect(detail.status==="fail"&&detail.diagnostics[0]?.kind==="assertion","assertion failure detail");expect(client.snapshot().retainedRowArtifacts===1,"only the current detail is retained");client.releaseRowEvidence();expect(client.snapshot().retainedRowArtifacts===0,"detail released");}},
+ {suite:SUITE,caseId:"six-statuses",name:"six terminal statuses decode without admission",run:async()=>{const{client}=fixtureClient();const index=await client.loadIndex();const seen=new Set<string>();for(const category of index.categories){const listing=await client.loadCategory(category);for(const suite of listing.suites){seen.add(suite.status);const cases=await client.loadSuite(suite);for(const item of cases.cases)seen.add(item.status);}}expect([...seen].sort().join(",")==="cancelled,error,fail,pass,skip,unsupported","all statuses retained");}},
+ {suite:SUITE,caseId:"six-run-statuses",name:"each direct terminal run status is presentable",run:()=>{for(const status of ["pass","fail","skip","unsupported","cancelled","error"]){const value=structuredClone(frozen_test_evidence_package_fixture().index);value.status=status;const index=decode_frozen_test_evidence_index(value,FROZEN_TEST_EVIDENCE_RUN_ID);expect(serialize_frozen_index_summary(index).includes(`status: ${status.toUpperCase()}`),`${status} run summary`);}}},
+ {suite:SUITE,caseId:"diagnostics-and-public-attachments",name:"bounded diagnostics and admitted attachment decode",run:async()=>{const{client}=fixtureClient();const index=await client.loadIndex();const category=await client.loadCategory(index.categories.find(item=>item.id==="infrastructure")!);const suite=category.suites[0]!,listing=await client.loadSuite(suite),detail=await client.loadRowEvidence({suite,testCase:listing.cases[0]!,reference:listing.cases[0]!.evidence});const text=serialize_frozen_row_artifact(detail);expect(text.includes("private attachment omitted")&&text.includes("truncated")&&detail.artifacts[0]?.mediaType==="text/plain","public diagnostic contract");}},
+ {suite:SUITE,caseId:"malformed-index",name:"malformed index status totals and duplicate IDs reject",run:async()=>{for(const mutate of [(v:any)=>v.status="running",(v:any)=>v.totals.cases++, (v:any)=>v.categories.push(v.categories[0])]){const value=structuredClone(frozen_test_evidence_package_fixture().index);mutate(value);await rejects(()=>decode_frozen_test_evidence_index(value,FROZEN_TEST_EVIDENCE_RUN_ID),"FROZEN_INDEX");}}},
+ {suite:SUITE,caseId:"unsafe-and-unresolved-refs",name:"unsafe and unresolved progressive references fail closed",run:async()=>{const fixture=frozen_test_evidence_package_fixture();const unsafe=structuredClone(fixture.index);unsafe.categories[0].file="categories/../private.json";await rejects(()=>decode_frozen_test_evidence_index(unsafe,FROZEN_TEST_EVIDENCE_RUN_ID),"EVIDENCE_PATH");const{client}=fixtureClient();const index=await client.loadIndex();const missing={...index.categories[0]!,listing:{id:index.categories[0]!.id,file:"categories/missing.json"}};await rejects(()=>client.loadCategory(missing),"HTTP");}},
+ {suite:SUITE,caseId:"unresolved-suite-and-case",name:"unresolved suite and requested case references reject",run:async()=>{const{client}=fixtureClient(),index=await client.loadIndex(),category=await client.loadCategory(index.categories[0]!),suite=category.suites[0]!;await rejects(()=>client.loadSuite({...suite,listing:{id:suite.id,file:"suites/missing.json"}}),"HTTP");const listing=await client.loadSuite(suite),testCase=listing.cases[0]!;await rejects(()=>client.loadRowEvidence({suite,testCase:{...testCase,evidence:{id:testCase.caseId,file:"cases/missing.json"}},reference:{id:testCase.caseId,file:"cases/missing.json"}}),"HTTP");}},
+ {suite:SUITE,caseId:"duplicate-descendant-ids",name:"duplicate suite and case IDs reject where observed",run:async()=>{const fixture=frozen_test_evidence_package_fixture(),index=decode_frozen_test_evidence_index(fixture.index,FROZEN_TEST_EVIDENCE_RUN_ID),category=index.categories[0]!,categoryValue=JSON.parse(fixture.artifacts.get(category.listing.file)!);categoryValue.suites.push(categoryValue.suites[0]);await rejects(()=>decode_frozen_test_category_listing(categoryValue,category),"DUPLICATE_ID");const suiteValue=JSON.parse(fixture.artifacts.get(categoryValue.suites[0].file)!),suite=decode_frozen_test_category_listing(JSON.parse(fixture.artifacts.get(category.listing.file)!),category).suites[0]!;suiteValue.cases.push(suiteValue.cases[0]);await rejects(()=>decode_frozen_test_suite_listing(suiteValue,suite),"DUPLICATE_ID");}},
+ {suite:SUITE,caseId:"root-run-id",name:"immutable UUID run roots replace deployment commits",run:async()=>{expect(validate_frozen_test_evidence_root(FROZEN_TEST_EVIDENCE_ROOT).runId===FROZEN_TEST_EVIDENCE_RUN_ID,"UUID root");for(const root of [undefined,"","/test-evidence/latest","/test-evidence/4f9e7b26ade102e43aa2c14505bd74afdc19130b","/test-evidence/../bad"])await rejects(()=>validate_frozen_test_evidence_root(root),"FROZEN_EVIDENCE_ROOT");}},
+ {suite:SUITE,caseId:"run-provenance",name:"repository provenance is informational",run:async()=>{const index=decode_frozen_test_evidence_index(frozen_test_evidence_package_fixture().index,FROZEN_TEST_EVIDENCE_RUN_ID),text=serialize_frozen_index_summary(index);expect(index.repositories[0]?.dirty===true&&text.includes("dirty")&&text.includes("status: ERROR"),"dirty error report remains presentable");}},
+];return Object.freeze({suite:SUITE,cases});}
