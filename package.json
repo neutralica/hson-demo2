@@ -116,6 +116,8 @@
     "test:phase6a-node-hosted": "node --import=tsx tests/runners/harness/run-phase-6a-node-hosted.node.mts",
     "test:phase6a-full-node-hosted": "node --import=tsx tests/runners/harness/run-phase-6a-full-node-hosted.node.mts",
     "test:node-process-supervisor": "node --import=tsx tests/runners/harness/run-node-process-supervisor.node.mts",
+    "test:report": "node --import=tsx tests/runners/harness/run-test-report.node.mts",
+    "test:report-meta": "node --import=tsx tests/runners/harness/run-test-report-meta.node.mts",
     "test:phase6b-browser-executor": "node --import=tsx tests/runners/harness/run-phase-6b-browser-executor.node.mts",
     "test:phase6b-browser-cancellation": "node --import=tsx tests/runners/harness/run-phase-6b-browser-cancellation.node.mts",
     "test:phase6b-mixed-run": "node --import=tsx tests/runners/harness/run-phase-6b-mixed-run.node.mts",

@@ -1,0 +1,17 @@
+import { execFileSync } from "node:child_process";
+import { randomUUID } from "node:crypto";
+import { cwd } from "node:process";
+import type { TestEvent } from "../../core/test-contracts";
+import { empty_totals, reduce_status, totals_for, type Diagnostic, type RunReport, type SuiteReport } from "./run-report-contract";
+import { create_local_redactor, type LocalRedactor } from "./run-report-redaction";
+import { materialize_run_site } from "./run-report-materializer";
+import { begin_run, finalize_run } from "./run-report-storage";
+import { TestEventAdapter } from "./test-event-adapter";
+function repository(name: string, path: string): { name: string; revision: string | null; dirty: boolean | null } { try { const revision = execFileSync("git", ["-C", path, "rev-parse", "HEAD"], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim(); const dirty = execFileSync("git", ["-C", path, "status", "--porcelain"], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim().length > 0; return { name, revision: /^[a-f0-9]{40}$/.test(revision) ? revision : null, dirty }; } catch { return { name, revision: null, dirty: null }; } }
+export class LocalRunReporter {
+  readonly id = randomUUID(); readonly started = new Date(); readonly redactor: LocalRedactor; readonly adapter: TestEventAdapter; readonly diagnostics: Diagnostic[] = [];
+  constructor(readonly root = cwd(), readonly selection: Readonly<{ profile: string | null; ids: readonly string[] }> = { profile: null, ids: [] }) { this.redactor = create_local_redactor(root); this.adapter = new TestEventAdapter(this.redactor); }
+  event(event: TestEvent): void { try { this.adapter.ingest(event); } catch (error) { this.diagnostics.push(this.redactor.diagnostic("reporter", error)); } }
+  async finalize(options: Readonly<{ injectMaterializerFailure?: boolean }> = {}): Promise<RunReport> { const incomplete = await begin_run(this.root, this.id); let suites: readonly SuiteReport[] = []; let site = false; try { suites = this.adapter.finalize(); let report = this.report(suites); if (options.injectMaterializerFailure) throw new Error("INJECTED_MATERIALIZER_FAILURE"); await materialize_run_site(incomplete, report, this.redactor); site = true; await finalize_run(this.root, report, incomplete, true); return report; } catch (error) { this.diagnostics.push(this.redactor.diagnostic("materializer", error)); const report = this.report(suites, "error"); try { await materialize_run_site(incomplete, report, this.redactor); site = true; } catch { site = false; } await finalize_run(this.root, report, incomplete, site); return report; } }
+  private report(suites: readonly SuiteReport[], forced?: "error"): RunReport { const ended = new Date(); const status = forced ?? reduce_status(suites.map((s) => s.status)); const cases = suites.flatMap((s) => s.cases); const totals = totals_for(cases, suites); if (forced === "error") (totals as Record<string, number>).error = ((totals as Record<string, number>).error ?? 0) + 1; return { id: this.id, startedAt: this.started.toISOString(), endedAt: ended.toISOString(), durationMs: ended.getTime() - this.started.getTime(), status, repositories: [repository("hson-demo2", this.root), repository("hson-live", new URL("../../hson-live", `file://${this.root}/`).pathname)], selection: { profile: this.selection.profile, ids: [...this.selection.ids] }, totals, diagnostics: this.diagnostics, artifacts: [], suites }; }
+}
