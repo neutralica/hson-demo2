@@ -26,7 +26,6 @@ const H2C_CHILD_RELATIVE_PATH: H2CChildModule extends true ? string : never = "t
 export const H2_WORKSPACE_POLL_INTERVAL_MS = 250;
 
 export const H2B_VERIFICATION_IDS = Object.freeze([
-  "hson-demo2:test:surface-enumeration-node",
   "hson-demo2:test:stage2-contracts-node",
   "hson-demo2:test:stage3-discovery-node",
   "hson-demo2:test:stage4a-selected-node",
@@ -87,9 +86,7 @@ const H2_REGISTRY: ReadonlyMap<H2VerificationId, Descriptor> = new Map(
     preparation: "build-hson-live" as const,
     capabilityProfile: "source-meta" as const,
     timeoutMs: 180_000,
-    completion: id.endsWith("surface-enumeration-node")
-      ? Object.freeze({ kind: "stdout-marker" as const, marker: "test surface enumeration: ok" })
-      : id.endsWith("stage2-contracts-node")
+    completion: id.endsWith("stage2-contracts-node")
         ? Object.freeze({ kind: "stdout-marker" as const, marker: "Stage 2 contracts: ok" })
         : Object.freeze({ kind: "terminal-json" as const, certificate: h2b_terminal_certificate(id) }),
     artifactPolicy: "discard" as const,

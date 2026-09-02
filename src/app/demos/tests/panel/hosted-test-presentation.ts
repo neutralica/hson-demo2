@@ -106,13 +106,6 @@ export function hosted_test_suite_summary(suite: HostedTestSuiteRunReport): stri
     + terminal_extra(suite.status, counts.unsupported, counts.cancelled);
 }
 
-function strip_control_frames(stdout: string): string {
-  return stdout
-    .split(/(?<=\n)/)
-    .filter((line) => !line.replace(/\r?\n$/, "").startsWith("<HSON_LIVE_TEST_COMPLETION>"))
-    .join("");
-}
-
 function runtime_warning_line(line: string): boolean {
   return /(?:ExperimentalWarning|DeprecationWarning|\[DEP\d+\])/.test(line)
     || /^\(Use `node --trace-(?:warnings|deprecation)/.test(line);
@@ -166,7 +159,7 @@ export function hosted_test_evidence_sections(suite: HostedTestSuiteRunReport): 
 
   for (const evidence of [...suite.evidence].sort((left, right) => left.sequence - right.sequence)) {
     if (evidence.kind === "stdout") {
-      add("stdout", strip_control_frames(evidence.content));
+      add("stdout", evidence.content);
       continue;
     }
     if (evidence.kind === "stderr") {
@@ -369,7 +362,7 @@ export function make_hosted_test_chronology(): HostedTestChronology {
         for (const evidence of [...suite.evidence].sort((left, right) => left.sequence - right.sequence)) {
           if (evidence.sequence <= lastEvidence || (first && recovered)) continue;
           if (evidence.kind === "stdout" && suite.status === "fail") {
-            const output = concise_output(strip_control_frames(evidence.content));
+            const output = concise_output(evidence.content);
             if (output !== "") append(evidence.sequence, `stdout ${suite.id} — ${output}`);
           } else if (evidence.kind === "stderr") {
             const classified = classify_hosted_test_stderr(evidence.content);

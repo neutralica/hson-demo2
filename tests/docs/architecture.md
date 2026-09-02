@@ -124,12 +124,12 @@ oracle compares already-admitted graphs strictly, reports the first canonical
 path divergence, preserves structured Transform error identity, and emits a
 deterministic named witness. It performs no comparison-time normalization or
 root transparency. Exact tokenizer, formatting, browser presentation, and
-launcher-completion assertions remain specialized.
+external child event-protocol assertions remain specialized.
 
 The same support module is importable in Node, browser, and Worker-safe test
 contexts without filesystem, process, Node assertion, or inspection utilities.
-The external launcher manifest remains the accounting authority for its oracle
-self-test launcher; Demo catalog and inclusive totals derive from that manifest.
+The oracle self-test is discovered from its executable source metadata. Reports
+derive totals from emitted case terminals rather than a separate inventory.
 
 ## Panel
 
@@ -153,9 +153,9 @@ either the entire suite or one exact case. Changing suites clears stale case
 selection.
 
 Discovery failure is an error, not an empty catalog and not a reason to silently
-fall back to hard-coded routes. The only surviving adapter is the hson-live
-launcher manifest boundary: Node normalizes its entries into canonical opaque
-suite descriptors and resolves execution from each accepted `sourceRef`.
+fall back to hard-coded routes. Node statically discovers hson-live suite-owned
+metadata, binds each accepted `sourceRef` to that executable source, and reports
+its real child cases.
 
 ## Reports and Worker boundary
 

@@ -64,10 +64,7 @@ function median(values: readonly number[]): number {
   return ordered[Math.floor(ordered.length / 2)]!;
 }
 
-async function run_sample(
-  selectedPolicy: Policy,
-  invocation: "verified" | "tsx",
-): Promise<Sample> {
+async function run_sample(selectedPolicy: Policy): Promise<Sample> {
   const registry = make_local_node_locus_executor_registry();
   const availability = await resolve_external_library_launchers();
   const discovery = make_test_executor_discovery(registry, availability.targets);
@@ -97,7 +94,6 @@ async function run_sample(
     { yieldEveryCases: 0, yieldBetweenSuites: false },
     {
       externalScheduling: selectedPolicy.scheduling,
-      externalInvocation: invocation,
     },
   );
   const timing = node_selected_verification_metrics();
@@ -111,7 +107,7 @@ async function run_sample(
     totalMs,
     maximumOrdinaryConcurrency: timing.maximumOrdinaryLauncherConcurrency,
     maximumSpecialConcurrency: timing.maximumSpecialLauncherConcurrency,
-    launcherStarts: processMetrics.directLauncherStarts + processMetrics.packageScriptStarts,
+    launcherStarts: processMetrics.directLauncherStarts,
     passedCases: projection.canonical.pass + projection.launchers.passedChecks,
     failedCases: projection.canonical.fail + projection.launchers.fail,
   });
@@ -130,17 +126,13 @@ async function run_sample(
   return sample;
 }
 
-const invocationArgument = argument("invocation") ?? "verified";
-assert.ok(invocationArgument === "verified" || invocationArgument === "tsx");
-const invocation = invocationArgument;
 const samplePolicy = argument("sample");
 if (samplePolicy !== undefined) {
   const selectedPolicy = policy(samplePolicy);
   console.log(JSON.stringify({
     type: "sample",
     policy: selectedPolicy.label,
-    invocation,
-    ...(await run_sample(selectedPolicy, invocation)),
+    ...(await run_sample(selectedPolicy)),
   }));
   process.exit(0);
 }
@@ -159,7 +151,6 @@ for (const selectedPolicy of policies) {
       ...process.execArgv,
       scriptPath,
       `--sample=${selectedPolicy.label}`,
-      `--invocation=${invocation}`,
     ], {
       cwd: process.cwd(),
       encoding: "utf8",
@@ -181,7 +172,6 @@ for (const selectedPolicy of policies) {
     console.log(JSON.stringify({
       type: "sample",
       policy: selectedPolicy.label,
-      invocation,
       repeat,
       ...sample,
     }));
@@ -190,7 +180,6 @@ for (const selectedPolicy of policies) {
   const summary = Object.freeze({
     type: "summary",
     policy: selectedPolicy.label,
-    invocation,
     repeats,
     canonicalMedianMs: median(samples.map((sample) => sample.canonicalMs)),
     externalMedianMs: median(samples.map((sample) => sample.externalMs)),

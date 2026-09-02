@@ -1,9 +1,8 @@
 # Phase 6A Node hosted-test executor
 
-This is the audit record for Node-generalist closure. The machine-readable
-authority remains the surface catalog, executable registries, Node command
-inventory, and composed surface census. Counts here are a review snapshot, not
-test contracts.
+This is a historical audit record for Node-generalist closure. Its counts and
+former inventory references are review context only; executable discovery is
+the current test authority.
 
 ## Verdict
 
@@ -108,14 +107,14 @@ LiveHost:
   canvas runtime/collection, timing, and Phase 3A coordinator;
 - application/generated: generated JSON, Amoebi geometry, soft tile, and splash
   lifecycle;
-- meta/protocol: external-launcher protocol, launcher-manifest audit, and runner
+- meta/protocol: external event protocol and runner
   truthfulness.
 
 These 22 command surfaces are classified `hosted-local-now` as semantic aliases,
 not launched a second time: hson-live default-identity fixture; TOWL and TOWL
 room; replay; the three Phase 3B cancellation commands; Node application-host;
 three circuit commands; two parsing commands; five LiveTree/Hson lifecycle
-commands; the two external-library aggregate commands; inclusive-library; and
+commands; direct external executable reporting; and
 DOM compatibility. Their exact work is already represented by canonical or
 opaque identities in the same authoritative selection.
 

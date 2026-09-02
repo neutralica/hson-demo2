@@ -39,8 +39,7 @@ async function run(scenario: string, timeoutMs = 5_000, signal?: AbortSignal, ob
 const valid = await run("valid");
 assert.equal(valid.result.ok, true);
 assert.equal(valid.result.events?.filter((event) => event.t === "case_end").length, 2);
-assert.equal(valid.result.completion?.executed, 999, "legacy aggregate can disagree without becoming authority");
-assert.doesNotMatch(valid.result.ordinaryStdout, /HSON_TEST_EVENT|HSON_LIVE_TEST_COMPLETION/);
+assert.doesNotMatch(valid.result.ordinaryStdout, /HSON_TEST_EVENT/);
 
 for (const [scenario, pattern] of [
   ["invalid-json", /JSON\/control frame/], ["invalid-control", /JSON\/control frame/], ["unknown-event", /unknown test event/],
@@ -52,7 +51,7 @@ for (const [scenario, pattern] of [
   const observed = await run(scenario);
   assert.equal(observed.result.ok, false, scenario);
   assert.equal(observed.result.events, undefined, `${scenario} exposes no accepted child events`);
-  assert.match(observed.result.completionError ?? "", pattern, scenario);
+  assert.match(observed.result.protocolError ?? "", pattern, scenario);
   assert.equal(observed.activeChildren, 0, `${scenario} leaves no active child`);
 }
 
@@ -71,7 +70,7 @@ try {
 
 const failed = await run("failed");
 assert.equal(failed.result.ok, false);
-assert.equal(failed.result.completionError, undefined, "truthful assertion failure is not a protocol error");
+assert.equal(failed.result.protocolError, undefined, "truthful assertion failure is not a protocol error");
 assert.equal(failed.result.events?.filter((event) => event.t === "case_end" && event.status === "fail").length, 1);
 for (const scenario of ["nonzero", "signal"] as const) {
   const observed = await run(scenario);
@@ -85,7 +84,7 @@ assert.equal(graceful.result.timedOut, true); assert.equal(graceful.activeChildr
 const completedAbort = new AbortController();
 const completedThenCancelled = await run("completed-then-wait", 5_000, completedAbort.signal, (text) => { if (text.includes('"t":"terminal"')) completedAbort.abort(); });
 assert.equal(completedThenCancelled.result.ok, true, "an accepted terminal wins a later cancellation race");
-assert.equal(completedThenCancelled.result.completionAcceptedBeforeCancellation, true);
+assert.equal(completedThenCancelled.result.terminalAcceptedBeforeCancellation, true);
 const resistantStarted = performance.now(); const resistantAbort = new AbortController();
 const resistant = await run("resistant-timeout", 5_000, resistantAbort.signal, (text) => { if (text.includes("ready")) resistantAbort.abort(); });
 assert.equal(resistant.result.cancelled, true); assert.equal(resistant.result.forceKilled, true); assert.equal(resistant.result.signal, "SIGKILL");

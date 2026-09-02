@@ -1,5 +1,4 @@
 const EVENT_PREFIX = "<HSON_TEST_EVENT>";
-const COMPLETION_PREFIX = "<HSON_LIVE_TEST_COMPLETION>";
 const [, , scenario, suiteId] = process.argv;
 
 function event(value) { process.stdout.write(`${EVENT_PREFIX}${JSON.stringify(value)}\n`); }
@@ -15,7 +14,6 @@ async function write(stream, value) { if (stream.write(value)) return; await new
 switch (scenario) {
   case "valid":
     process.stdout.write("ordinary diagnostic\n"); valid_cases();
-    process.stdout.write(`${COMPLETION_PREFIX}{"version":1,"launcherId":"${suiteId}","executed":999,"passed":0,"failed":999}\n`);
     break;
   case "invalid-json": process.stdout.write(`${EVENT_PREFIX}{not-json}\n`); break;
   case "invalid-control": process.stdout.write(`${EVENT_PREFIX}[]\n`); break;

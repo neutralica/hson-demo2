@@ -16,10 +16,7 @@ import { make_test_executor_discovery } from "../../../core/test-discovery";
 import { make_node_livehost_hosted_test_executor_registry } from "../livehost-node-executor";
 import { create_node_selected_verification_service } from "../run-node-selected-verifications";
 import { run_fresh_node_selected_test_ids } from "../run-node-selected-test-suites";
-import {
-  node_command_suite_descriptor,
-  resolve_node_command_surfaces,
-} from "../node-command-surfaces";
+import { node_command_suite_descriptor, resolve_h2_command_surfaces } from "../node-command-surfaces";
 import { make_hosted_test_case_inspector } from "../../../hosted/hosted-test-case-inspection";
 import {
   create_hosted_test_application,
@@ -120,17 +117,12 @@ export async function create_node_hosted_tests_application(
     : Object.freeze({ targets: Object.freeze([]), unavailable: Object.freeze([]) });
   const hsonLiveRoot = "repositoryRoot" in externalLaunchers ? externalLaunchers.repositoryRoot : undefined;
   const commandSurfaces = options.executorRegistry === undefined
-    ? resolve_node_command_surfaces({
+    ? resolve_h2_command_surfaces({
       demoRoot: process.cwd(),
-        ...(hsonLiveRoot === undefined ? {} : { hsonLiveRoot }),
-        ...(options.h2TestHooks === undefined ? {} : { h2TestHooks: options.h2TestHooks }),
-      })
+      ...(hsonLiveRoot === undefined ? {} : { hsonLiveRoot }),
+      ...(options.h2TestHooks === undefined ? {} : { h2TestHooks: options.h2TestHooks }),
+    })
     : Object.freeze({ targets: Object.freeze([]), unavailable: Object.freeze([]) });
-  for (const target of commandSurfaces.targets) {
-    if (!executor_supports(executorRegistry.executor, target)) {
-      throw new Error(`HOSTED_TEST_COMMAND_ASSIGNMENT_UNSATISFIED: ${target.id}`);
-    }
-  }
   const launcherService = create_external_library_launcher_service();
   const browserExecutor = create_playwright_browser_executor(launcherService.processSupervisor);
   const selectedVerification = create_node_selected_verification_service(launcherService, commandSurfaces, browserExecutor);

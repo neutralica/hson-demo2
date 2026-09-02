@@ -125,18 +125,14 @@ const externalAvailability = await resolve_external_library_launchers();
 const liveTransform = externalAvailability.targets.find((target) => target.launcherId === "transform.hson-tokenizer");
 const liveMap = externalAvailability.targets.find((target) => target.launcherId.startsWith("livemap."));
 const liveReflect = externalAvailability.targets.find((target) => target.subject === "reflect");
-const liveDev = externalAvailability.targets.find((target) => target.launcherId === "core.public-boundaries");
 certify("taxonomy", CANONICAL_TEST_SUBJECT_ORDER.join("|") === "transform|livetree|livemap|livehost|reflect", "one subject authority includes Reflect in settled rank order");
 certify("taxonomy", CANONICAL_TEST_COLLECTION_ORDER.join("|") === "unit|dev", "collection-only selector entries follow semantic subjects");
 certify("taxonomy", liveTransform?.id === "transform/hson-tokenizer" && liveTransform.subject === "transform", "hson-live Transform launchers normalize to Transform");
 certify("taxonomy", liveMap?.id.startsWith("livemap/") && liveMap.subject === "livemap", "hson-live LiveMap launchers normalize to LiveMap");
 certify("taxonomy", liveReflect?.id.startsWith("reflect/") && liveReflect.subject === "reflect", "Reflect launchers normalize to a first-class Reflect subject");
-certify("taxonomy", externalAvailability.targets.every((target) => target.sourceRef === `hson-live:${target.launcherId}`), "sourceRef retains launcher provenance without becoming identity");
+certify("taxonomy", externalAvailability.targets.every((target) => target.sourceRef === `hson-live:${target.sourceFile}`), "sourceRef retains executable source provenance without becoming identity");
 certify("taxonomy", externalAvailability.targets.every((target) => !target.id.startsWith("library::") && !target.id.includes("::")), "no external canonical suite uses the removed library identity prefix");
-certify("taxonomy", externalAvailability.targets.every((target) => target.collections.every((collection) => collection === "unit" || collection === "dev")), "normalized launcher collections contain only tier metadata");
 certify("taxonomy", externalAvailability.targets.every((target) => !target.requirements.includes("unit" as never) && !target.requirements.includes("dev" as never)), "Unit and Dev are never runtime requirements");
-certify("taxonomy", liveDev?.subject === "integration" && liveDev.collections.includes("dev"), "an external Dev suite retains a separate semantic subject");
-certify("taxonomy", liveDev !== undefined && hosted_test_panel_selected_ids(Object.freeze([]), { kind: "collection", collection: "dev" }, Object.freeze([external_launcher_suite_descriptor(liveDev)])).join() === liveDev.id, "external collection filtering reads collections without rewriting subject");
 certify("taxonomy", case_descriptor(suite_descriptor("livemap/unit-proof", "livemap", 0, Object.freeze(["unit"])), "proof", 0).subject === "livemap", "a Unit case retains one LiveMap semantic identity");
 certify("taxonomy", case_descriptor(suite_descriptor("livemap/unit-proof", "livemap", 0, Object.freeze(["unit"])), "proof", 0).collections.includes("unit"), "the same case independently retains Unit membership");
 certify("taxonomy", test_presentation_rank("livemap", Object.freeze(["unit"])) === 2, "collection membership never displaces a first-class semantic subject");
@@ -211,9 +207,8 @@ function external_event(suite: TestSuiteDescriptor, status: "running" | "pass"):
     ? { t: "external_state", ...shared, status }
     : {
       t: "external_end", ...shared, status, ms: 1,
-      stdout: `opaque output\n<HSON_LIVE_TEST_COMPLETION>{}\n`, ordinaryStdout: "opaque output\n", stderr: "",
+      stdout: "opaque output\n", ordinaryStdout: "opaque output\n", stderr: "",
       exitCode: 0, signal: null, timedOut: false,
-      completion: { version: 1, launcherId: suite.sourceRef ?? suite.id, executed: 7, passed: 7, failed: 0 },
     };
 }
 
@@ -238,7 +233,6 @@ const finalReport = report.map.snap();
 certify("planAndReport", finalReport.suiteRuns.map((suite) => suite.id).join("|") === expectedSuiteOrder, "hostile completion timing never moves report records");
 certify("planAndReport", finalReport.suiteRuns.filter((suite) => suite.status === "fail").map((suite) => suite.id).join() === reflectSuite.id, "one controlled failure transitions in its seeded position");
 certify("planAndReport", finalReport.suiteRuns.flatMap((suite) => suite.cases).filter((testCase) => testCase.status === "fail").length === 1, "case records transition in place with one controlled failure");
-certify("planAndReport", finalReport.suiteRuns.filter((suite) => suite.executionShape === "opaque-aggregate").every((suite) => suite.counts.passed === 7 && suite.cases.length === 0), "opaque suites retain check counts without fabricated cases");
 certify("planAndReport", finalReport.suiteRuns.filter((suite) => suite.executionShape === "opaque-aggregate").every((suite) => suite.evidence.some((item) => item.kind === "stdout")), "opaque output attaches as evidence rather than a result model");
 inspector.ingest({ report: finalReport, terminal: true });
 inspector.flush();
@@ -252,9 +246,9 @@ report.dispose();
 const nodeRegistry = make_local_node_locus_executor_registry();
 const nodeDiscovery = make_test_executor_discovery(nodeRegistry, externalAvailability.targets);
 const workerDiscovery = make_test_executor_discovery(make_cloudflare_locus_executor_registry());
-certify("planAndReport", nodeDiscovery.catalog.suites.some((suite) => suite.executionShape === "opaque-aggregate" && suite.provenance === "hson-live"), "Node discovery exposes normalized executable opaque suites");
+certify("planAndReport", nodeDiscovery.catalog.suites.some((suite) => suite.executionShape === "cases" && suite.provenance === "hson-live"), "Node discovery exposes normalized executable hson-live suites");
 certify("planAndReport", workerDiscovery.catalog.suites.every((suite) => suite.executionShape === "cases" && suite.provenance === "hson-demo2"), "Worker discovery exposes only its exact executable case suites");
-certify("planAndReport", workerDiscovery.catalog.suites.every((suite) => suite.executionShape !== "opaque-aggregate"), "external launchers remain absent rather than failed on Worker");
+certify("planAndReport", workerDiscovery.catalog.suites.every((suite) => suite.provenance !== "hson-live"), "external suites remain absent rather than failed on Worker");
 certify("planAndReport", nodeDiscovery.catalog.tests.every((descriptor) => nodeRegistry.get(descriptor.id) !== undefined), "every Node case descriptor has exact executable registration");
 
 console.log(JSON.stringify({ certificate: "phase1-convergence", counts, initialOrder: expectedSuiteOrder.split("|"), hostileCompletion: ["dev", "livemap opaque", "reflect", "transform opaque", "remaining canonical"], finalOrder: finalReport.suiteRuns.map((suite) => suite.id) }));

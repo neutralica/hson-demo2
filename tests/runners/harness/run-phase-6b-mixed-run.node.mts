@@ -17,21 +17,13 @@ const selectedIds = select_direct_report_executable_ids(discovered.catalog, [bro
 assert.deepEqual(selectedIds, select_direct_report_executable_ids(discovered.catalog, [native.id, browser.id, external.id]), "selection order derives from executable discovery");
 
 const baseService = create_external_library_launcher_service();
-const launcherService = Object.freeze({
-  async run(...args: Parameters<typeof baseService.run>) {
-    const result = await baseService.run(...args);
-    return Object.freeze({ ...result, completion: Object.freeze({ version: 1 as const, launcherId: result.target.launcherId, executed: 999_999, passed: 0, failed: 999_999 }) });
-  },
-  runCommand: baseService.runCommand,
-  terminationGeneration: baseService.terminationGeneration,
-});
 const browserExecutor = create_playwright_browser_executor(baseService.processSupervisor);
 const reportRoot = await mkdtemp(join(tmpdir(), "hson-phase2b-mixed-"));
 const reporter = new LocalRunReporter(reportRoot, { profile: "phase-2b-mixed", ids: selectedIds });
 try {
   const result = await run_node_selected_verifications(
     discovered.registry, discovered.catalog, discovered.external, selectedIds,
-    (event) => reporter.event(event), {}, { launcherService, browserExecutor },
+    (event) => reporter.event(event), {}, { launcherService: baseService, browserExecutor },
   );
   const report = await reporter.finalize();
   assert.equal(result.ok, true); assert.equal(report.status, "pass"); assert.equal(report.suites.length, 3);
@@ -46,7 +38,6 @@ try {
   assert.equal(browserReport.category, browser.subject);
   const actualCases = nativeReport.cases.length + externalReport.cases.length + browserReport.cases.length;
   assert.equal(report.totals.cases, actualCases); assert.equal(result.summary.cases, actualCases);
-  assert.notEqual(externalReport.cases.length, 999_999, "legacy aggregate completion is not reconciled with real cases");
   console.log(JSON.stringify({ certificate: "phase2b-mixed-direct-report", selectedIds, totals: report.totals, categories: report.suites.map((suite) => suite.category), externalCases: externalReport.cases.length }));
 } finally {
   await browserExecutor.dispose();

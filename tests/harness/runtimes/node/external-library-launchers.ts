@@ -20,16 +20,11 @@ export const EXTERNAL_LIBRARY_LAUNCHER_STDOUT_LIMIT_BYTES = 256 * 1024;
 export const EXTERNAL_LIBRARY_LAUNCHER_STDERR_LIMIT_BYTES = 256 * 1024;
 export const EXTERNAL_LIBRARY_LAUNCHER_TRUNCATION_MARKER = "<HSON_LIVE_TEST_OUTPUT_TRUNCATED>";
 export const HSON_LIVE_TEST_EVENT_PREFIX = "<HSON_TEST_EVENT>";
-/** Kept only while the upstream compatibility emitter is physically present. */
-export const HSON_LIVE_TEST_COMPLETION_PREFIX = "<HSON_LIVE_TEST_COMPLETION>";
-export const HSON_LIVE_TEST_COMPLETION_VERSION = 1;
-const COMPLETION_LINE_LIMIT = 16 * 1024;
+const CONTROL_LINE_LIMIT = 16 * 1024;
 export const NODE_TSX_IMPORT_PATH = fileURLToPath(import.meta.resolve("tsx"));
 
-export type ExternalLibraryLauncherInvocationKind = "direct" | "package-script";
-
 type ExternalLibraryLauncherInvocation = Readonly<{
-  kind: ExternalLibraryLauncherInvocationKind;
+  kind: "direct";
   command: string;
   args: readonly string[];
   env: Readonly<Record<string, string>>;
@@ -46,7 +41,7 @@ export type ExternalLibraryLauncherResult = Readonly<{
   target: ExternalLibraryLauncherTarget;
   /** Untouched, bounded process stdout, including protocol control frames. */
   stdout: string;
-  /** Bounded human stdout with completion control frames removed. */
+  /** Bounded human stdout with test-event control frames removed. */
   ordinaryStdout: string;
   stderr: string;
   stdoutBytes: number;
@@ -58,14 +53,13 @@ export type ExternalLibraryLauncherResult = Readonly<{
   durationMs: number;
   timedOut: boolean;
   spawnError?: string;
-  completion?: ExternalLibraryLauncherCompletion;
   events?: readonly ExternalLibraryChildEvent[];
   terminalStatus?: "pass" | "fail" | "skip" | "unsupported" | "cancelled";
-  completionError?: string;
+  protocolError?: string;
   forceKilled?: boolean;
   cancelled?: boolean;
-  completionAcceptedBeforeCancellation?: boolean;
-  invocationKind: ExternalLibraryLauncherInvocationKind;
+  terminalAcceptedBeforeCancellation?: boolean;
+  invocationKind: "direct";
   ok: boolean;
 }>;
 
@@ -75,14 +69,11 @@ export type ExternalLibraryChildEvent = Readonly<
   | { t: "case_end"; caseId: string; name: string; status: "pass" | "fail" | "skip" | "unsupported" | "cancelled" }
   | { t: "terminal"; suiteId: string; status: "pass" | "fail" | "skip" | "unsupported" | "cancelled" }
 >;
-export type ExternalLibraryLauncherCompletion = Readonly<{ version: 1; launcherId: string; executed: number; passed: number; failed: number }>;
-
 type ExternalLibraryLauncherState = {
   readonly processSupervisor: NodeProcessSupervisor;
   readonly activeLaunchers: Map<string, Promise<ExternalLibraryLauncherResult>>;
   readonly activeCommands: Map<string, Promise<SupervisedNodeCommandResult>>;
   directLauncherStarts: number;
-  packageScriptStarts: number;
   commandStarts: number;
 };
 
@@ -91,10 +82,7 @@ export type ExternalLibraryLauncherRunOptions = Readonly<{
   signal?: AbortSignal;
   command?: string;
   terminationGeneration?: number;
-  forcePackageScript?: boolean;
-  forceTsx?: boolean;
   forcePlainNode?: boolean;
-  forceVerifiedDirect?: boolean;
   /** Deterministic process-boundary certificate hook; receives raw chunks. */
   observeStdoutChunk?: (text: string) => void;
 }>;
@@ -133,7 +121,6 @@ export type ExternalLibraryLauncherService = Readonly<{
     activeChildren: number;
     maximumObservedConcurrentChildren: number;
     directLauncherStarts: number;
-    packageScriptStarts: number;
     commandStarts: number;
   }>;
 }>;
@@ -149,7 +136,6 @@ function make_external_library_launcher_state(): ExternalLibraryLauncherState {
     activeLaunchers: new Map(),
     activeCommands: new Map(),
     directLauncherStarts: 0,
-    packageScriptStarts: 0,
     commandStarts: 0,
   };
 }
@@ -211,11 +197,6 @@ function target(launcher: Readonly<{ id: string; title: string; category: string
     requirements: launcher_requirements(launcher.runtime),
     order,
   });
-}
-
-/** Transitional compatibility helper; normal discovery never reads package scripts. */
-export function classify_external_library_launcher_invocation(launcher: Readonly<{ repositoryModule: string }>, _packageCommand: string): ExternalLibraryLauncherInvocation {
-  return Object.freeze({ kind: "direct", command: process.execPath, args: Object.freeze(["--import", NODE_TSX_IMPORT_PATH, launcher.repositoryModule]), env: Object.freeze({ TS_NODE_TRANSPILE_ONLY: "true" }) });
 }
 
 async function exists(path: string): Promise<boolean> {
@@ -345,156 +326,6 @@ export function resolve_external_launcher_binding(
   return target;
 }
 
-type CompletionScan = Readonly<{
-  records: readonly unknown[];
-  malformedRecords: number;
-  trailingOutput: boolean;
-  ordinaryStdout: string;
-}>;
-
-class CompletionScanner {
-  readonly #decoder = new StringDecoder("utf8");
-  readonly #records: unknown[] = [];
-  #pending = "";
-  #discardingLongLine = false;
-  #malformedRecords = 0;
-  #sawCompletionLine = false;
-  #trailingOutput = false;
-  readonly #ordinaryOutput = new BoundedOutputCapture(
-    EXTERNAL_LIBRARY_LAUNCHER_STDOUT_LIMIT_BYTES,
-    EXTERNAL_LIBRARY_LAUNCHER_TRUNCATION_MARKER,
-  );
-
-  add(chunk: Buffer): void {
-    this.#consume(this.#decoder.write(chunk));
-  }
-
-  finish(): CompletionScan {
-    this.#consume(this.#decoder.end());
-    if (!this.#discardingLongLine && this.#pending.length > 0) this.#line(this.#pending);
-    this.#pending = "";
-    return Object.freeze({
-      records: Object.freeze([...this.#records]),
-      malformedRecords: this.#malformedRecords,
-      trailingOutput: this.#trailingOutput,
-      ordinaryStdout: this.#ordinaryOutput.snapshot().text,
-    });
-  }
-
-  snapshot(): CompletionScan {
-    return Object.freeze({
-      records: Object.freeze([...this.#records]),
-      malformedRecords: this.#malformedRecords,
-      trailingOutput: this.#trailingOutput,
-      ordinaryStdout: this.#ordinaryOutput.snapshot().text,
-    });
-  }
-
-  #consume(text: string): void {
-    let remaining = text;
-    while (remaining.length > 0) {
-      if (this.#discardingLongLine) {
-        const newline = remaining.indexOf("\n");
-        if (newline < 0) return;
-        this.#discardingLongLine = false;
-        remaining = remaining.slice(newline + 1);
-        continue;
-      }
-      const newline = remaining.indexOf("\n");
-      if (newline < 0) {
-        this.#pending += remaining;
-        if (this.#pending.length > COMPLETION_LINE_LIMIT) {
-          if (this.#pending.startsWith(HSON_LIVE_TEST_COMPLETION_PREFIX)) {
-            this.#malformedRecords += 1;
-            this.#sawCompletionLine = true;
-          } else if (this.#sawCompletionLine && this.#pending.trim().length > 0) {
-            this.#trailingOutput = true;
-          }
-          this.#pending = "";
-          this.#discardingLongLine = true;
-        }
-        return;
-      }
-      this.#pending += remaining.slice(0, newline);
-      this.#line(this.#pending);
-      this.#pending = "";
-      remaining = remaining.slice(newline + 1);
-    }
-  }
-
-  #line(rawLine: string): void {
-    const line = rawLine.endsWith("\r") ? rawLine.slice(0, -1) : rawLine;
-    if (line.startsWith(HSON_LIVE_TEST_COMPLETION_PREFIX)) {
-      this.#sawCompletionLine = true;
-      const payload = line.slice(HSON_LIVE_TEST_COMPLETION_PREFIX.length);
-      try {
-        this.#records.push(JSON.parse(payload));
-      } catch {
-        this.#malformedRecords += 1;
-      }
-      return;
-    }
-    this.#ordinaryOutput.add(Buffer.from(`${rawLine}\n`, "utf8"));
-    if (this.#sawCompletionLine && line.trim().length > 0) this.#trailingOutput = true;
-  }
-}
-
-function completion_record(value: unknown): ExternalLibraryLauncherCompletion | undefined {
-  if (typeof value !== "object" || value === null || Array.isArray(value)) return undefined;
-  const record = value as Record<string, unknown>;
-  const keys = Object.keys(record).sort();
-  const expectedKeys = ["executed", "failed", "launcherId", "passed", "version"];
-  if (keys.length !== expectedKeys.length || !keys.every((key, index) => key === expectedKeys[index])) {
-    return undefined;
-  }
-  const counts = [record.executed, record.passed, record.failed];
-  if (record.version !== HSON_LIVE_TEST_COMPLETION_VERSION
-    || typeof record.launcherId !== "string" || record.launcherId.length === 0
-    || !counts.every((count) => Number.isSafeInteger(count) && (count as number) >= 0)) {
-    return undefined;
-  }
-  const executed = record.executed as number;
-  const passed = record.passed as number;
-  const failed = record.failed as number;
-  if (executed !== passed + failed) return undefined;
-  return Object.freeze({
-    version: HSON_LIVE_TEST_COMPLETION_VERSION,
-    launcherId: record.launcherId,
-    executed,
-    passed,
-    failed,
-  });
-}
-
-export function reconcile_external_launcher_completion(
-  scan: CompletionScan,
-  target: ExternalLibraryLauncherTarget,
-): Readonly<{ completion?: ExternalLibraryLauncherCompletion; error?: string }> {
-  if (scan.malformedRecords > 0) {
-    return Object.freeze({ error: "External launcher emitted malformed completion data." });
-  }
-  if (scan.records.length === 0) {
-    return Object.freeze({ error: "External launcher emitted no completion record." });
-  }
-  if (scan.records.length !== 1) {
-    return Object.freeze({ error: "External launcher emitted more than one completion record." });
-  }
-  if (scan.trailingOutput) {
-    return Object.freeze({ error: "External launcher emitted output after its terminal completion record." });
-  }
-  const completion = completion_record(scan.records[0]);
-  if (completion === undefined) {
-    return Object.freeze({ error: "External launcher completion record has an invalid shape or count relationship." });
-  }
-  if (completion.launcherId !== target.launcherId) {
-    return Object.freeze({
-      completion,
-      error: `External launcher completion identified "${completion.launcherId}", expected "${target.launcherId}".`,
-    });
-  }
-  return Object.freeze({ completion });
-}
-
 type ExternalTestEventScan = Readonly<{
   events?: readonly ExternalLibraryChildEvent[];
   ordinaryStdout: string;
@@ -569,7 +400,7 @@ class ExternalTestEventScanner {
       const newline = remaining.indexOf("\n");
       if (newline < 0) {
         this.#pending += remaining;
-        if (this.#pending.length > COMPLETION_LINE_LIMIT) {
+        if (this.#pending.length > CONTROL_LINE_LIMIT) {
           if (this.#pending.startsWith(HSON_LIVE_TEST_EVENT_PREFIX)) this.#fail("External launcher emitted an oversized or truncated control frame.");
           else this.#ordinary.add(Buffer.from(this.#pending, "utf8"));
           this.#pending = "";
@@ -586,7 +417,7 @@ class ExternalTestEventScanner {
 
   #line(line: string): void {
     if (!line.startsWith(HSON_LIVE_TEST_EVENT_PREFIX)) {
-      if (!line.startsWith(HSON_LIVE_TEST_COMPLETION_PREFIX)) this.#ordinary.add(Buffer.from(`${line}\n`, "utf8"));
+      this.#ordinary.add(Buffer.from(`${line}\n`, "utf8"));
       return;
     }
     if (this.#error !== undefined) return;
@@ -686,11 +517,7 @@ async function run_external_library_launcher_with_state(
   if (active !== undefined) return active;
   const configuredInvocation = availability.invocations?.[targetId];
   let resolvedInvocation: ExternalLibraryLauncherInvocation;
-  if (options.forcePackageScript) {
-    throw new Error("External executable discovery does not use package scripts.");
-  } else if (options.forceTsx) {
-    resolvedInvocation = tsx_invocation(selectedTarget);
-  } else if (options.forcePlainNode) {
+  if (options.forcePlainNode) {
     resolvedInvocation = Object.freeze({
       kind: "direct",
       command: process.execPath,
@@ -705,10 +532,8 @@ async function run_external_library_launcher_with_state(
   const invocation = options.command === undefined
     ? resolvedInvocation
     : Object.freeze({ ...resolvedInvocation, command: options.command });
-  if (invocation.kind === "direct") state.directLauncherStarts += 1;
-  else state.packageScriptStarts += 1;
+  state.directLauncherStarts += 1;
 
-  const completionScanner = new CompletionScanner();
   const eventScanner = new ExternalTestEventScanner(selectedTarget);
   let cancelled = false;
   let terminationRequested = false;
@@ -722,7 +547,6 @@ async function run_external_library_launcher_with_state(
     timeoutMs,
   }, {
     observeStdoutChunk(chunk) {
-      completionScanner.add(chunk);
       eventScanner.add(chunk);
       options.observeStdoutChunk?.(chunk.toString("utf8"));
     },
@@ -742,8 +566,6 @@ async function run_external_library_launcher_with_state(
   if (options.signal?.aborted) abort();
   const execution = processExecution.result.then((processResult): ExternalLibraryLauncherResult => {
     options.signal?.removeEventListener("abort", abort);
-    const completionScan = completionScanner.finish();
-    const completionResult = reconcile_external_launcher_completion(completionScan, selectedTarget);
     const finishedEvents = eventScanner.finish();
     const eventResult: ExternalTestEventScan = eventsAcceptedBeforeCancellation === undefined
       ? finishedEvents
@@ -764,13 +586,12 @@ async function run_external_library_launcher_with_state(
       durationMs: processResult.durationMs,
       timedOut: processResult.timedOut,
       ...(processResult.spawnError === undefined ? {} : { spawnError: processResult.spawnError }),
-      ...(completionResult.completion === undefined ? {} : { completion: completionResult.completion }),
-      ...(eventResult.events === undefined ? { completionError: eventResult.error ?? completionResult.error ?? "External launcher protocol rejected." } : { events: eventResult.events }),
+      ...(eventResult.events === undefined ? { protocolError: eventResult.error ?? "External launcher protocol rejected." } : { events: eventResult.events }),
       ...(eventTerminal?.t === "terminal" ? { terminalStatus: eventTerminal.status } : {}),
-      ...(processResult.outputLimitExceeded ? { completionError: "External launcher output limit exceeded." } : {}),
+      ...(processResult.outputLimitExceeded ? { protocolError: "External launcher output limit exceeded." } : {}),
       ...(processResult.forceKilled ? { forceKilled: true } : {}),
       ...(cancelled ? { cancelled: true } : {}),
-      ...(terminalAcceptedBeforeCancellation ? { completionAcceptedBeforeCancellation: true } : {}),
+      ...(terminalAcceptedBeforeCancellation ? { terminalAcceptedBeforeCancellation: true } : {}),
       invocationKind: invocation.kind,
       ok: eventResult.events !== undefined
         ? processResult.spawnError === undefined && !processResult.timedOut
@@ -802,7 +623,6 @@ export function create_external_library_launcher_service(): ExternalLibraryLaunc
       }
       state.processSupervisor.resetMetrics();
       state.directLauncherStarts = 0;
-      state.packageScriptStarts = 0;
       state.commandStarts = 0;
     },
     metrics: () => {
@@ -811,7 +631,6 @@ export function create_external_library_launcher_service(): ExternalLibraryLaunc
         activeChildren: processMetrics.activeChildren,
         maximumObservedConcurrentChildren: processMetrics.maximumObservedConcurrentChildren,
         directLauncherStarts: state.directLauncherStarts,
-        packageScriptStarts: state.packageScriptStarts,
         commandStarts: state.commandStarts,
       });
     },
@@ -846,7 +665,6 @@ export function external_library_launcher_metrics(): Readonly<{
   activeChildren: number;
   maximumObservedConcurrentChildren: number;
   directLauncherStarts: number;
-  packageScriptStarts: number;
 }> {
   return defaultExternalLibraryLauncherService.metrics();
 }

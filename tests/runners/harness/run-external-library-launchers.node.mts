@@ -1,8 +1,7 @@
 import assert from "node:assert/strict";
-import { mkdtemp, mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { hson_live_non_launcher_test_scripts } from "hson-live/test-launchers";
 import { discover_direct_report_executables, select_direct_report_executable_ids } from "../../harness/runtimes/node/direct-report-discovery";
 import {
   create_external_library_launcher_service,
@@ -12,9 +11,8 @@ import {
 import { run_external_library_launcher_pool } from "../../harness/runtimes/node/run-node-selected-verifications";
 import { assert_external_launcher_stdout_parity } from "../../harness/runtimes/node/external-launcher-stdout-parity";
 
-const parityCompletion = '<HSON_LIVE_TEST_COMPLETION>{"version":1,"launcherId":"livemap.aggregate-library-transitions","executed":1,"passed":1,"failed":0}\n';
-assert.doesNotThrow(() => assert_external_launcher_stdout_parity("livemap.aggregate-library-transitions", `ok 1\ntelemetry single-library=0.1ms aggregate-two-library=0.2ms candidates=2 revisions=1 publications=1\n${parityCompletion}`, `ok 1\ntelemetry single-library=9.1ms aggregate-two-library=8.2ms candidates=2 revisions=1 publications=1\n${parityCompletion}`));
-assert.throws(() => assert_external_launcher_stdout_parity("livemap.aggregate-library-transitions", `ok 1\ntelemetry single-library=0.1ms aggregate-two-library=0.2ms candidates=2 revisions=1 publications=1\n${parityCompletion}`, `not ok 1\ntelemetry single-library=0.1ms aggregate-two-library=0.2ms candidates=2 revisions=1 publications=1\n${parityCompletion}`), /PARITY_FAILED/);
+assert.doesNotThrow(() => assert_external_launcher_stdout_parity("livemap.aggregate-library-transitions", "ok 1\ntelemetry single-library=0.1ms aggregate-two-library=0.2ms candidates=2 revisions=1 publications=1\n", "ok 1\ntelemetry single-library=9.1ms aggregate-two-library=8.2ms candidates=2 revisions=1 publications=1\n"));
+assert.throws(() => assert_external_launcher_stdout_parity("livemap.aggregate-library-transitions", "ok 1\ntelemetry single-library=0.1ms aggregate-two-library=0.2ms candidates=2 revisions=1 publications=1\n", "not ok 1\ntelemetry single-library=0.1ms aggregate-two-library=0.2ms candidates=2 revisions=1 publications=1\n"), /PARITY_FAILED/);
 
 const first = await resolve_external_library_launchers();
 const second = await resolve_external_library_launchers();
@@ -37,16 +35,7 @@ const metadata = 'export const HSON_LIVE_TEST_METADATA = Object.freeze({ id: "du
 await writeFile(join(duplicateRoot, "tests", "one.mjs"), metadata); await writeFile(join(duplicateRoot, "tests", "two.mjs"), metadata);
 await assert.rejects(resolve_external_library_launchers(new URL(`file://${join(duplicateRoot, "index.js")}`).href), /DUPLICATE_ID:duplicate/);
 
-const transitionalFormerNonLaunchers = hson_live_non_launcher_test_scripts.filter((entry) => entry.reason.includes("Phase 2B"));
-assert.equal(transitionalFormerNonLaunchers.length, 13);
-const livePackage = JSON.parse(await readFile(join(first.repositoryRoot!, "package.json"), "utf8")) as { scripts: Record<string, string> };
-const scripts = livePackage.scripts;
-for (const entry of transitionalFormerNonLaunchers) {
-  const command = scripts[entry.packageScript] ?? "";
-  const source = /\b(tests\/[^ ]+\.(?:mts|mjs|ts))\b/.exec(command)?.[1];
-  assert.ok(source, `${entry.packageScript} has a transitional executable source`);
-  assert.ok(first.targets.some((target) => target.sourceFile === source), `${source} is ordinary source discovery, not a downstream exception`);
-}
+assert.equal(Object.values(first.invocations ?? {}).every((invocation) => invocation.kind === "direct"), true, "every discovered source uses direct executable invocation");
 
 const direct = await discover_direct_report_executables();
 const sample = [direct.catalog.tests[0]!.id, first.targets[0]!.id];
@@ -62,4 +51,4 @@ if (process.argv.includes("--all")) {
     assert.equal(pool.results.length, first.targets.length); assert.equal(pool.results.every((result) => result.ok), true);
   } finally { service.terminate(); }
 }
-console.log(JSON.stringify({ executableSourceDiscovery: "passed", discoveredSuites: first.targets.length, formerNonLaunchers: transitionalFormerNonLaunchers.length, exactSelection: "passed" }));
+console.log(JSON.stringify({ executableSourceDiscovery: "passed", discoveredSuites: first.targets.length, exactSelection: "passed" }));

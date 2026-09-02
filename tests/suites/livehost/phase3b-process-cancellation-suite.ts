@@ -4,7 +4,7 @@ import type { ExternalLibraryLauncherTarget } from "../../../src/shared/testing/
 import {
   create_external_library_launcher_service,
   EXTERNAL_LIBRARY_LAUNCHER_TERMINATION_GRACE_MS,
-  HSON_LIVE_TEST_COMPLETION_PREFIX,
+  HSON_LIVE_TEST_EVENT_PREFIX,
   resolve_external_library_launchers,
   type ExternalLibraryLauncherAvailability,
   type ExternalLibraryLauncherResult,
@@ -115,27 +115,27 @@ export function phase3b_process_cancellation_suite(): TestSuite {
         const evidence = await cancelled_scenario("graceful-timeout", true);
         expect(evidence.result.cancelled === true && evidence.activeChildren === 0, "AbortSignal one-shot delivery remains idempotent");
       }),
-      test_case(suite, "completion-before-cancel", "valid completion before cancellation preserves counts", async () => {
+      test_case(suite, "terminal-before-cancel", "valid event terminal before cancellation preserves cases", async () => {
         const selected = await target();
         const service = create_external_library_launcher_service();
         const controller = new AbortController();
         let stdout = "";
-        let completionResolve = (): void => undefined;
-        const completionObserved = new Promise<void>((resolve) => { completionResolve = resolve; });
+        let terminalResolve = (): void => undefined;
+        const terminalObserved = new Promise<void>((resolve) => { terminalResolve = resolve; });
         const running = service.run(availability_for(selected, "completed-then-wait"), selected.id, {
           timeoutMs: 10_000,
           signal: controller.signal,
           observeStdoutChunk(text) {
             stdout += text;
-            if (stdout.includes(HSON_LIVE_TEST_COMPLETION_PREFIX)) completionResolve();
+            if (stdout.includes(`${HSON_LIVE_TEST_EVENT_PREFIX}{"t":"terminal"`)) terminalResolve();
           },
         });
-        await completionObserved;
+        await terminalObserved;
         controller.abort();
         const result = await running;
-        expect(result.completionAcceptedBeforeCancellation === true && result.cancelled !== true, "pre-fence completion control frame wins authority ordering");
-        expect(result.completion?.executed === 5 && result.ok, "actual aggregate counts are preserved");
-        expect(service.metrics().activeChildren === 0, "post-completion cancellation still releases the lingering process");
+        expect(result.terminalAcceptedBeforeCancellation === true && result.cancelled !== true, "pre-fence event terminal wins authority ordering");
+        expect(result.events?.filter((event) => event.t === "case_end").length === 1 && result.ok, "actual child case is preserved");
+        expect(service.metrics().activeChildren === 0, "post-terminal cancellation still releases the lingering process");
       }),
       test_case(suite, "queued-launchers-fenced", "queued launcher does not spawn after cancellation", async () => {
         const base = await target();

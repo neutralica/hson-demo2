@@ -58,7 +58,6 @@ export type NodeSelectedVerificationScheduling =
 
 export type NodeSelectedVerificationConfiguration = Readonly<{
   externalScheduling?: NodeSelectedVerificationScheduling;
-  externalInvocation?: "verified" | "tsx";
   launcherService?: Pick<ExternalLibraryLauncherService, "run" | "runCommand" | "terminationGeneration">;
   commandAvailability?: NodeCommandSurfaceAvailability;
   browserExecutor?: PlaywrightBrowserExecutor;
@@ -329,7 +328,7 @@ function failed_external_result(
     durationMs: 0,
     timedOut: false,
     spawnError: error instanceof Error ? error.message : String(error),
-    invocationKind: "package-script",
+    invocationKind: "direct",
     ok: false,
   });
 }
@@ -376,10 +375,9 @@ function external_end_event(result: ExternalLibraryLauncherResult): TestEvent {
     ...(result.cancelled === undefined ? {} : { cancelled: result.cancelled }),
     ...(result.forceKilled === undefined ? {} : { forceKilled: result.forceKilled }),
     ...(result.spawnError === undefined ? {} : { spawnError: result.spawnError }),
-    ...(result.completion === undefined ? {} : { completion: result.completion }),
-    ...(result.completionError === undefined ? {} : { completionError: result.completionError }),
+    ...(result.protocolError === undefined ? {} : { protocolError: result.protocolError }),
     ...(result.terminalStatus === undefined ? {} : { terminalStatus: result.terminalStatus }),
-    ...(result.completionAcceptedBeforeCancellation === undefined ? {} : { completionAcceptedBeforeCancellation: true }),
+    ...(result.terminalAcceptedBeforeCancellation === undefined ? {} : { terminalAcceptedBeforeCancellation: true }),
   });
 }
 
@@ -540,8 +538,6 @@ export async function run_node_selected_verifications(
             return await (configuration.launcherService?.run ?? run_external_library_launcher)(availability, target.id, {
               terminationGeneration,
               ...(options.signal === undefined ? {} : { signal: options.signal }),
-              forceTsx: configuration.externalInvocation === "tsx",
-              forceVerifiedDirect: configuration.externalInvocation === "verified",
             });
           } catch (error) {
             return failed_external_result(target, error);

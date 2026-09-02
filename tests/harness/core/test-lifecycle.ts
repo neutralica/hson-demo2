@@ -49,31 +49,14 @@ function terminal_from_cases(statuses: ReadonlyMap<string, TestLifecycleTerminal
   return "pass";
 }
 
-function strip_completion_control_frames(stdout: string): string {
-  return stdout
-    .split(/(?<=\n)/)
-    .filter((line) => !line.replace(/\r?\n$/, "").startsWith("<HSON_LIVE_TEST_COMPLETION>"))
-    .join("");
-}
-
 function external_error(event: Extract<TestEvent, { t: "external_end" }>): TestLifecycleError | undefined {
   if (event.status === "cancelled") return Object.freeze({ kind: "cancelled", message: "External library launcher was cancelled." });
-  if (event.completionAcceptedBeforeCancellation) {
-    return event.completion !== undefined && event.completion.failed > 0
-      ? Object.freeze({ kind: "assertion", message: `External launcher reported ${event.completion.failed} failed checks.` })
-      : undefined;
-  }
+  if (event.terminalAcceptedBeforeCancellation) return undefined;
   if (event.timedOut) return Object.freeze({ kind: "timeout", message: "External library launcher timed out." });
   if (event.spawnError) return Object.freeze({ kind: "infrastructure", message: event.spawnError });
-  if (event.completionError) return Object.freeze({ kind: "protocol", message: event.completionError });
+  if (event.protocolError) return Object.freeze({ kind: "protocol", message: event.protocolError });
   if (event.signal !== null) return Object.freeze({ kind: "infrastructure", message: `External launcher exited from signal ${event.signal}.` });
-  if (event.exitCode !== 0) return Object.freeze({ kind: "infrastructure", message: `External launcher exited with code ${event.exitCode ?? "none"}.` });
-  if (event.completion && event.completion.failed > 0) {
-    return Object.freeze({
-      kind: "assertion",
-      message: `External launcher reported ${event.completion.failed} failed checks.`,
-    });
-  }
+  if (event.exitCode !== 0 && event.terminalStatus !== "fail") return Object.freeze({ kind: "infrastructure", message: `External launcher exited with code ${event.exitCode ?? "none"}.` });
   return undefined;
 }
 
@@ -93,6 +76,7 @@ export function make_test_lifecycle_adapter(options: Readonly<{
   const suiteStatuses = new Map<string, TestLifecycleTerminalStatus>();
   const caseStatuses = new Map<string, Map<string, TestLifecycleTerminalStatus>>();
   const suiteErrors = new Map<string, TestLifecycleError[]>();
+  const externalStatuses = new Map<string, TestLifecycleTerminalStatus>();
   const suiteExecutors = new Map(options.runPlan?.suites.map((suite) => [suite.id, suite.executorId ?? options.executorId]) ?? []);
   const caseExecutors = new Map<string, string>();
 
@@ -201,7 +185,13 @@ export function make_test_lifecycle_adapter(options: Readonly<{
       if (event.t === "suite_end") {
         if (terminalSuites.has(event.suite)) return;
         terminalSuites.add(event.suite);
-        const status = terminal_from_cases(caseStatuses.get(event.suite) ?? new Map());
+        const cases = caseStatuses.get(event.suite) ?? new Map();
+        const errors = suiteErrors.get(event.suite) ?? [];
+        const status = errors.length > 0
+          ? "fail"
+          : cases.size > 0
+            ? terminal_from_cases(cases)
+            : externalStatuses.get(event.suite) ?? "pass";
         suiteStatuses.set(event.suite, status);
         emit({
           t: "suite_finished",
@@ -225,7 +215,7 @@ export function make_test_lifecycle_adapter(options: Readonly<{
       }
 
       startSuite(event.suite, opaque);
-      const ordinaryStdout = event.ordinaryStdout ?? strip_completion_control_frames(event.stdout);
+      const ordinaryStdout = event.ordinaryStdout ?? event.stdout;
       if (ordinaryStdout.length > 0) {
         emit({
           t: "output",
@@ -255,23 +245,20 @@ export function make_test_lifecycle_adapter(options: Readonly<{
         truncated: Boolean(event.stdoutTruncated || event.stderrTruncated),
         knownBytes: (event.stdoutBytes ?? 0) + (event.stderrBytes ?? 0),
       });
-      if (event.completion !== undefined || event.completionError !== undefined) {
-        emit({
-          t: "artifact",
-          suiteId: event.suite,
-          kind: "protocol_control",
-          name: "HSON_LIVE_TEST_COMPLETION",
-          content: JSON.stringify(event.completion ?? { error: event.completionError }),
-        });
-      }
       const classifiedError = external_error(event);
       if (classifiedError !== undefined && classifiedError.kind !== "assertion" && classifiedError.kind !== "cancelled") {
+        const errors = suiteErrors.get(event.suite) ?? [];
+        errors.push(classifiedError);
+        suiteErrors.set(event.suite, errors);
         emit({ t: "infrastructure_error", suiteId: event.suite, error: classifiedError });
       }
-      // A completion rejected by protocol reconciliation is evidence, not a
-      // trustworthy count source. Counts are observed only from an accepted result.
-      const completion = event.status !== "cancelled" && event.completionError === undefined ? event.completion : undefined;
-      const certification = shapes.get(event.suite) === "certification-aggregate";
+      const shape = shapes.get(event.suite);
+      if (shape === "cases" || shape === "browser-journeys") {
+        externalStatuses.set(event.suite, event.status);
+        return;
+      }
+      if (terminalSuites.has(event.suite)) return;
+      const certification = shape === "certification-aggregate";
       const counts: TestLifecycleCounts = certification
         ? Object.freeze({
             declared: 1,
@@ -284,11 +271,11 @@ export function make_test_lifecycle_adapter(options: Readonly<{
             cancelled: event.status === "cancelled" ? 1 : 0,
           })
         : Object.freeze({
-            declared: completion?.executed ?? 0,
-            total: completion?.executed ?? 0,
-            executed: completion?.executed ?? 0,
-            passed: completion?.passed ?? 0,
-            failed: completion?.failed ?? 0,
+            declared: 0,
+            total: 0,
+            executed: 0,
+            passed: 0,
+            failed: 0,
             skipped: 0,
             unsupported: 0,
             cancelled: 0,

@@ -41,10 +41,10 @@ Keep benchmarks in the repository-level `benchmarks/` directory.
 
 ## Running tests
 
-Run the complete integrated catalog:
+Run a direct report from executable discovery:
 
 ```sh
-npm run test:inclusive-library-node
+npm run test:report -- --suite transform/hson-number
 ```
 
 Run the fixed hson-demo2 catalog only:
@@ -67,7 +67,7 @@ npm run test:browser
 npm run test:hosted-cloudflare
 ```
 
-The complete command inventory and ownership metadata are in [`docs/surface-inventory.md`](./docs/surface-inventory.md); the file-by-file old-to-new record is in [`docs/migration-inventory.md`](./docs/migration-inventory.md). Package script names, launcher IDs, launcher order, executable counts, and external launcher metadata are owned by `package.json`, [`harness/hosted/test-surface-catalog.ts`](./harness/hosted/test-surface-catalog.ts), and the `hson-live/test-launchers` manifest. Physical source paths are not identities.
+The file-by-file old-to-new record is in [`docs/migration-inventory.md`](./docs/migration-inventory.md). Native suite descriptors, hson-live suite-owned metadata, and Playwright discovery own executable identity. Reports count actual emitted case terminals; package scripts are invocation conveniences rather than inventory authority.
 
 ## Adding coverage
 
@@ -81,4 +81,7 @@ Shared helpers belong in `helpers/` only when multiple suites or subsystems use 
 
 ## Authoritative surfaces
 
-The fixed hson-demo2 catalog, the `hson-live` launcher manifest, the hosted suite registry, package scripts, Playwright discovery, and Cloudflare adapter checks are authoritative together. Aggregate commands certify those surfaces but do not create extra test claims. See [`docs/architecture.md`](./docs/architecture.md) and [`docs/pending-environments.md`](./docs/pending-environments.md) for runtime boundaries.
+Native executable suites, hson-live suite-owned metadata, Playwright discovery,
+and environment-specific adapters own their test identities. Reports derive
+totals from actual case terminals. See [`docs/architecture.md`](./docs/architecture.md)
+and [`docs/pending-environments.md`](./docs/pending-environments.md) for runtime boundaries.

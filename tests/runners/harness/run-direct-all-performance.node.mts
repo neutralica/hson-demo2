@@ -40,7 +40,7 @@ try {
     selectedIds,
     () => undefined,
     HOSTED_TEST_RUN_OPTIONS,
-    { externalScheduling: { kind: "fixed", concurrency: 2 }, externalInvocation: "verified" },
+    { externalScheduling: { kind: "fixed", concurrency: 2 } },
   );
   const elapsedMs = performance.now() - startedAt;
   if (!result.ok) originalConsole.error(JSON.stringify({ failures: result.summary.failures }, null, 2));

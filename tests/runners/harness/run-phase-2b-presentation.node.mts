@@ -113,10 +113,10 @@ try {
     { kind: "cancelled", executorId: "future-05", message: "acknowledged cancellation", stack: null, expected: null, actual: null },
   ];
   const evidence: HostedTestEvidence[] = [
-    { id: "e1", sequence: 3, timestamp: 30, executorId: "node-child-03", kind: "stdout", name: "stdout", content: "human output\n<HSON_LIVE_TEST_COMPLETION>{\"executed\":139}\n", truncated: false, knownBytes: 64, reference: null, mediaType: null },
+    { id: "e1", sequence: 3, timestamp: 30, executorId: "node-child-03", kind: "stdout", name: "stdout", content: "human output\n", truncated: false, knownBytes: 13, reference: null, mediaType: null },
     { id: "e2", sequence: 4, timestamp: 31, executorId: "node-child-03", kind: "stderr", name: "stderr", content: "(node:1) ExperimentalWarning: loader\nmeaningful stderr\n", truncated: false, knownBytes: 50, reference: null, mediaType: null },
-    { id: "e3", sequence: 5, timestamp: 32, executorId: "node-child-03", kind: "protocol_control", name: "completion", content: "{\"executed\":139,\"failed\":1}", truncated: false, knownBytes: null, reference: null, mediaType: "application/json" },
-    { id: "e4", sequence: 6, timestamp: 33, executorId: "node-child-03", kind: "raw_process_output", name: "raw", content: "<HSON_LIVE_TEST_COMPLETION>{...}", truncated: false, knownBytes: 80, reference: null, mediaType: null },
+    { id: "e3", sequence: 5, timestamp: 32, executorId: "node-child-03", kind: "protocol_control", name: "test event", content: "{\"t\":\"terminal\",\"status\":\"fail\"}", truncated: false, knownBytes: null, reference: null, mediaType: "application/json" },
+    { id: "e4", sequence: 6, timestamp: 33, executorId: "node-child-03", kind: "raw_process_output", name: "raw", content: "<HSON_TEST_EVENT>{...}", truncated: false, knownBytes: 40, reference: null, mediaType: null },
     { id: "e5", sequence: 7, timestamp: 34, executorId: "browser-02", kind: "artifact", name: "trace", content: "", truncated: false, knownBytes: null, reference: "artifact://trace-1", mediaType: "application/zip" },
   ];
   const failed = clone_report(running) as HostedTestReport & { suiteRuns: HostedTestSuiteRunReport[] };
@@ -141,9 +141,9 @@ try {
   certify(runtime.document.querySelectorAll(".hosted-failure-card").length === 6, "failed suite expands to six immediately understandable failure cards");
   certify(runtime.document.querySelector('[data-failure-kind="assertion"]')?.textContent?.includes("expected: Ada") === true && runtime.document.querySelector('[data-failure-kind="assertion"]')?.textContent?.includes("actual: Grace") === true, "assertion card exposes expected and actual");
   certify(runtime.document.querySelector('[data-failure-kind="infrastructure"]')?.textContent?.includes("browser-02") === true, "infrastructure card names executor context without changing test identity");
-  certify(runtime.document.querySelector('[data-evidence-kind="stdout"]')?.textContent?.includes("HSON_LIVE_TEST_COMPLETION") === false, "control sentinel is absent from ordinary stdout presentation");
-  certify(runtime.document.querySelector('[data-evidence-kind="protocol"]')?.textContent?.includes("executed") === true, "structured completion remains available under protocol evidence");
-  certify(runtime.document.querySelector('[data-evidence-kind="raw"]')?.textContent?.includes("HSON_LIVE_TEST_COMPLETION") === true, "untouched control text remains available only in raw forensic evidence");
+  certify(runtime.document.querySelector('[data-evidence-kind="stdout"]')?.textContent?.includes("HSON_TEST_EVENT") === false, "control sentinel is absent from ordinary stdout presentation");
+  certify(runtime.document.querySelector('[data-evidence-kind="protocol"]')?.textContent?.includes("terminal") === true, "structured event remains available under protocol evidence");
+  certify(runtime.document.querySelector('[data-evidence-kind="raw"]')?.textContent?.includes("HSON_TEST_EVENT") === true, "untouched control text remains available only in raw forensic evidence");
   certify(runtime.document.querySelector('[data-evidence-kind="artifacts"]')?.textContent?.includes("artifact://trace-1") === true, "generic artifact reference renders as truthful metadata");
   inspector.dispose();
 } finally {

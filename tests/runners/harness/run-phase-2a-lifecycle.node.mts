@@ -160,51 +160,19 @@ certify(recoveredFinal.suiteRuns.map((entry) => entry.id).join("|") === initialO
 certify(recoveredFinal.suiteRuns.find((entry) => entry.id === canonicalSuite.id)?.evidence.at(-1)?.content === "post-reconnect evidence", "recovered authority continues incremental evidence ingestion without raw-output reconstruction");
 recoveredReport.dispose();
 
-// Opaque adapter: completion is control authority, raw output remains an artifact.
-const opaquePlan = plan_for("phase2a-opaque", make_test_catalog([], [opaqueSuite]), [opaqueSuite.id]);
-const opaqueReport = make_hosted_test_report(() => 50, undefined, { runPlan: opaquePlan });
 const sharedExternal = {
   id: opaqueSuite.id, suite: opaqueSuite.id, name: opaqueSuite.title, subject: opaqueSuite.subject,
   runtime: "node", collections: Object.freeze([]),
 };
-opaqueReport.reduce({ t: "external_state", ...sharedExternal, status: "running" });
-opaqueReport.reduce({
-  t: "external_end", ...sharedExternal, status: "pass", ms: 5,
-  stdout: "human\n<HSON_LIVE_TEST_COMPLETION>{\"version\":1}\n", ordinaryStdout: "human\n", stderr: "",
-  exitCode: 0, signal: null, timedOut: false,
-  completion: { version: 1, launcherId: "opaque", executed: 5, passed: 5, failed: 0 },
-});
-const opaqueFinal = opaqueReport.map.snap().suiteRuns[0]!;
-certify(opaqueFinal.evidence.find((item) => item.kind === "stdout")?.content === "human\n", "completion control frame never enters ordinary stdout evidence");
-certify(opaqueFinal.evidence.find((item) => item.kind === "raw_process_output")?.content.includes("HSON_LIVE_TEST_COMPLETION") === true, "untouched raw process output remains recoverable");
-certify(opaqueFinal.evidence.some((item) => item.kind === "protocol_control"), "structured completion is retained as control evidence");
-certify(opaqueFinal.status === "pass" && opaqueFinal.counts.passed === 5, "opaque completion is authoritative normalized suite state");
-
 const protocolReport = make_hosted_test_report(() => 60, undefined, { runPlan: plan_for("phase2a-protocol", make_test_catalog([], [opaqueSuite]), [opaqueSuite.id]) });
 protocolReport.reduce({ t: "external_state", ...sharedExternal, status: "running" });
 protocolReport.reduce({
   t: "external_end", ...sharedExternal, status: "fail", ms: 1, stdout: "", ordinaryStdout: "", stderr: "raw stderr\n",
-  exitCode: 0, signal: null, timedOut: false, completionError: "missing completion",
+  exitCode: 0, signal: null, timedOut: false, protocolError: "missing terminal test event",
 });
 const protocolFinal = protocolReport.map.snap().suiteRuns[0]!;
 certify(protocolFinal.errors.some((error) => error.kind === "protocol" && error.executorId === "livehost-authority"), "protocol failure is classified with executor context");
 certify(protocolFinal.evidence.some((item) => item.kind === "stderr" && item.content === "raw stderr\n"), "protocol diagnostics retain stderr as normalized evidence");
-
-const variableInventoryReport = make_hosted_test_report(() => 61, undefined, { runPlan: plan_for("phase2a-variable-inventory", make_test_catalog([], [opaqueSuite]), [opaqueSuite.id]) });
-variableInventoryReport.reduce({ t: "external_state", ...sharedExternal, status: "running" });
-variableInventoryReport.reduce({
-  t: "external_end", ...sharedExternal, status: "pass", ms: 2, stdout: "", ordinaryStdout: "", stderr: "",
-  exitCode: 0, signal: null, timedOut: false,
-  completion: { version: 1, launcherId: "opaque", executed: 6, passed: 6, failed: 0 },
-});
-const variableInventoryFinal = variableInventoryReport.map.snap().suiteRuns[0]!;
-certify(
-  variableInventoryFinal.status === "pass"
-    && variableInventoryFinal.declaredChecks === null
-    && variableInventoryFinal.counts.total === 6
-    && variableInventoryFinal.counts.passed === 6,
-  "accepted completion inventory is observed without a separately declared count",
-);
 
 const impossiblePlan = plan_for("phase2a-impossible", canonicalCatalog, [canonicalCase.id]);
 const impossibleReport = make_hosted_test_report(() => 0, undefined, { runPlan: impossiblePlan });
@@ -238,7 +206,7 @@ const timeoutReport = make_hosted_test_report(() => 70, undefined, { runPlan: ti
 timeoutReport.reduce({ t: "external_state", ...sharedExternal, status: "running" });
 timeoutReport.reduce({
   t: "external_end", ...sharedExternal, status: "fail", ms: 1000, stdout: "partial output", ordinaryStdout: "partial output", stderr: "",
-  exitCode: null, signal: null, timedOut: true, completionError: "missing completion",
+  exitCode: null, signal: null, timedOut: true, protocolError: "missing terminal test event",
 });
 certify(timeoutReport.map.snap().suiteRuns[0]?.errors.some((error) => error.kind === "timeout") === true, "opaque timeout retains partial evidence and timeout classification");
 

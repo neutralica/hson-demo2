@@ -78,16 +78,9 @@ export type TestEvent = (
     cancelled?: boolean;
     forceKilled?: boolean;
     spawnError?: string;
-    completion?: Readonly<{
-      version: 1;
-      launcherId: string;
-      executed: number;
-      passed: number;
-      failed: number;
-    }>;
-    completionError?: string;
+    protocolError?: string;
     terminalStatus?: "pass" | "fail" | "skip" | "unsupported" | "cancelled";
-    completionAcceptedBeforeCancellation?: boolean;
+    terminalAcceptedBeforeCancellation?: boolean;
     ordinaryStdout?: string;
     stdoutBytes?: number;
     stderrBytes?: number;

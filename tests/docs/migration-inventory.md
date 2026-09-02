@@ -61,7 +61,7 @@ The twelve entries marked as removed were internal re-export shims: ten LiveHost
 | `src/app/hosted-test/hosted-test-report.types.ts` | harness reporting | `tests/harness/reporting/hosted/hosted-test-report.types.ts` |
 | `src/app/hosted-test/hosted-test-suite.ts` | harness core | `tests/harness/hosted/hosted-test-suite.ts` |
 | `src/app/hosted-test/hosted-test-timing.ts` | harness reporting | `tests/harness/reporting/hosted/hosted-test-timing.ts` |
-| `src/app/hosted-test/test-surface-catalog.ts` | harness core | `tests/harness/hosted/test-surface-catalog.ts` |
+| `src/app/hosted-test/test-surface-catalog.ts` | obsolete duplicate inventory | deleted in Phase 2C; executable discovery is authoritative |
 | `src/app/ui/soft-tile/soft-tile-test.mts` | runner | `tests/runners/app/run-soft-tile.node.mts` |
 | `src/docs/canonical-hosted-test-architecture.md` | documentation | `tests/docs/architecture.md` |
 | `src/docs/pending-test-environments.md` | documentation | `tests/docs/pending-environments.md` |
@@ -85,11 +85,11 @@ The twelve entries marked as removed were internal re-export shims: ten LiveHost
 | `src/hosted-test/dom/hosted-dom-runtime.ts` | runtime adapter | `tests/harness/runtimes/dom/hosted-dom-runtime.ts` |
 | `src/hosted-test/dom/jsdom-hosted-test-suites.ts` | runtime adapter | `tests/harness/runtimes/dom/jsdom-hosted-test-suites.ts` |
 | `src/hosted-test/dom/jsdom.types.d.ts` | runtime adapter | `tests/harness/runtimes/dom/jsdom.types.d.ts` |
-| `src/hosted-test/final-harness-migration-inventory.ts` | historical migration ledger | retired in Phase 5; current truth derives from `test-surface-census.ts` |
+| `src/hosted-test/final-harness-migration-inventory.ts` | historical migration ledger | retired in Phase 5; executable discovery is current authority |
 | `src/hosted-test/hosted-all-test-suites.ts` | harness core | `tests/harness/hosted/hosted-all-test-suites.ts` |
 | `src/hosted-test/hosted-test-application.ts` | harness core | `tests/harness/hosted/hosted-test-application.ts` |
 | `src/hosted-test/hosted-test-case-inspection.ts` | harness core | `tests/harness/hosted/hosted-test-case-inspection.ts` |
-| `src/hosted-test/hosted-test-migration-inventory.ts` | historical migration ledger | retired in Phase 5; current truth derives from `test-surface-census.ts` |
+| `src/hosted-test/hosted-test-migration-inventory.ts` | historical migration ledger | retired in Phase 5; executable discovery is current authority |
 | `src/hosted-test/livehost-authority-composition.ts` | harness core | `tests/harness/hosted/livehost-authority-composition.ts` |
 | `src/hosted-test/node-safe-hosted-test-suites.ts` | harness core | `tests/harness/hosted/node-safe-hosted-test-suites.ts` |
 | `src/hosted-test/registered-hosted-test-suites.ts` | harness core | `tests/harness/hosted/registered-hosted-test-suites.ts` |
@@ -275,13 +275,13 @@ The twelve entries marked as removed were internal re-export shims: ten LiveHost
 | `src/tests/test-data/htmlstring.html` | fixture | `tests/fixtures/transform/html/htmlstring.html` |
 | `src/tests/test-data/json-fixtures.ts` | fixture | `tests/fixtures/transform/json/json-fixtures.ts` |
 | `src/tests/test-data/large-fixtures/invalid-html.ts` | fixture | `tests/fixtures/transform/large/invalid-html.ts` |
-| `src/tests/test-surface/run-test-surface-enumeration.node.mts` | runner | `tests/runners/harness/run-test-surface-enumeration.node.mts` |
+| `src/tests/test-surface/run-test-surface-enumeration.node.mts` | obsolete census runner | deleted in Phase 2C |
 | `src/tests/test-system/fixtures/external-launcher-protocol-fixture.mjs` | fixture | `tests/fixtures/protocol/external-launcher-protocol-fixture.mjs` |
 | `src/tests/test-system/run-canonical-tests.node.mts` | runner | `tests/runners/harness/run-canonical-tests.node.mts` |
 | `src/tests/test-system/run-external-launcher-protocol.node.mts` | runner | `tests/runners/harness/run-external-launcher-protocol.node.mts` |
 | `src/tests/test-system/run-external-library-launchers.node.mts` | runner | `tests/runners/harness/run-external-library-launchers.node.mts` |
 | `src/tests/test-system/run-hosted-test-performance.node.mts` | runner | `tests/runners/harness/run-hosted-test-performance.node.mts` |
-| `src/tests/test-system/run-inclusive-library-verification.node.mts` | runner | `tests/runners/harness/run-inclusive-library-verification.node.mts` |
+| `src/tests/test-system/run-inclusive-library-verification.node.mts` | obsolete aggregate wrapper | deleted in Phase 2C; bounded mixed reporting owns its useful proof |
 | `src/tests/test-system/run-stage-2-contracts.node.mts` | runner | `tests/runners/harness/run-stage-2-contracts.node.mts` |
 | `src/tests/test-system/run-stage-3-discovery.node.mts` | runner | `tests/runners/harness/run-stage-3-discovery.node.mts` |
 | `src/tests/test-system/run-stage-4a-selected.node.mts` | runner | `tests/runners/harness/run-stage-4a-selected.node.mts` |

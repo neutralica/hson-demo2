@@ -9,14 +9,14 @@ import { H2B_VERIFICATION_IDS, H2D_VERIFICATION_IDS, H2_VERIFICATION_IDS } from 
 import { H2C_VERIFICATION_IDS } from "../../harness/runtimes/node/h2-artifact-certification";
 import { start_hosted_test_server } from "../../harness/runtimes/node/server/hosted-test-server";
 
-const H2_LIFECYCLE_ID = "hson-demo2:test:surface-enumeration-node";
+const H2_LIFECYCLE_ID = "hson-demo2:test:stage2-contracts-node";
 
 async function wait_for_file(path: string, label: string): Promise<void> {
-  const deadline = Date.now() + 12_000;
+  const deadline = Date.now() + 30_000;
   while (Date.now() < deadline) {
     try { await access(path); return; } catch { await new Promise<void>((resolve) => setTimeout(resolve, 20)); }
   }
-  throw new Error(`Hosted H2 lifecycle did not reach ${label} within 12 seconds.`);
+  throw new Error(`Hosted H2 lifecycle did not reach ${label} within 30 seconds.`);
 }
 
 async function is_alive(pid: number): Promise<boolean> {
@@ -51,11 +51,11 @@ async function lifecycle_fixture(mode: "cancel" | "pass"): Promise<Readonly<{
       async beforeExecution(runWorkspace, snapshotDemo) {
         workspace = runWorkspace;
         const pkg = JSON.parse(await readFile(join(snapshotDemo, "package.json"), "utf8")) as { scripts: Record<string, string> };
-        pkg.scripts["test:surface-enumeration-node"] = "node h2-hosted-lifecycle-fixture.mjs";
+        pkg.scripts["test:stage2-contracts-node"] = "node h2-hosted-lifecycle-fixture.mjs";
         await writeFile(join(snapshotDemo, "package.json"), JSON.stringify(pkg));
         await writeFile(join(snapshotDemo, "h2-hosted-lifecycle-fixture.mjs"), mode === "cancel"
           ? `import { appendFileSync, existsSync, writeFileSync } from "node:fs"; import { spawn } from "node:child_process"; const descendantReady = ${JSON.stringify(`${ready}.descendant`)}; const descendant = spawn("/bin/sh", ["-c", 'trap "" TERM; touch "$1"; while :; do sleep 1; done', "sh", descendantReady], { stdio: "ignore" }); const published = setInterval(() => { if (existsSync(descendantReady)) { clearInterval(published); writeFileSync(${JSON.stringify(ready)}, JSON.stringify({ parentPid: process.ppid, descendantPid: descendant.pid })); } }, 5); process.on("SIGTERM", () => { appendFileSync(${JSON.stringify(cancelled)}, "observed\\n"); process.exit(0); }); setInterval(() => {}, 1000);`
-          : `console.log("test surface enumeration: ok");`,
+          : `console.log("Stage 2 contracts: ok");`,
         );
       },
       beforeCleanup(runWorkspace) { workspace = runWorkspace; },

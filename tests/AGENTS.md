@@ -23,18 +23,12 @@ Do not create a second panel-specific test list.
 
 ### Tests owned by hson-live
 
-For a new or changed acceptance/runtime-probe launcher, update the exported `hson-live/test-launchers` manifest with:
-
-- a stable launcher ID;
-- accurate subject;
-- display name;
-- package script and repository module;
-- runtime classification;
-- relevant collections.
-
-Executable check counts are observed from valid terminal completion records. Do not add a
-separately maintained launcher count or make current inventory cardinality a discovery,
-execution, or success requirement.
+Executable acceptance and runtime-probe suites own an exported, frozen
+`HSON_LIVE_TEST_METADATA` declaration. Keep its stable ID, title, category,
+runtime, and tags accurate. The suite must emit only `<HSON_TEST_EVENT>` case
+lifecycle, diagnostics, and a count-free terminal. Static source discovery is
+authoritative; do not add a launcher manifest, package-script registry, expected
+suite count, or aggregate completion record.
 
 The corresponding hson-demo2 integration must expose it to the internal hosted registry and generated evidence under its functional category. Do not create a separate “library verification” category when the test belongs to LiveHost, LiveMap, LiveTree, Transform, or another established subject.
 
@@ -57,7 +51,7 @@ Before reporting a test-related task complete, verify that:
 
 - the original CLI command still passes;
 - hosted discovery includes the new test or launcher;
-- category and suite counts reflect it;
+- executable metadata and discovered categories reflect it;
 - CLI/capture selection executes it;
 - Worker discovery remains free of Node-only tests;
-- no test is registered twice.
+- no executable identity is discovered twice.

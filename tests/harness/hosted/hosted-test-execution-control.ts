@@ -44,7 +44,7 @@ export function make_hosted_test_execution_control(): HostedTestExecutionControl
     // These are executor acknowledgements/evidence, not new semantic work.
     return event.t === "case_cancelled"
       || (event.t === "external_end" && (
-        event.status === "cancelled" || event.completionAcceptedBeforeCancellation === true
+        event.status === "cancelled" || event.terminalAcceptedBeforeCancellation === true
       ));
   };
 
