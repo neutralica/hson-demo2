@@ -75,6 +75,7 @@ const DEMO_TEST_SCRIPTS = Object.freeze({
   "test:node-application-host-entry": "tests/runners/livehost/run-node-application-host-entry.node.mts",
   "test:livehost-bootstrap-integration": "tests/runners/livehost/run-livehost-bootstrap-integration.node.mts",
   "test:node-production-runtime": "tests/runners/livehost/run-node-production-runtime.node.mts",
+  "test:towl-worker-compatibility": "tests/integration/cloudflare/run-towl-worker-compatibility.node.mts",
   "test:hosted-cloudflare": "tests/integration/cloudflare/run-hosted-cloudflare.node.mts",
   "test:hosted-jsdom-runtime-node": "tests/runners/livehost/run-hosted-jsdom-runtime.node.mts",
   "test:hosted-dom-collection-node": "tests/runners/livehost/run-hosted-dom-collection.node.mts",
@@ -282,12 +283,36 @@ const LIVE_SUPPORT_RUNNERS: readonly (readonly [string, string, TestClassificati
   ["livemap:operators:review", "LiveMap operator human review artifact generator", "temporary diagnostic"],
   ["test:hson-array-index", "Hson array-index acceptance", "library acceptance"],
   ["test:hson-attribute-transport", "Hson attribute transport acceptance", "library acceptance"],
+  ["test:hson-authoring-package", "built-package Hson authoring tree-shaking certification", "build/typecheck certification"],
+  ["test:hson-schema-consumer", "Hson Schema consumer build and check", "build/typecheck certification"],
+  ["test:hson-schema-document-consumer", "Hson Schema document consumer build", "build/typecheck certification"],
   ["test:diagnostics-inventory", "external diagnostics manifest consistency", "runtime integration"],
   ["test:locus-graph-content-codec", "Locus graph-content codec acceptance", "library acceptance"],
   ["test:locus-public-contract", "Locus built-package public contract", "library acceptance"],
+  ["test:production-dependency-boundary", "production dependency boundary certification", "build/typecheck certification"],
+  ["test:public-entrypoint-runtime", "fresh-process public entrypoint certification", "build/typecheck certification"],
   ["test:root-compatibility", "root compatibility acceptance", "library acceptance"],
+  ["test:schema-editor-proof", "Schema editor diagnostic proof", "build/typecheck certification"],
   ["test:transform-worker", "Worker transform entrypoint acceptance", "library acceptance"],
+  ["test:typescript-observability", "TypeScript observability inventory certification", "build/typecheck certification"],
 ];
+
+const LIVE_PRODUCTION_ARTIFACT_SUPPORTS = new Set([
+  "test:hson-authoring-package",
+  "test:hson-schema-consumer",
+  "test:hson-schema-document-consumer",
+  "test:production-dependency-boundary",
+  "test:public-entrypoint-runtime",
+  "test:schema-editor-proof",
+  "test:typescript-observability",
+]);
+
+const LIVE_SUPPORT_PATH_OVERRIDES = Object.freeze({
+  "test:hson-authoring-package": "tests/hson-authoring-package.acceptance.mjs",
+  "test:hson-schema-consumer": "package.json",
+  "test:hson-schema-document-consumer": "package.json",
+  "test:locus-public-contract": "tests/locus-public-contract.acceptance.mjs",
+} satisfies Readonly<Record<string, string>>);
 
 function live_support_role(name: string): Readonly<{
   role: TestSurfaceRole;
@@ -301,7 +326,11 @@ function live_support_role(name: string): Readonly<{
       exclusionReason: "Generates a human review artifact and executes no independent semantic test.",
     });
   }
-  if (name === "build" || name === "check" || name.startsWith("check:") || name === "test:root-compatibility") {
+  if (name === "build"
+    || name === "check"
+    || name.startsWith("check:")
+    || name === "test:root-compatibility"
+    || LIVE_PRODUCTION_ARTIFACT_SUPPORTS.has(name)) {
     return Object.freeze({ role: "production artifact verification", exposure: "command only" });
   }
   if (name === "test:diagnostics-inventory") {
@@ -375,12 +404,15 @@ function live_launcher_entry(launcher: HsonLiveTestLauncher): TestSurfaceCatalog
 const LIVE_SUPPORT_ENTRIES: readonly TestSurfaceCatalogEntry[] =
 LIVE_SUPPORT_RUNNERS.map(([name, behavior, classification]) => Object.freeze({
   id: `hson-live:${name}`, label: name,
-  category: name === "build" || name === "check" || name.startsWith("check:") || name === "test:root-compatibility"
+  category: name === "build"
+    || name === "check"
+    || name.startsWith("check:")
+    || name === "test:root-compatibility"
+    || LIVE_PRODUCTION_ARTIFACT_SUPPORTS.has(name)
     ? "Build / Types"
     : name.includes("hson") || name.includes("transform") ? "Transforms" : "Locus",
-  repository: "hson-live", path: name === "test:locus-public-contract"
-    ? "tests/locus-public-contract.acceptance.mjs"
-    : name.startsWith("test:") ? `tests/${name.slice(5)}.acceptance.mts` : "package.json",
+  repository: "hson-live", path: Reflect.get(LIVE_SUPPORT_PATH_OVERRIDES, name) as string | undefined
+    ?? (name.startsWith("test:") ? `tests/${name.slice(5)}.acceptance.mts` : "package.json"),
   behavior, classification,
   ...live_support_role(name),
   environment: "Node",

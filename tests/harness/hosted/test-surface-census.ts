@@ -144,12 +144,7 @@ export type DuplicateRetirement = Readonly<{
 export const PHASE5_DUPLICATE_RETIREMENTS: readonly DuplicateRetirement[] = Object.freeze([
   ["transform/hson/quoted-name-acceptance", "transform.hson-quoted-name-acceptance", "Hson quoted property-name acceptance grammar", 24],
   ["transform/hson/quoted-name-rejection", "transform.hson-quoted-name-rejection", "Hson quoted property-name rejection grammar", 25],
-  ["livemap/path-handle", "livemap.path-handle", "LiveMap path-handle semantics", 8],
-  ["livemap/carrier-mutation-planning", "livemap.carrier-mutation-planning", "LiveMap carrier mutation planning", 23],
-  ["livemap/exact-transport", "livemap.exact-transport", "LiveMap exact transport", 23],
-  ["livemap/exact-transport-rejection", "livemap.exact-transport-rejection", "LiveMap exact transport rejection", 10],
   ["livemap/exact-propagation", "livemap.exact-propagation", "LiveMap exact propagation", 23],
-  ["livemap/schema-value-boundary", "livemap.schema-value-boundary", "LiveMap schema value boundary", 24],
 ].map(([removedTestIdentity, retainedAuthoritativeIdentity, semanticProposition, removedCanonicalCases]) => Object.freeze({
   removedTestIdentity,
   retainedAuthoritativeIdentity,

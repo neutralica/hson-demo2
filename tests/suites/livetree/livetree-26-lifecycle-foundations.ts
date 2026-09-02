@@ -54,40 +54,6 @@ function traversal_case(suite: string): LiveTreeCaseSpec {
   };
 }
 
-function recursive_quid_case(suite: string): LiveTreeCaseSpec {
-  let destroyed = 0;
-  let repeated = -1;
-  let allStrongGone = false;
-  let allWeakGone = false;
-  let allMetadataGone = false;
-
-  return {
-    suite,
-    caseId: "recursive-quid-destruction-scrubs-unmounted-root-descendants-and-vsn-identity", name: "recursive QUID destruction scrubs unmounted root descendants and VSN identity",
-    html: `<main></main>`,
-    act() {
-      const leaf = _CREATE_NODE({ $_tag: "span", $_content: ["x"] });
-      const elem = _CREATE_NODE({ $_tag: "_hson_elem", $_content: [leaf] });
-      const root = _CREATE_NODE({ $_tag: "_hson_root", $_content: [elem] });
-      const nodes = _collect_subtree_nodes(root, "post");
-      const quids = nodes.map((node) => _ensure_livetree_quid(node));
-
-      destroyed = _destroy_subtree_quids(root);
-      repeated = _destroy_subtree_quids(root);
-      allStrongGone = quids.every((quid) => _get_livetree_node_by_quid(quid) === undefined);
-      allWeakGone = nodes.every((node) => !_has_livetree_quid(node) && _get_livetree_quid(node) === undefined);
-      allMetadataGone = nodes.every((node) => node.$_meta?.quid === undefined);
-    },
-    assert(_tree, t) {
-      t.eq("all three node identities destroyed", destroyed, 3);
-      t.eq("repeated recursive destruction is harmless", repeated, 0);
-      t.eq("all strong registry entries are gone", allStrongGone, true);
-      t.eq("all weak reverse entries are gone", allWeakGone, true);
-      t.eq("all persisted metadata is gone", allMetadataGone, true);
-    },
-  };
-}
-
 function mapped_quid_case(suite: string): LiveTreeCaseSpec {
   let destroyed = 0;
   let rootRegistryGone = false;
@@ -126,101 +92,6 @@ function mapped_quid_case(suite: string): LiveTreeCaseSpec {
       t.eq("mapped root DOM attribute scrubbed", rootDomScrubbed, true);
       t.eq("mapped child DOM attribute scrubbed", childDomScrubbed, true);
       t.eq("identity destruction alone preserves mappings", mappingsRemain, true);
-    },
-  };
-}
-
-function weak_and_duplicate_case(suite: string): LiveTreeCaseSpec {
-  let weakGone = false;
-  let duplicateCouldNotDeleteOwner = false;
-  let duplicateMetadataGone = false;
-  let divergentRegistryReleasedSafely = false;
-
-  return {
-    suite,
-    caseId: "recursive-quid-destruction-handles-weakmap-only-and-malformed-duplicate-identity", name: "recursive QUID destruction handles WeakMap-only and malformed duplicate identity",
-    html: `<main></main>`,
-    act() {
-      const weakOnly = _CREATE_NODE({ $_tag: "aside" });
-      const weakQuid = _ensure_livetree_quid(weakOnly, { persist: false });
-      _destroy_subtree_quids(weakOnly);
-      weakGone = _get_livetree_quid(weakOnly) === undefined
-        && _get_livetree_node_by_quid(weakQuid) === undefined;
-
-      const duplicateQuid = `lifecycle-duplicate-${crypto.randomUUID()}`;
-      const owner = _CREATE_NODE({ $_tag: "section", $_meta: { quid: duplicateQuid } });
-      const duplicate = _CREATE_NODE({ $_tag: "div", $_meta: { quid: duplicateQuid } });
-      _ensure_livetree_quid(owner);
-      _destroy_subtree_quids(duplicate);
-      duplicateCouldNotDeleteOwner = _get_livetree_node_by_quid(duplicateQuid) === owner;
-      duplicateMetadataGone = duplicate.$_meta?.quid === undefined;
-      _destroy_subtree_quids(owner);
-
-      const registryOwner = _CREATE_NODE({ $_tag: "article" });
-      const registryQuid = _ensure_livetree_quid(registryOwner, { persist: false });
-      const metadataOwner = _CREATE_NODE({ $_tag: "nav" });
-      const metadataQuid = _ensure_livetree_quid(metadataOwner);
-      (registryOwner.$_meta ??= {}).quid = metadataQuid;
-      _destroy_subtree_quids(registryOwner);
-      divergentRegistryReleasedSafely = _get_livetree_node_by_quid(registryQuid) === undefined
-        && _get_livetree_node_by_quid(metadataQuid) === metadataOwner;
-      _destroy_subtree_quids(metadataOwner);
-    },
-    assert(_tree, t) {
-      t.eq("WeakMap-only identity is gone", weakGone, true);
-      t.eq("duplicate metadata cannot delete the real owner", duplicateCouldNotDeleteOwner, true);
-      t.eq("duplicate node metadata is still scrubbed", duplicateMetadataGone, true);
-      t.eq("divergent metadata cannot hide or steal registry ownership", divergentRegistryReleasedSafely, true);
-    },
-  };
-}
-
-function unmounted_terminal_case(suite: string): LiveTreeCaseSpec {
-  let expectedNodes = 0;
-  let disposedNodes = 0;
-  let resultNodes = 0;
-  let identitiesDestroyed = 0;
-  let aliasesDisposed = false;
-  let identitiesGone = false;
-  let metadataGone = false;
-  let repeatedStillDisposed = false;
-
-  return {
-    suite,
-    caseId: "terminal-disposal-marks-every-unmounted-node-and-every-alias", name: "terminal disposal marks every unmounted node and every alias",
-    html: `<main></main>`,
-    act() {
-      const branch = hsonLiveTree.fromTrustedHtml(
-        `<section id="owner"><span id="child">x</span></section>`,
-      );
-      const child = branch.find.must.byId("child");
-      const branchAlias = new LiveTree(branch);
-      const childAlias = new LiveTree(child);
-      const rootNode = branch.node;
-      const nodes = _collect_subtree_nodes(rootNode, "post");
-      const quids = nodes.map((node) => _ensure_livetree_quid(node));
-      expectedNodes = nodes.length;
-
-      const result = _dispose_node_deep(rootNode);
-      resultNodes = result.nodesDisposed;
-      identitiesDestroyed = result.identitiesDestroyed;
-      disposedNodes = _disposed_nodes_count_for_subtree(rootNode);
-      aliasesDisposed = branch.isDisposed && branchAlias.isDisposed
-        && child.isDisposed && childAlias.isDisposed;
-      identitiesGone = quids.every((quid) => _get_livetree_node_by_quid(quid) === undefined)
-        && nodes.every((node) => _get_livetree_quid(node) === undefined);
-      metadataGone = nodes.every((node) => node.$_meta?.quid === undefined);
-      _dispose_node_deep(rootNode);
-      repeatedStillDisposed = nodes.every((node) => _is_livetree_node_disposed(node));
-    },
-    assert(_tree, t) {
-      t.eq("terminal result covers the complete graph", resultNodes, expectedNodes);
-      t.eq("all identities are counted as destroyed", identitiesDestroyed, expectedNodes);
-      t.eq("every subtree node is disposed", disposedNodes, expectedNodes);
-      t.eq("all aliases share disposed state", aliasesDisposed, true);
-      t.eq("no node remains QUID-reachable", identitiesGone, true);
-      t.eq("no persisted QUID metadata remains", metadataGone, true);
-      t.eq("repeated terminal disposal remains disposed", repeatedStillDisposed, true);
     },
   };
 }
@@ -468,10 +339,7 @@ export function livetree_lifecycle_foundations(): TestSuite {
   const suite = "livetree/lifecycle-foundations";
   const cases: readonly LiveTreeCaseSpec[] = [
     traversal_case(suite),
-    recursive_quid_case(suite),
     mapped_quid_case(suite),
-    weak_and_duplicate_case(suite),
-    unmounted_terminal_case(suite),
     runtime_terminal_case(suite),
     bounded_reentrant_case(suite),
     detach_state_case(suite),

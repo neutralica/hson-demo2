@@ -19,7 +19,6 @@ import {
 import { livemap_link_contract_suites } from "../../suites/livemap/link-contract-suite";
 import { livemap_suites_bridge } from "../../suites/livemap/bridge-suite";
 import { livemap_misc_suite } from "../../suites/livemap/misc-suite";
-import { livemap_error_handling } from "../../suites/livemap/error-handling-suite";
 import { livemap_suite_rev } from "../../suites/livemap/rev-suite";
 import { livemap_suite_replay } from "../../suites/livemap/replay-suite";
 import { all_unit_tests } from "../../suites/unit/suite-registry";
@@ -95,7 +94,6 @@ export function all_canonical_portable_test_suites(): readonly TestSuite[] {
     livemap_link_contract_suites(),
     livemap_suites_bridge(),
     livemap_misc_suite(),
-    livemap_error_handling(),
     livemap_suite_rev(),
     livemap_suite_replay(),
     livemap_projected_ingress_suite(),

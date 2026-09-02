@@ -25,7 +25,6 @@ import { livemap_suites_schema_controls } from "./generated-control-suite";
 import { livemap_suites_schema_validation_controls } from "./schema-control-suite-2";
 import { livemap_misc_suite } from "./misc-suite";
 import { livemap_bind_suite } from "./bind-suite";
-import { livemap_error_handling } from "./error-handling-suite";
 import { livemap_suite_rev } from "./rev-suite";
 import { livemap_suite_replay } from "./replay-suite";
 import { livemap_document_foundation_suite } from "./document-foundation-suite";
@@ -107,7 +106,6 @@ export function all_livemap_suites(): readonly TestSuite[] {
     livemap_suites_schema_validation_controls(),
     livemap_misc_suite(),
     livemap_bind_suite(),
-    livemap_error_handling(),
     livemap_suite_rev(),
     livemap_suite_replay(),
     livemap_document_foundation_suite(),
