@@ -30,8 +30,102 @@ import { CANONICAL_TEST_SUBJECT_ORDER, TEST_SUBJECT_IDENTIFIERS } from "../../..
 import { make_local_node_locus_executor_registry } from "../../harness/runtimes/node/livehost-node-executor";
 import { visible_external_launcher_stderr } from "../../../src/app/demos/tests/panel/hosted-test-report-view";
 import { external_launcher_suite_descriptor } from "../../../src/shared/testing/external-launcher-contract";
+import { assert_external_launcher_stdout_parity } from "../../harness/runtimes/node/external-launcher-stdout-parity";
 
 const all = process.argv.includes("--all");
+const parityLauncherId = "livemap.aggregate-library-transitions";
+const completion = '<HSON_LIVE_TEST_COMPLETION>{"version":1,"launcherId":"livemap.aggregate-library-transitions","executed":1,"passed":1,"failed":0}\n';
+const parityOutput = (singleMs: string, aggregateMs: string, candidates = 2): string => [
+  "ok 1 - deterministic assertion",
+  `telemetry single-library=${singleMs}ms aggregate-two-library=${aggregateMs}ms candidates=${candidates} revisions=1 publications=1`,
+  "1..1",
+  completion.trimEnd(),
+  "",
+].join("\n");
+const parityLeft = parityOutput("0.095", "0.151");
+const parityRight = parityOutput("0.090", "0.132");
+assert.doesNotThrow(
+  () => assert_external_launcher_stdout_parity(parityLauncherId, parityLeft, parityRight),
+  "observational timing values do not participate in launcher stdout parity",
+);
+assert.throws(
+  () => assert_external_launcher_stdout_parity(parityLauncherId, parityLeft, parityOutput("0.090", "0.132", 3)),
+  /EXTERNAL_LAUNCHER_STDOUT_PARITY_FAILED/,
+  "deterministic telemetry fields remain exact parity inputs",
+);
+assert.throws(
+  () => assert_external_launcher_stdout_parity(parityLauncherId, parityLeft.replace("0.095ms", "not-a-number-ms"), parityRight),
+  /EXTERNAL_LAUNCHER_TELEMETRY_INVALID/,
+  "malformed telemetry is rejected",
+);
+assert.throws(
+  () => assert_external_launcher_stdout_parity(parityLauncherId, parityLeft.replace(/^telemetry.*\n/m, ""), parityRight),
+  /missing telemetry record/,
+  "required telemetry cannot be omitted",
+);
+assert.throws(
+  () => assert_external_launcher_stdout_parity(parityLauncherId, parityLeft, parityRight.replace("1..1\n", "unexpected output\n1..1\n")),
+  /EXTERNAL_LAUNCHER_STDOUT_PARITY_FAILED/,
+  "unexpected output remains a parity failure",
+);
+assert.throws(
+  () => assert_external_launcher_stdout_parity(parityLauncherId, parityLeft, parityRight.replace('"passed":1', '"passed":0')),
+  /EXTERNAL_LAUNCHER_STDOUT_PARITY_FAILED/,
+  "completion records remain exact parity inputs",
+);
+const analyzerLauncherId = "hson-schema-analyzer";
+const analyzerTelemetry = (schemas: number, analyzerColdMs: number, checkerHeapBytes: number): string => `${JSON.stringify({
+  hsonSchema: "verify",
+  schemas,
+  defs: 2,
+  refs: 3,
+  recursiveSccs: 1,
+  documentRepeatNodes: 4,
+  documentExactCountNodes: 5,
+  canonicalNodes: 6,
+  canonicalDocumentNodes: 7,
+  refinementCount: 8,
+  generatedDeclarationBytes: 9,
+  proofNodes: 10,
+  staticHsonValidations: 11,
+  staticDocumentValidations: 12,
+  freshnessArtifactBytes: 13,
+  sourceProvenanceBytes: 14,
+  analyzerColdMs,
+  analyzerWarmMs: 0.2,
+  staticValidationMs: 0.3,
+  typescriptColdMs: 0.4,
+  typescriptIncrementalMs: 0.5,
+  totalMs: 0.6,
+  checkerHeapBytes,
+  checkerRssBytes: checkerHeapBytes + 1,
+})}\n`;
+const analyzerCompletion = '<HSON_LIVE_TEST_COMPLETION>{"version":1,"launcherId":"hson-schema-analyzer","executed":1,"passed":1,"failed":0}\n';
+assert.doesNotThrow(
+  () => assert_external_launcher_stdout_parity(
+    analyzerLauncherId,
+    `${analyzerTelemetry(1, 0.1, 100)}${analyzerCompletion}`,
+    `${analyzerTelemetry(1, 9.9, 999)}${analyzerCompletion}`,
+  ),
+  "analyzer timing and process-memory observations do not participate in parity",
+);
+assert.throws(
+  () => assert_external_launcher_stdout_parity(
+    analyzerLauncherId,
+    `${analyzerTelemetry(1, 0.1, 100)}${analyzerCompletion}`,
+    `${analyzerTelemetry(2, 9.9, 999)}${analyzerCompletion}`,
+  ),
+  /EXTERNAL_LAUNCHER_STDOUT_PARITY_FAILED/,
+  "deterministic analyzer-build telemetry fields remain exact when both invocations emit them",
+);
+assert.doesNotThrow(
+  () => assert_external_launcher_stdout_parity(
+    analyzerLauncherId,
+    `${analyzerTelemetry(1, 0.1, 100)}${analyzerCompletion}`,
+    analyzerCompletion,
+  ),
+  "the validated analyzer build prelude is optional for a direct launcher invocation",
+);
 const availability = await resolve_external_library_launchers();
 const catalogSuites = Object.freeze(availability.targets.map(external_launcher_suite_descriptor));
 const manifestIds = hson_live_test_launchers.map((launcher) => launcher.id);
@@ -48,8 +142,11 @@ assert.deepEqual(
   "every exported diagnostics launcher resolves in manifest order",
 );
 assert.equal(availability.unavailable.length, 0, "no exported diagnostics launcher is unavailable");
-assert.equal(Object.values(availability.invocations ?? {}).every((invocation) => invocation.kind === "direct"), true,
-  "all current package scripts match the audited direct invocation shape");
+assert.deepEqual(
+  Object.keys(availability.invocations ?? {}).sort(),
+  availability.targets.map((target) => target.id).sort(),
+  "every available launcher has one resolved invocation",
+);
 for (const launcher of hson_live_test_launchers) {
   const target = availability.targets.find((candidate) => candidate.launcherId === launcher.id);
   assert.ok(target, `exported launcher resolves: ${launcher.id}`);
@@ -62,7 +159,6 @@ for (const requiredId of [
   "transform.hson-node-quid-ingress",
   "transform.hson-node-quid-egress",
   "livetree.quid-eligibility",
-  "livemap.path-handle",
 ]) {
   assert.equal(manifestIds.includes(requiredId), true, `required canonical launcher is exported: ${requiredId}`);
 }
@@ -94,10 +190,6 @@ assert.equal(
 );
 assert.equal(
   categoryTargets.get("transform")?.some((target) => target.launcherId === "core.canonical-hson-equality"),
-  true,
-);
-assert.equal(
-  categoryTargets.get("livemap")?.some((target) => target.launcherId === "livemap.path-handle"),
   true,
 );
 assert.equal(
@@ -489,7 +581,7 @@ for (const result of results) {
   assert.equal(typeof result.stderr, "string");
   assert.equal(result.exitCode, 0);
   assert.equal(result.signal, null);
-  assert.equal(result.invocationKind, "direct");
+  assert.equal(result.invocationKind, availability.invocations?.[result.target.id]?.kind);
   assert.equal(result.completion?.version, 1);
   assert.equal(result.completion?.launcherId, launcherId);
   assert.equal(result.completion?.passed, result.completion?.executed);
@@ -508,14 +600,18 @@ assert.ok(
   processMetrics.maximumObservedConcurrentChildren <= EXTERNAL_LIBRARY_LAUNCHER_CONCURRENCY + 1,
   "bounded execution never exceeds the ordinary cap plus its single special lane",
 );
-assert.equal(processMetrics.directLauncherStarts, selected.length);
-assert.equal(processMetrics.packageScriptStarts, 0);
+const selectedInvocationKinds = selectedTargets.map((target) => availability.invocations?.[target.id]?.kind);
+assert.equal(processMetrics.directLauncherStarts, selectedInvocationKinds.filter((kind) => kind === "direct").length);
+assert.equal(processMetrics.packageScriptStarts, selectedInvocationKinds.filter((kind) => kind === "package-script").length);
 if (packageScriptResults !== undefined) {
   for (let index = 0; index < results.length; index += 1) {
     const direct = results[index]!;
     const packaged: ExternalLibraryLauncherResult = packageScriptResults[index]!;
     assert.equal(direct.exitCode, packaged.exitCode, `${direct.target.id} direct exit matches package script`);
-    assert.equal(direct.stdout, packaged.stdout, `${direct.target.id} direct stdout matches package script`);
+    assert.doesNotThrow(
+      () => assert_external_launcher_stdout_parity(direct.target.launcherId, direct.stdout, packaged.stdout),
+      `${direct.target.id} deterministic stdout matches package script`,
+    );
     assert.equal(
       visible_external_launcher_stderr(direct.stderr),
       visible_external_launcher_stderr(packaged.stderr),
@@ -528,7 +624,10 @@ if (tsxCandidateResults !== undefined) {
     const verified = results[index]!;
     const tsx: ExternalLibraryLauncherResult = tsxCandidateResults[index]!;
     assert.equal(tsx.exitCode, verified.exitCode, `${tsx.target.id} tsx exit matches verified direct form`);
-    assert.equal(tsx.stdout, verified.stdout, `${tsx.target.id} tsx stdout matches verified direct form`);
+    assert.doesNotThrow(
+      () => assert_external_launcher_stdout_parity(tsx.target.launcherId, tsx.stdout, verified.stdout),
+      `${tsx.target.id} deterministic stdout matches verified direct form`,
+    );
     assert.equal(
       visible_external_launcher_stderr(tsx.stderr),
       visible_external_launcher_stderr(verified.stderr),

@@ -99,6 +99,28 @@ const process_exists = (pid: number): boolean => {
   try { process.kill(pid, 0); return true; } catch (error) { return (error as NodeJS.ErrnoException).code !== "ESRCH"; }
 };
 
+let transientStdioPid = 0;
+let transientBlockScheduled = false;
+const transientStdio = supervisor.start(invocation(
+  "const{spawn}=require('node:child_process');const c=spawn(process.execPath,['-e','setTimeout(()=>{},50)'],{detached:true,stdio:['ignore',process.stdout,'ignore']});c.unref();process.stdout.write('transient:'+c.pid);setTimeout(()=>process.exit(0),10)",
+  10_000,
+), { observeStdoutChunk(chunk) {
+  const match = /transient:(\d+)/.exec(chunk.toString("utf8"));
+  if (match !== null) transientStdioPid = Number(match[1]);
+  if (transientBlockScheduled) return;
+  transientBlockScheduled = true;
+  setTimeout(() => {
+    const blockedUntil = performance.now() + 1_300;
+    while (performance.now() < blockedUntil) { /* deterministic event-loop starvation */ }
+  }, 20);
+} });
+const transientStdioResult = await transientStdio.result;
+assert.equal(transientStdioResult.ok, true, "an EOF already ready after a starved timer turn settles without a false stdio failure");
+assert.equal(transientStdioResult.spawnError, undefined);
+if (process.platform !== "win32" && transientStdioPid > 0) {
+  assert.equal(process_exists(transientStdioPid), false, "the transient escaped writer is gone before successful settlement");
+}
+
 let escapedStdioPid = 0;
 const escapedStdio = supervisor.start(invocation(
   "const{spawn}=require('node:child_process');const c=spawn(process.execPath,['-e','setInterval(()=>{},1000)'],{detached:true,stdio:['ignore',process.stdout,'ignore']});c.unref();process.stdout.write('escaped:'+c.pid)",
@@ -207,6 +229,7 @@ console.log(JSON.stringify({
   resistantDescendantTermObserved: resistantTree.descendantTermObserved,
   cooperativeDescendantForceKilled: cooperativeTree.result.forceKilled,
   processTreeCleanup: true,
+  queuedEofSettlement: transientStdioResult.ok,
   exitedParentStdioSettlement: escapedStdioResult.spawnError === "PROCESS_STDIO_SETTLEMENT_FAILED",
   activeChildDisposal: supervisor.metrics().activeChildren === 0,
   replacementEnvironment: replacedEnvironment.ok,

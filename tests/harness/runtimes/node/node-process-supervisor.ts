@@ -169,8 +169,12 @@ export function create_node_process_supervisor(configuration: Readonly<{
       let groupProbeTimer: ReturnType<typeof setInterval> | undefined;
       let settlementFailureTimer: ReturnType<typeof setTimeout> | undefined;
       let stdioSettlementTimer: ReturnType<typeof setTimeout> | undefined;
+      let stdioSettlementCheck: ReturnType<typeof setImmediate> | undefined;
       let parentClosed = false;
       let parentExited = false;
+      let stdoutEnded = false;
+      let stderrEnded = false;
+      let stdioForcedClosed = false;
       let parentExitCode: number | null = null;
       let parentSignal: NodeJS.Signals | null = null;
       const child = spawn(invocation.command, invocation.args, {
@@ -181,8 +185,11 @@ export function create_node_process_supervisor(configuration: Readonly<{
         stdio: ["ignore", "pipe", "pipe"],
         detached: process.platform !== "win32",
       });
+      stdoutEnded = child.stdout === null;
+      stderrEnded = child.stderr === null;
+      const stdio_settled = (): boolean => (stdoutEnded && stderrEnded) || stdioForcedClosed;
       const resolve_settlement = (): void => {
-        if (settled || !parentClosed) return;
+        if (settled || (!parentExited && !parentClosed) || !stdio_settled()) return;
         if (owned_process_group_exists(child)) return;
         settled = true;
         activeChildren.delete(child);
@@ -191,6 +198,7 @@ export function create_node_process_supervisor(configuration: Readonly<{
         if (groupProbeTimer !== undefined) clearInterval(groupProbeTimer);
         if (settlementFailureTimer !== undefined) clearTimeout(settlementFailureTimer);
         if (stdioSettlementTimer !== undefined) clearTimeout(stdioSettlementTimer);
+        if (stdioSettlementCheck !== undefined) clearImmediate(stdioSettlementCheck);
         options.signal?.removeEventListener("abort", abort);
         const stdout = stdoutCapture.snapshot();
         const stderr = stderrCapture.snapshot();
@@ -217,17 +225,28 @@ export function create_node_process_supervisor(configuration: Readonly<{
         groupProbeTimer = setInterval(resolve_settlement, 25);
       };
       const require_stdio_settlement = (): void => {
-        if (settled || parentClosed || stdioSettlementTimer !== undefined) return;
+        if (settled || stdio_settled() || stdioSettlementTimer !== undefined || stdioSettlementCheck !== undefined) return;
         stdioSettlementTimer = setTimeout(() => {
-          if (settled || parentClosed) return;
-          spawnError ??= "PROCESS_STDIO_SETTLEMENT_FAILED";
-          // A descendant outside the owned process group can keep inherited
-          // descriptors open after the supervised parent exits.  Do not wait
-          // for the command timeout or accept the execution as successful.
-          child.stdout?.destroy();
-          child.stderr?.destroy();
-          parentClosed = true;
-          resolve_settlement();
+          stdioSettlementTimer = undefined;
+          if (settled || stdio_settled()) return;
+          // A heavily loaded event loop can service this overdue timer before
+          // polling an EOF that is already ready. Give that poll turn priority;
+          // a genuinely inherited open descriptor still has no EOF afterward.
+          stdioSettlementCheck = setImmediate(() => {
+            stdioSettlementCheck = undefined;
+            if (settled || stdio_settled()) {
+              resolve_settlement();
+              return;
+            }
+            spawnError ??= "PROCESS_STDIO_SETTLEMENT_FAILED";
+            // A descendant outside the owned process group can keep inherited
+            // descriptors open after the supervised parent exits. Do not wait
+            // for the command timeout or accept the execution as successful.
+            child.stdout?.destroy();
+            child.stderr?.destroy();
+            stdioForcedClosed = true;
+            resolve_settlement();
+          });
         }, Math.max(1_000, configuration.terminationGraceMs));
       };
       const terminate = (): void => {
@@ -252,6 +271,7 @@ export function create_node_process_supervisor(configuration: Readonly<{
               clearTimeout(timeoutTimer);
               if (groupProbeTimer !== undefined) clearInterval(groupProbeTimer);
               if (stdioSettlementTimer !== undefined) clearTimeout(stdioSettlementTimer);
+              if (stdioSettlementCheck !== undefined) clearImmediate(stdioSettlementCheck);
               options.signal?.removeEventListener("abort", abort);
               const stdout = stdoutCapture.snapshot();
               const stderr = stderrCapture.snapshot();
@@ -279,6 +299,14 @@ export function create_node_process_supervisor(configuration: Readonly<{
           terminate();
         }
       });
+      child.stdout?.once("end", () => {
+        stdoutEnded = true;
+        resolve_settlement();
+      });
+      child.stderr?.once("end", () => {
+        stderrEnded = true;
+        resolve_settlement();
+      });
       const timeoutTimer = setTimeout(() => {
         timedOut = true;
         terminate();
@@ -299,12 +327,13 @@ export function create_node_process_supervisor(configuration: Readonly<{
           parentExited = true;
           parentExitCode = exitCode;
           parentSignal = signal;
-          // `close` is a stronger stdio-settlement event, but it may never
-          // arrive when an escaped descendant inherited a pipe.  Start the
-          // existing bounded settlement policy as soon as exit is observed.
+          // `close` aggregates the process handle and stdio close callbacks,
+          // but stream EOF is tracked independently. Start the bounded policy
+          // as soon as exit is observed so an inherited pipe cannot hang it.
           if (owned_process_group_exists(child) && !terminationRequested) terminate();
           begin_group_probe();
           require_stdio_settlement();
+          resolve_settlement();
         });
         child.once("close", (exitCode, signal) => {
           if (settled) return;

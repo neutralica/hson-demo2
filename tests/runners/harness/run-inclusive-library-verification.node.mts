@@ -155,8 +155,9 @@ assert.equal(
   "projected external checks are derived from accepted launcher results",
 );
 assert.equal(processMetrics.activeChildren, 0);
-assert.equal(processMetrics.directLauncherStarts, availability.targets.length);
-assert.equal(processMetrics.packageScriptStarts, 0);
+const inclusiveInvocationKinds = availability.targets.map((target) => availability.invocations?.[target.id]?.kind);
+assert.equal(processMetrics.directLauncherStarts, inclusiveInvocationKinds.filter((kind) => kind === "direct").length);
+assert.equal(processMetrics.packageScriptStarts, inclusiveInvocationKinds.filter((kind) => kind === "package-script").length);
 assert.ok(timing.overlappedTotalMs >= timing.canonicalPhaseMs);
 assert.ok(timing.overlappedTotalMs >= timing.externalPhaseMs);
 

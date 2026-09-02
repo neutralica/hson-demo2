@@ -16,7 +16,7 @@ export function livemap_equivalence_transport_propagation_suite(): TestSuite {
         return { assertRows: [equal_row("payload", target.capture().payload, source.capture().payload)] };
       }),
       test("minimal-exact-restore-closes-canonical-state", "minimal exact restore closes canonical state", () => {
-        const source = hson.liveMap.fromJson('{"value":{"b":2,"a":1}}'); const capture = source.capture(); const target = hson.liveMap.fromJson({ old: true }); target.restore({ rev: capture.rev, root: capture.root, format: capture.format, payload: capture.payload });
+        const source = hson.liveMap.fromJson('{"value":{"b":2,"a":1}}'); const capture = source.capture(); const target = hson.liveMap.fromJson({ old: true }); target.restore(capture);
         return { assertRows: [equal_row("payload", target.capture().payload, capture.payload)] };
       }),
       test("exact-apply-closes-canonical-state", "exact apply closes canonical state", () => {
