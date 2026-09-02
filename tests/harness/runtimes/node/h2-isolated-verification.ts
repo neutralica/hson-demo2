@@ -297,6 +297,11 @@ async function verify_materialized_manifest(source: RepositoryManifest, target: 
   if (JSON.stringify(actual) !== JSON.stringify(expected)) throw new Error("MATERIALIZED_SNAPSHOT_MISMATCH");
 }
 
+async function prepare_snapshot_repository(root: string): Promise<void> {
+  await execFileAsync("git", ["-C", root, "init", "-q"]);
+  await execFileAsync("git", ["-C", root, "add", "--all"]);
+}
+
 function is_missing_path(error: unknown): boolean {
   return (error as NodeJS.ErrnoException).code === "ENOENT";
 }
@@ -383,35 +388,77 @@ async function publish_prepared_dependencies(
   }
 }
 
+async function npm_dependency_root(packageRoot: string): Promise<string> {
+  const root = resolve((await execFileAsync("npm", ["root"], { cwd: packageRoot })).stdout.trim());
+  if ((await stat(root).catch(() => undefined))?.isDirectory() !== true) {
+    throw new Error(`H2_DEPENDENCY_ROOT_UNAVAILABLE: ${packageRoot}`);
+  }
+  return root;
+}
+
+async function installed_dependency(packageRoot: string, name: string): Promise<string | undefined> {
+  let current = resolve(packageRoot);
+  while (true) {
+    const candidate = join(current, "node_modules", name);
+    if ((await stat(candidate).catch(() => undefined))?.isDirectory() === true) return candidate;
+    const parent = dirname(current);
+    if (parent === current) return undefined;
+    current = parent;
+  }
+}
+
+function locked_top_level_dependencies(lock: unknown): readonly string[] {
+  if (typeof lock !== "object" || lock === null || Array.isArray(lock)) throw new Error("H2_DEMO_DEPENDENCY_LOCK_INVALID");
+  const packages = (lock as { packages?: unknown }).packages;
+  if (typeof packages !== "object" || packages === null || Array.isArray(packages)) throw new Error("H2_DEMO_DEPENDENCY_LOCK_INVALID");
+  const names = new Set<string>();
+  for (const path of Object.keys(packages)) {
+    const match = /^node_modules\/((?:@[^/]+\/)?[^/]+)/.exec(path);
+    if (match?.[1] !== undefined && match[1] !== "hson-live") names.add(match[1]);
+  }
+  return Object.freeze([...names].sort());
+}
+
 async function prepare_dependencies(sourceLive: string, sourceDemo: string, snapshotDemo: string, snapshotLive: string, preparedRoot: string, testHooks?: H2ExecutorTestHooks): Promise<void> {
+  const demoDependencies = await npm_dependency_root(sourceDemo);
+  const demoLockBytes = await readFile(join(sourceDemo, "package-lock.json"));
+  const demoDependencyNames = locked_top_level_dependencies(JSON.parse(demoLockBytes.toString("utf8")));
   const key = createHash("sha256")
     .update(await readFile(join(sourceLive, "package-lock.json")))
-    .update(await readFile(join(sourceDemo, "package-lock.json")))
+    .update(demoLockBytes)
+    .update(await readFile(join(dirname(demoDependencies), "package-lock.json")))
     .update(process.version)
     .update(await execFileAsync("npm", ["--version"]).then((result) => result.stdout.trim()))
-    .update("h2-prepared-dependencies-v6")
+    .update("h2-prepared-dependencies-v8")
     .digest("hex");
   const preparedDirectory = join(preparedRoot, key);
   const prepared = join(preparedDirectory, "node_modules");
   if (!await require_valid_prepared_dependencies(preparedDirectory, key)) {
     const staging = join(preparedRoot, `${key}.staging-${randomUUID()}`);
     try {
-      await mkdir(staging, { recursive: true });
-      await cp(join(sourceDemo, "node_modules"), join(staging, "node_modules"), {
-        recursive: true,
-        dereference: true,
-        // Both are reconstructed below.  Copying .bin with dereference can
-        // follow a launcher into the deliberately excluded paired package.
-        filter: (path) => !["hson-live", ".bin"].includes(basename(path)),
-      });
       const copied = join(staging, "node_modules");
-      const sourceBin = join(sourceDemo, "node_modules", ".bin");
+      await mkdir(copied, { recursive: true });
+      for (const name of demoDependencyNames) {
+        const source = await installed_dependency(sourceDemo, name);
+        // Platform-specific optional packages may be present in the lock but
+        // absent from this installation.  Parent-local nested packages travel
+        // with their installed parent package.
+        if (source === undefined) continue;
+        const target = join(copied, name);
+        await mkdir(dirname(target), { recursive: true });
+        await cp(source, target, {
+          recursive: true,
+          dereference: true,
+          filter: (path) => basename(path) !== ".bin",
+        });
+      }
+      const sourceBin = join(demoDependencies, ".bin");
       await rm(join(copied, ".bin"), { recursive: true, force: true });
       await mkdir(join(copied, ".bin"));
       for (const entry of await readdir(sourceBin)) {
         const link = await readlink(join(sourceBin, entry));
         const resolved = resolve(sourceBin, link);
-        if (!inside(join(sourceDemo, "node_modules"), resolved)) throw new Error("DEPENDENCY_BIN_ESCAPE");
+        if (!inside(demoDependencies, resolved)) throw new Error("DEPENDENCY_BIN_ESCAPE");
         await symlink(link, join(copied, ".bin", entry));
       }
       // tsx is an ESM entrypoint whose relative imports are resolved against a
@@ -478,6 +525,24 @@ async function prepare_dependencies(sourceLive: string, sourceDemo: string, snap
     await copyFile(join(runBin, "tsx"), join(liveBin, "tsx"));
     await chmod(join(liveBin, "tsx"), 0o755);
   }
+  const sourceEditor = join(sourceLive, "editors", "vscode-hson");
+  if ((await stat(join(sourceEditor, "package.json")).catch(() => undefined))?.isFile() === true) {
+    const editorDependencies = await npm_dependency_root(sourceEditor);
+    const snapshotEditorDependencies = join(snapshotLive, "editors", "vscode-hson", "node_modules");
+    await cp(editorDependencies, snapshotEditorDependencies, {
+      recursive: true,
+      dereference: true,
+      filter: (path) => basename(path) !== ".bin",
+    });
+    const editorBin = join(snapshotEditorDependencies, ".bin");
+    await mkdir(editorBin);
+    for (const entry of await readdir(join(editorDependencies, ".bin"))) {
+      const sourceEntry = join(editorDependencies, ".bin", entry);
+      const info = await lstat(sourceEntry);
+      if (info.isSymbolicLink()) await symlink(await readlink(sourceEntry), join(editorBin, entry));
+      else await copyFile(sourceEntry, join(editorBin, entry));
+    }
+  }
   await symlink(snapshotLive, join(snapshotDemo, "node_modules", "hson-live"), "dir");
   const resolved = await realpath(join(snapshotDemo, "node_modules", "hson-live"));
   if (!inside(await realpath(snapshotLive), resolved)) throw new Error("DEPENDENCY_RESOLUTION_ESCAPES_SNAPSHOT");
@@ -493,11 +558,11 @@ function host_playwright_browsers_path(): string {
 
 /** The host cache is only a provisioning source.  Children receive a copy in
  * their H2 workspace and never resolve Chromium from the developer cache. */
-async function prepare_playwright_browsers(workspace: string, preparedRoot: string, sourceDemo: string): Promise<string> {
+async function prepare_playwright_browsers(workspace: string, preparedRoot: string, dependencies: string): Promise<string> {
   const source = host_playwright_browsers_path();
   const sourceInfo = await stat(source).catch(() => undefined);
   if (sourceInfo?.isDirectory() !== true) throw new Error("H2_PLAYWRIGHT_BROWSER_SOURCE_UNAVAILABLE");
-  const browserManifest = JSON.parse(await readFile(join(sourceDemo, "node_modules", "playwright-core", "browsers.json"), "utf8")) as {
+  const browserManifest = JSON.parse(await readFile(join(dependencies, "playwright-core", "browsers.json"), "utf8")) as {
     browsers?: readonly Readonly<{ name?: string; revision?: string }>[];
   };
   const revision = browserManifest.browsers?.find((entry) => entry.name === "chromium-headless-shell")?.revision;
@@ -663,6 +728,7 @@ export async function execute_h2_verification(options: H2ExecutorOptions, reques
     if (live === undefined || demo === undefined) throw new Error("SNAPSHOT_MANIFEST_UNAVAILABLE");
     metadata = Object.freeze({ hsonLiveHead: live.head, hsonDemo2Head: demo.head, hsonLiveDirty: live.dirty, hsonDemo2Dirty: demo.dirty, sourceDigest: h2_paired_manifest_digest(live, demo), snapshotTime: new Date().toISOString(), nodeVersion: process.version });
     const snapshotLive = join(workspace, "root", "hson-live"); const snapshotDemo = join(workspace, "root", "hson-demo2");
+    await prepare_snapshot_repository(snapshotLive);
     const preparedRoot = join(tempRoot, "prepared-dependencies");
     await prepare_dependencies(options.hsonLiveRoot, options.hsonDemo2Root, snapshotDemo, snapshotLive, preparedRoot, options.testHooks);
     await scan();
@@ -670,7 +736,7 @@ export async function execute_h2_verification(options: H2ExecutorOptions, reques
     if (workspaceScanFailed) throw new Error("WORKSPACE_ACCOUNTING_FAILED");
     const dependencies = join(snapshotDemo, "node_modules");
     const playwrightBrowsersPath = descriptor.capabilityProfile === "browser-chromium" || descriptor.capabilityProfile === "mixed-node-browser"
-      ? await prepare_playwright_browsers(workspace, preparedRoot, options.hsonDemo2Root)
+      ? await prepare_playwright_browsers(workspace, preparedRoot, dependencies)
       : undefined;
     await options.testHooks?.beforeExecution?.(workspace, snapshotDemo);
     const supervisor = create_node_process_supervisor({ stdoutLimitBytes: OUTPUT_LIMIT_BYTES, stderrLimitBytes: OUTPUT_LIMIT_BYTES, truncationMarker: "<H2_OUTPUT_TRUNCATED>", terminationGraceMs: 1_000, environmentMode: "replace" });

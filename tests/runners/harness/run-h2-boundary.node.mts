@@ -21,11 +21,15 @@ async function h2_fixture(name: string): Promise<Readonly<{ live: string; demo: 
   await writeFile(join(live, "package-lock.json"), JSON.stringify({ lockfileVersion: 3, packages: { "": { name: "hson-live" } } }));
   await writeFile(join(live, ".gitignore"), "node_modules\n");
   await mkdir(join(live, "node_modules", ".bin"), { recursive: true });
-  await writeFile(join(live, "build.mjs"), `import { mkdir, writeFile } from "node:fs/promises"; await mkdir("dist", { recursive: true }); await writeFile("dist/index.js", "export const fixture = true;\\n"); await writeFile("dist/test-launchers.js", "export const fixtureLauncher = true;\\n"); await writeFile("dist/hson-schema.mjs", "export {};\\n");`);
+  await mkdir(join(live, "editors", "vscode-hson", "node_modules", ".bin"), { recursive: true });
+  await writeFile(join(live, "editors", "vscode-hson", "package.json"), JSON.stringify({ name: "hson-language", version: "0.0.0" }));
+  await writeFile(join(live, "editors", "vscode-hson", "package-lock.json"), "{}\n");
+  await writeFile(join(live, "editors", "vscode-hson", "node_modules", "editor-sentinel"), "fixture");
+  await writeFile(join(live, "build.mjs"), `import { spawnSync } from "node:child_process"; import { existsSync } from "node:fs"; import { mkdir, writeFile } from "node:fs/promises"; if (!existsSync("editors/vscode-hson/node_modules/editor-sentinel")) throw new Error("EDITOR_DEPENDENCIES_MISSING"); const tracked = spawnSync("git", ["ls-files", "--", "build.mjs"], { encoding: "utf8" }); if (tracked.status !== 0 || tracked.stdout.trim() !== "build.mjs") throw new Error("SNAPSHOT_REPOSITORY_INDEX_MISSING"); await mkdir("dist", { recursive: true }); await writeFile("dist/index.js", "export const fixture = true;\\n"); await writeFile("dist/test-launchers.js", "export const fixtureLauncher = true;\\n"); await writeFile("dist/hson-schema.mjs", "export {};\\n"); await writeFile("dist/workspace-limit-padding", Buffer.alloc(256 * 1024));`);
   await writeFile(join(demo, "package.json"), JSON.stringify({ name: "hson-demo2", version: "0.0.0", type: "module", scripts: { "test:surface-enumeration-node": "node child.mjs" } }));
-  await writeFile(join(demo, "package-lock.json"), "{}\n");
-  await writeFile(join(demo, "child.mjs"), `import { createRequire } from "node:module"; import { realpathSync, readFileSync, existsSync } from "node:fs"; const require = createRequire(import.meta.url); const names = ["NODE_OPTIONS", "H2_SECRET", "GITHUB_TOKEN", "CLOUDFLARE_API_TOKEN", "AWS_SECRET_ACCESS_KEY", "TOWL_DEPLOYED_WS_URL", "VITE_SECRET_CANARY", "HOME", "TMPDIR", "XDG_CACHE_HOME", "npm_config_cache", "CI", "HSON_HOSTED_VERIFICATION_DEPTH"]; console.log(JSON.stringify({ live: realpathSync(require.resolve("hson-live")), launchers: realpathSync(require.resolve("hson-live/test-launchers")), schema: realpathSync("node_modules/.bin/hson-schema"), sentinel: readFileSync("node_modules/sentinel", "utf8"), canary: existsSync("node_modules/run-canary"), env: Object.fromEntries(names.map((name) => [name, process.env[name] ?? null])) })); console.log("test surface enumeration: ok");`);
-  await writeFile(join(demo, ".gitignore"), "node_modules\n"); await mkdir(join(demo, "node_modules", ".bin"), { recursive: true }); await writeFile(join(demo, "node_modules", "sentinel"), "fixture"); await symlink("../sentinel", join(demo, "node_modules", ".bin", "sentinel")); await symlink("../hson-live/dist/hson-schema.mjs", join(demo, "node_modules", ".bin", "hson-schema"));
+  await writeFile(join(demo, "package-lock.json"), JSON.stringify({ lockfileVersion: 3, packages: { "": { name: "hson-demo2" }, "node_modules/sentinel": { version: "0.0.0-fixture" } } }));
+  await writeFile(join(demo, "child.mjs"), `import { createRequire } from "node:module"; import { realpathSync, readFileSync, existsSync } from "node:fs"; const require = createRequire(import.meta.url); const names = ["NODE_OPTIONS", "H2_SECRET", "GITHUB_TOKEN", "CLOUDFLARE_API_TOKEN", "AWS_SECRET_ACCESS_KEY", "TOWL_DEPLOYED_WS_URL", "VITE_SECRET_CANARY", "HOME", "TMPDIR", "XDG_CACHE_HOME", "npm_config_cache", "CI", "HSON_HOSTED_VERIFICATION_DEPTH"]; console.log(JSON.stringify({ live: realpathSync(require.resolve("hson-live")), launchers: realpathSync(require.resolve("hson-live/test-launchers")), schema: realpathSync("node_modules/.bin/hson-schema"), sentinel: readFileSync("node_modules/sentinel/value", "utf8"), canary: existsSync("node_modules/run-canary"), env: Object.fromEntries(names.map((name) => [name, process.env[name] ?? null])) })); console.log("test surface enumeration: ok");`);
+  await writeFile(join(demo, ".gitignore"), "node_modules\n"); await mkdir(join(demo, "node_modules", ".bin"), { recursive: true }); await mkdir(join(demo, "node_modules", "sentinel")); await writeFile(join(demo, "node_modules", "sentinel", "package.json"), JSON.stringify({ name: "sentinel", version: "0.0.0-fixture" })); await writeFile(join(demo, "node_modules", "sentinel", "value"), "fixture"); await symlink("../sentinel/value", join(demo, "node_modules", ".bin", "sentinel")); await symlink("../hson-live/dist/hson-schema.mjs", join(demo, "node_modules", ".bin", "hson-schema"));
   await exec("git", ["-C", live, "add", "."]); await exec("git", ["-C", live, "commit", "-qm", "fixture"]);
   await exec("git", ["-C", demo, "add", "."]); await exec("git", ["-C", demo, "commit", "-qm", "fixture"]);
   return Object.freeze({ live, demo });
@@ -132,7 +136,7 @@ try {
   check(canary.stdout === "absent|absent|absent|absent|absent|absent|absent", "replacement environment strips parent secret canaries");
   check(canary.ok, "replacement environment child succeeds with executor-owned variables");
   const fixture = await h2_fixture("real");
-  const preparationWorkspaceLimitBytes = 16 * 1024;
+  const preparationWorkspaceLimitBytes = 128 * 1024;
   const workspaceLimit = await execute_h2_verification({ hsonLiveRoot: fixture.live, hsonDemo2Root: fixture.demo, tempRoot: join(root, "workspace-limit"), workspaceLimitBytes: preparationWorkspaceLimitBytes }, "hson-demo2:test:surface-enumeration-node");
   check(workspaceLimit.status === "FAIL" && workspaceLimit.failureReason === "WORKSPACE_LIMIT_EXCEEDED" && workspaceLimit.process !== undefined && workspaceLimit.workspacePeakBytes > preparationWorkspaceLimitBytes && workspaceLimit.cleanup === "removed", `build preparation workspace limit is authoritative before child execution (poll ${H2_WORKSPACE_POLL_INTERVAL_MS}ms; bounded polling overshoot)`);
   const originalCanaries = Object.fromEntries(["NODE_OPTIONS", "H2_SECRET", "GITHUB_TOKEN", "CLOUDFLARE_API_TOKEN", "AWS_SECRET_ACCESS_KEY", "TOWL_DEPLOYED_WS_URL", "VITE_SECRET_CANARY"].map((name) => [name, process.env[name]]));
@@ -204,14 +208,14 @@ try {
   check(unrelatedRename.status === "FAIL" && unrelatedRename.failureReason === "SIMULATED_RENAME_PERMISSION_FAILURE" && unrelatedRename.process === undefined && unrelatedRenameEntries.length === 0, "unrelated rename failure remains fatal and removes staging debris");
 
   const dependencyRoot = join(root, "dependency-isolation");
-  const runA = await execute_h2_verification({ hsonLiveRoot: fixture.live, hsonDemo2Root: fixture.demo, tempRoot: dependencyRoot, testHooks: { async beforeExecution(_workspace, snapshotDemo) { await writeFile(join(snapshotDemo, "node_modules", "run-canary"), "run-a"); await writeFile(join(snapshotDemo, "node_modules", "sentinel"), "mutated-by-run-a"); } } }, "hson-demo2:test:surface-enumeration-node");
+  const runA = await execute_h2_verification({ hsonLiveRoot: fixture.live, hsonDemo2Root: fixture.demo, tempRoot: dependencyRoot, testHooks: { async beforeExecution(_workspace, snapshotDemo) { await writeFile(join(snapshotDemo, "node_modules", "run-canary"), "run-a"); await writeFile(join(snapshotDemo, "node_modules", "sentinel", "value"), "mutated-by-run-a"); } } }, "hson-demo2:test:surface-enumeration-node");
   check(runA.status === "PASS", "dependency-isolation run A completes");
   const preparedDirectories = await readdir(join(dependencyRoot, "prepared-dependencies"));
   const prepared = join(dependencyRoot, "prepared-dependencies", preparedDirectories.find((name) => !name.includes(".staging-"))!, "node_modules");
   let preparedHasCanary = true;
   try { await stat(join(prepared, "run-canary")); } catch { preparedHasCanary = false; }
   check(!preparedHasCanary, "prepared template has no run A canary");
-  check(await readFile(join(prepared, "sentinel"), "utf8") === "fixture", "prepared template bytes survive run A mutation");
+  check(await readFile(join(prepared, "sentinel", "value"), "utf8") === "fixture", "prepared template bytes survive run A mutation");
   let cacheHitRepublished = false;
   const runB = await execute_h2_verification({ hsonLiveRoot: fixture.live, hsonDemo2Root: fixture.demo, tempRoot: dependencyRoot, testHooks: { beforeDependencyPublication() { cacheHitRepublished = true; } } }, "hson-demo2:test:surface-enumeration-node");
   const runBEvidenceText = runB.process?.stdout.split("\n").find((line) => line.startsWith('{"live"')) ?? "";
