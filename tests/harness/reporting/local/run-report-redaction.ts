@@ -1,20 +1,5 @@
 import { relative, resolve, sep } from "node:path";
-const text_limit = (value: string, limit: number): Readonly<{ value: string; truncated: boolean }> => {
-  if (value.length <= limit) return { value, truncated: false };
-  const marker = `\n<TRUNCATED ${value.length - limit} characters>\n`; const room = Math.max(0, limit - marker.length);
-  return { value: `${value.slice(0, Math.ceil(room / 2))}${marker}${value.slice(value.length - Math.floor(room / 2))}`, truncated: true };
-};
-export type LocalRedactor = Readonly<{ text(value: string, limit?: number): Readonly<{ value: string; truncated: boolean }>; path(value: string): string; diagnostic(kind: string, error: unknown): Readonly<{ kind: string; message: string; stack?: string; truncated: boolean }> }>;
-export function create_local_redactor(repositoryRoot: string, home = process.env.HOME ?? ""): LocalRedactor {
-  const replace = (input: string): string => input
-    .replaceAll(home, "<home>").replaceAll(repositoryRoot, "<repo>")
-    .replace(/(authorization|cookie|set-cookie)\s*:\s*[^\r\n]+/gi, "$1: <redacted>")
-    .replace(/\bBearer\s+[A-Za-z0-9._~+\/-]+=*/gi, "Bearer <redacted>")
-    .replace(/\b(token|secret|password|credential)\s*=\s*[^\s,;]+/gi, "$1=<redacted>")
-    .replace(/([?&#](?:token|secret|password|credential|access_token)=)[^&#\s]+/gi, "$1<redacted>");
-  return Object.freeze({
-    text(value, limit = 8 * 1024) { const bounded = text_limit(replace(value), limit); return bounded; },
-    path(value) { const absolute = resolve(value); const rel = relative(repositoryRoot, absolute); return rel && !rel.startsWith(".." + sep) && rel !== ".." ? rel.split(sep).join("/") : replace(value); },
-    diagnostic(kind, error) { const e = error instanceof Error ? error : new Error(String(error)); const message = this.text(e.message, 8 * 1024); const stack = e.stack ? this.text(e.stack, 32 * 1024) : undefined; return { kind, message: message.value, ...(stack ? { stack: stack.value } : {}), truncated: message.truncated || stack?.truncated === true }; },
-  });
-}
+export const DIAGNOSTIC_MESSAGE_BYTES = 8 * 1024, DIAGNOSTIC_FIELD_BYTES = 32 * 1024, DIAGNOSTIC_CASE_BYTES = 64 * 1024, DIAGNOSTIC_RUN_BYTES = 16 * 1024 * 1024;
+export const bounded_text = (value: unknown, limit: number): Readonly<{ value: string; truncated: boolean }> => { const text = typeof value === "string" ? value : value instanceof Error ? value.message : String(value); const bytes = Buffer.byteLength(text); if (bytes <= limit) return { value: text, truncated: false }; const marker = `\n<TRUNCATED ${bytes - limit} bytes>\n`, keep = Math.max(0, limit - Buffer.byteLength(marker)); return { value: `${text.slice(0, Math.ceil(keep / 2))}${marker}${text.slice(-Math.floor(keep / 2))}`, truncated: true }; };
+export type LocalRedactor = Readonly<{ text(value: unknown, limit?: number): Readonly<{ value: string; truncated: boolean }>; path(value: string): string; diagnostic(kind: string, error: unknown): Readonly<{ kind: string; message: string; stack?: string; expected?: string; actual?: string; truncated: boolean }> }>;
+export function create_local_redactor(repositoryRoot: string, home = process.env.HOME ?? ""): LocalRedactor { const root = resolve(repositoryRoot); const replace = (input: string): string => input.replaceAll(home, "<home>").replaceAll(root, "<repo>").replace(/(authorization|cookie|set-cookie)\s*:\s*[^\r\n]+/gi, "$1: <redacted>").replace(/\bBearer\s+[A-Za-z0-9._~+\/-]+=*/gi, "Bearer <redacted>").replace(/\b(token|secret|password|credential)\s*[=:]\s*[^\s,;]+/gi, "$1=<redacted>").replace(/([?&#](?:token|secret|password|credential|access_token)=)[^&#\s]+/gi, "$1<redacted>"); const text = (value: unknown, limit = DIAGNOSTIC_MESSAGE_BYTES) => bounded_text(replace(typeof value === "string" ? value : value instanceof Error ? value.message : String(value)), limit); return Object.freeze({ text, path(value) { const absolute = resolve(value), rel = relative(root, absolute); return rel && !rel.startsWith(".." + sep) && rel !== ".." ? rel.split(sep).join("/") : replace(value); }, diagnostic(kind, error) { const record = error && typeof error === "object" ? error as Record<string, unknown> : {}; const message = text(record.message ?? error, DIAGNOSTIC_MESSAGE_BYTES), stack = record.stack ? text(record.stack, DIAGNOSTIC_FIELD_BYTES) : undefined, expected = record.expected === undefined ? undefined : text(record.expected, DIAGNOSTIC_FIELD_BYTES), actual = record.actual === undefined ? undefined : text(record.actual, DIAGNOSTIC_FIELD_BYTES); return { kind: text(kind, 256).value, message: message.value, ...(stack ? { stack: stack.value } : {}), ...(expected ? { expected: expected.value } : {}), ...(actual ? { actual: actual.value } : {}), truncated: message.truncated || stack?.truncated === true || expected?.truncated === true || actual?.truncated === true }; } }); }

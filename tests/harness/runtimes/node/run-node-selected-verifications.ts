@@ -371,6 +371,8 @@ function external_end_event(result: ExternalLibraryLauncherResult): TestEvent {
     exitCode: result.exitCode,
     signal: result.signal,
     timedOut: result.timedOut,
+    ...(result.cancelled === undefined ? {} : { cancelled: result.cancelled }),
+    ...(result.forceKilled === undefined ? {} : { forceKilled: result.forceKilled }),
     ...(result.spawnError === undefined ? {} : { spawnError: result.spawnError }),
     ...(result.completion === undefined ? {} : { completion: result.completion }),
     ...(result.completionError === undefined ? {} : { completionError: result.completionError }),
@@ -415,6 +417,8 @@ function command_end_event(target: NodeCommandSurfaceTarget, result: SupervisedN
     exitCode: result.exitCode,
     signal: result.signal,
     timedOut: result.timedOut,
+    ...(result.cancelled === undefined ? {} : { cancelled: result.cancelled }),
+    ...(result.forceKilled === undefined ? {} : { forceKilled: result.forceKilled }),
     ...(result.spawnError === undefined ? {} : { spawnError: result.spawnError }),
   });
 }

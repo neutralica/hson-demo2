@@ -73,6 +73,8 @@ export type TestEvent = (
     exitCode: number | null;
     signal: string | null;
     timedOut: boolean;
+    cancelled?: boolean;
+    forceKilled?: boolean;
     spawnError?: string;
     completion?: Readonly<{
       version: 1;
