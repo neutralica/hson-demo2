@@ -20,10 +20,6 @@ function validate_catalog(catalog: TestCatalog): void {
     if (new Set(descriptor.collections).size !== descriptor.collections.length) {
       throw new Error(`Duplicate test collection on ${descriptor.id}.`);
     }
-    if (descriptor.executionShape === "certification-aggregate"
-      && (!Number.isSafeInteger(descriptor.declaredChecks) || (descriptor.declaredChecks ?? 0) < 1)) {
-      throw new Error(`Certification suite ${descriptor.id} requires a positive declaredChecks count.`);
-    }
     suites.set(descriptor.id, descriptor);
   }
   const tests = new Set<string>();
@@ -72,7 +68,6 @@ function canonical_suite_descriptor(descriptor: TestSuiteDescriptor): string {
     requirements: [...descriptor.requirements].sort(),
     executionShape: descriptor.executionShape,
     sourceRef: descriptor.sourceRef ?? null,
-    declaredChecks: descriptor.declaredChecks ?? null,
   });
 }
 

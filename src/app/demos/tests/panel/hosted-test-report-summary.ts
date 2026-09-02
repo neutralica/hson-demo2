@@ -26,12 +26,6 @@ export type HostedTestProjectionSummary = Readonly<{
     cancelled: number;
     cancelledChecks: number;
   }>;
-  certifications: Readonly<{
-    total: number;
-    pass: number;
-    fail: number;
-    cancelled: number;
-  }>;
   browser: Readonly<{
     total: number;
     pass: number;
@@ -50,7 +44,6 @@ export function hosted_test_projection_summary(report: HostedTestReport): Hosted
   const normalizedLaunchers = report.suiteRuns.filter((suite) => suite.executionShape === "opaque-aggregate");
   const normalizedCaseSuites = report.suiteRuns.filter((suite) => suite.executionShape === "cases");
   const normalizedBrowserSuites = report.suiteRuns.filter((suite) => suite.executionShape === "browser-journeys");
-  const normalizedCertifications = report.suiteRuns.filter((suite) => suite.executionShape === "certification-aggregate");
   const canonical = Object.freeze({
     total: normalizedCaseSuites.reduce((total, suite) => total + suite.counts.total, 0),
     pass: normalizedCaseSuites.reduce((total, suite) => total + suite.counts.passed, 0),
@@ -68,12 +61,6 @@ export function hosted_test_projection_summary(report: HostedTestReport): Hosted
     cancelled: normalizedLaunchers.filter((entry) => entry.status === "cancelled").length,
     cancelledChecks: normalizedLaunchers.reduce((total, entry) => total + entry.counts.cancelled, 0),
   });
-  const certifications = Object.freeze({
-    total: normalizedCertifications.length,
-    pass: normalizedCertifications.filter((entry) => entry.status === "pass").length,
-    fail: normalizedCertifications.filter((entry) => entry.status === "fail").length,
-    cancelled: normalizedCertifications.filter((entry) => entry.status === "cancelled").length,
-  });
   const browser = Object.freeze({
     total: normalizedBrowserSuites.reduce((total, suite) => total + suite.counts.total, 0),
     pass: normalizedBrowserSuites.reduce((total, suite) => total + suite.counts.passed, 0),
@@ -90,12 +77,11 @@ export function hosted_test_projection_summary(report: HostedTestReport): Hosted
     }),
     canonical,
     launchers,
-    certifications,
     browser,
     tests: Object.freeze({
       total: canonical.total + browser.total + launchers.observedChecks,
       passed: canonical.pass + browser.pass + launchers.passedChecks,
-      failed: canonical.fail + browser.fail + (launchers.failedChecks ?? launchers.fail) + certifications.fail,
+      failed: canonical.fail + browser.fail + (launchers.failedChecks ?? launchers.fail),
     }),
   });
 }

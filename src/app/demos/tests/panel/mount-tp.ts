@@ -110,7 +110,7 @@ function populate_targeted_test_selector(
     choices: readonly HostedTestPanelSelectionChoice[],
     selectedKey?: string,
     allCasesCount?: number,
-    countNoun: "cases" | "checks" | "certifications" = "cases",
+    countNoun: "cases" | "checks" = "cases",
 ): void {
     testSel.empty();
     const entireSuite = testSel.create.option();
@@ -258,7 +258,7 @@ export function tp_factory(options: Readonly<{
     let runningLogRow: LiveTree | undefined;
     let explicitExecutionCount = 0;
     const queuedSuiteIds = new Set<string>();
-    const suiteProgress = new Map<string, Readonly<{ shape: "cases" | "browser-journeys" | "opaque-aggregate" | "certification-aggregate"; terminal: boolean }>>();
+    const suiteProgress = new Map<string, Readonly<{ shape: "cases" | "browser-journeys" | "opaque-aggregate"; terminal: boolean }>>();
     let canonicalSuiteTotal = 0;
     let canonicalSuiteTerminal = 0;
     let opaqueSuiteTotal = 0;
@@ -644,8 +644,7 @@ export function tp_factory(options: Readonly<{
               targetedTestChoices,
               undefined,
               targetedSuite?.count,
-              aggregateSuite?.executionShape === "certification-aggregate" ? "certifications"
-                : aggregateSuite?.executionShape === "opaque-aggregate" ? "checks" : "cases",
+              aggregateSuite?.executionShape === "opaque-aggregate" ? "checks" : "cases",
             );
             if (targetedSuiteKey === undefined || aggregateSuite !== undefined) {
                 set_selector_enabled(targetedTestSel, false);

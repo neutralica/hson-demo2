@@ -61,8 +61,6 @@ function suite_matches(
   suite: TestSuiteDescriptor,
   selection: HostedTestPanelSelection,
 ): boolean {
-  if (suite.executionShape === "certification-aggregate"
-    && (selection.kind === "all" || selection.kind === "subject")) return false;
   return selection.kind === "all"
     || (selection.kind === "subject" && suite.subject === selection.subject)
     || (selection.kind === "collection" && suite.collections.includes(selection.collection))
@@ -170,9 +168,7 @@ export function hosted_test_panel_suite_choices(
   });
   const opaque = scopedOpaqueSuites.map((suite) => Object.freeze({
     key: `suite:${suite.id}`,
-    label: suite.executionShape === "certification-aggregate"
-      ? `${suite.title} (1 certification)`
-      : `${suite.title} (checks observed on run)`,
+    label: `${suite.title} (checks observed on run)`,
     selection: Object.freeze({ kind: "suite" as const, suite: suite.id }),
     count: 1,
   }));

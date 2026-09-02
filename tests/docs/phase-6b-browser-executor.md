@@ -64,9 +64,8 @@ when the owning Node-hosted application is disposed.
 
 Hosted zero-retry runs retain screenshots on failure but do not stage traces
 for passing journeys. Local direct Playwright runs keep `retain-on-failure`
-tracing. H2 provisions only the immutable Chromium headless-shell revision
-declared by the pinned Playwright runtime; unrelated cached browser
-installations and FFmpeg are not copied into the disposable workspace.
+tracing. The Playwright adapter uses the immutable Chromium headless-shell
+revision declared by the pinned Playwright runtime.
 
 ## Module isolation decision
 

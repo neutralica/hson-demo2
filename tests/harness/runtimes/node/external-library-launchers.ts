@@ -83,7 +83,7 @@ export type ExternalLibraryLauncherRunOptions = Readonly<{
   command?: string;
   terminationGeneration?: number;
   forcePlainNode?: boolean;
-  /** Deterministic process-boundary certificate hook; receives raw chunks. */
+  /** Deterministic process-boundary test hook; receives raw chunks. */
   observeStdoutChunk?: (text: string) => void;
 }>;
 

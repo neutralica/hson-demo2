@@ -165,7 +165,7 @@ function decode_suite_descriptor(value: unknown, path: string, issues: string[])
   }
   contract_key_issues(input, [
     "id", "title", "subject", "collections", "provenance", "order", "requirements", "executionShape",
-  ], ["sourceRef", "declaredChecks"], path, issues);
+  ], ["sourceRef"], path, issues);
   const requirements = string_set(input.requirements, CAPABILITIES);
   const collections = string_set(input.collections, COLLECTIONS);
   const before = issues.length;
@@ -179,13 +179,10 @@ function decode_suite_descriptor(value: unknown, path: string, issues: string[])
   }
   if (!non_negative_integer(input.order)) add_issue(issues, `${path}.order`, "expected non-negative safe integer");
   if (input.executionShape !== "cases" && input.executionShape !== "browser-journeys"
-    && input.executionShape !== "opaque-aggregate" && input.executionShape !== "certification-aggregate") {
+    && input.executionShape !== "opaque-aggregate") {
     add_issue(issues, `${path}.executionShape`, "expected supported execution shape");
   }
   if (input.sourceRef !== undefined && typeof input.sourceRef !== "string") add_issue(issues, `${path}.sourceRef`, "expected string when present");
-  if (input.declaredChecks !== undefined && (!non_negative_integer(input.declaredChecks) || input.declaredChecks < 1)) {
-    add_issue(issues, `${path}.declaredChecks`, "expected positive safe integer when present");
-  }
   if (requirements === undefined) add_issue(issues, `${path}.requirements`, "expected unique supported capability strings");
   if (collections === undefined) add_issue(issues, `${path}.collections`, "expected unique supported collection strings");
   if (issues.length !== before || !is_test_suite_id(input.id)
@@ -194,9 +191,8 @@ function decode_suite_descriptor(value: unknown, path: string, issues: string[])
     || typeof input.provenance !== "string" || !PROVENANCES.includes(input.provenance as TestProvenance)
     || !non_negative_integer(input.order)
     || (input.executionShape !== "cases" && input.executionShape !== "browser-journeys"
-      && input.executionShape !== "opaque-aggregate" && input.executionShape !== "certification-aggregate")
+      && input.executionShape !== "opaque-aggregate")
     || (input.sourceRef !== undefined && typeof input.sourceRef !== "string")
-    || (input.declaredChecks !== undefined && (!non_negative_integer(input.declaredChecks) || input.declaredChecks < 1))
     || requirements === undefined || collections === undefined) return undefined;
   return Object.freeze({
     id: input.id,
@@ -208,7 +204,6 @@ function decode_suite_descriptor(value: unknown, path: string, issues: string[])
     requirements,
     executionShape: input.executionShape,
     ...(input.sourceRef === undefined ? {} : { sourceRef: input.sourceRef }),
-    ...(input.declaredChecks === undefined ? {} : { declaredChecks: input.declaredChecks }),
   });
 }
 

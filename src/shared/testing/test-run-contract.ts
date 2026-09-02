@@ -23,7 +23,6 @@ export type PlannedTestSuite = Readonly<{
   executionShape: TestExecutionShape;
   executorId?: string;
   sourceRef?: string;
-  declaredChecks?: number;
   cases: readonly PlannedTestCase[];
 }>;
 

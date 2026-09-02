@@ -6,7 +6,7 @@ Do not reintroduce `src/tests`, `src/test-system`, `src/hosted-test`, `src/app/h
 
 ## Test visibility and execution
 
-Any automated test added, restored, split, renamed, or materially expanded must remain reachable from the canonical hosted-test application used by CLI, capture, and certification tooling, and must be represented truthfully in generated frozen evidence.
+Any automated test added, restored, split, renamed, or materially expanded must remain reachable from the canonical hosted-test application used by CLI and capture tooling, and must be represented truthfully in generated frozen evidence.
 
 This is part of completing the test change, not optional follow-up work. The ordinary browser surface is a frozen evidence explorer and must not initiate test execution.
 

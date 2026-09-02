@@ -98,9 +98,7 @@ export function hosted_test_suite_summary(suite: HostedTestSuiteRunReport): stri
     : counts.total;
   const noun = suite.executionShape === "opaque-aggregate"
     ? total === 1 ? "check" : "checks"
-    : suite.executionShape === "certification-aggregate"
-      ? total === 1 ? "certification" : "certifications"
-      : total === 1 ? "case" : "cases";
+    : total === 1 ? "case" : "cases";
   return `${total} ${noun} · ${counts.passed} pass · ${counts.failed} fail`
     + (suite.executionShape === "cases" || suite.executionShape === "browser-journeys" ? ` · ${counts.skipped} skip` : "")
     + terminal_extra(suite.status, counts.unsupported, counts.cancelled);

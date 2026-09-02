@@ -16,7 +16,6 @@ import { make_test_executor_discovery } from "../../../core/test-discovery";
 import { make_node_livehost_hosted_test_executor_registry } from "../livehost-node-executor";
 import { create_node_selected_verification_service } from "../run-node-selected-verifications";
 import { run_fresh_node_selected_test_ids } from "../run-node-selected-test-suites";
-import { node_command_suite_descriptor, resolve_h2_command_surfaces } from "../node-command-surfaces";
 import { make_hosted_test_case_inspector } from "../../../hosted/hosted-test-case-inspection";
 import {
   create_hosted_test_application,
@@ -30,7 +29,6 @@ import {
 } from "./node-capacity-livehost-socket";
 import { observe_hosted_test_timeline, type HostedTestTimelineObserver } from "../../../../../src/shared/hosted-tests/hosted-test-timeline";
 import { create_playwright_browser_executor, LOCAL_PLAYWRIGHT_BROWSER_EXECUTOR } from "../browser/playwright-browser-executor";
-import type { H2ExecutorTestHooks } from "../h2-isolated-verification";
 
 export const NODE_HOSTED_TESTS_APPLICATION_NAME = "hosted-tests";
 export const NODE_HOSTED_TESTS_CONNECTION_PATH = "/hosted-tests";
@@ -64,8 +62,6 @@ export type NodeHostedTestsApplicationOptions = Readonly<{
   timeline?: HostedTestTimelineObserver;
   /** Internal deployment capture mode: retain original-run structured case diagnostics. */
   retainRichDiagnostics?: boolean;
-  /** Private hosted-harness seam for lifecycle certification. */
-  h2TestHooks?: H2ExecutorTestHooks;
   lifecycle?: Readonly<{
     maxReports: number;
     terminalRetentionMs: number;
@@ -115,28 +111,19 @@ export async function create_node_hosted_tests_application(
   const externalLaunchers = options.executorRegistry === undefined
     ? await resolve_external_library_launchers()
     : Object.freeze({ targets: Object.freeze([]), unavailable: Object.freeze([]) });
-  const hsonLiveRoot = "repositoryRoot" in externalLaunchers ? externalLaunchers.repositoryRoot : undefined;
-  const commandSurfaces = options.executorRegistry === undefined
-    ? resolve_h2_command_surfaces({
-      demoRoot: process.cwd(),
-      ...(hsonLiveRoot === undefined ? {} : { hsonLiveRoot }),
-      ...(options.h2TestHooks === undefined ? {} : { h2TestHooks: options.h2TestHooks }),
-    })
-    : Object.freeze({ targets: Object.freeze([]), unavailable: Object.freeze([]) });
   const launcherService = create_external_library_launcher_service();
   const browserExecutor = create_playwright_browser_executor(launcherService.processSupervisor);
-  const selectedVerification = create_node_selected_verification_service(launcherService, commandSurfaces, browserExecutor);
+  const selectedVerification = create_node_selected_verification_service(launcherService, browserExecutor);
   const discovery = make_test_executor_discovery(
     executorRegistry,
     externalLaunchers.targets,
-    commandSurfaces.targets.map(node_command_suite_descriptor),
   );
   const authorities = create_hosted_test_application({
     makeRunId: make_hosted_test_run_id_factory(),
     inspectCase: options.inspectCase ?? make_hosted_test_case_inspector(executorRegistry),
     discovery,
     executorRegistry,
-    runSelected: options.runSelected ?? (externalLaunchers.targets.length === 0 && commandSurfaces.targets.length === 0
+    runSelected: options.runSelected ?? (externalLaunchers.targets.length === 0
       ? run_fresh_node_selected_test_ids
       : (selectedRegistry, ids, onEvent, runOptions) => selectedVerification.run(
         selectedRegistry,

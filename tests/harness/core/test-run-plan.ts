@@ -68,7 +68,6 @@ export function make_test_run_plan(options: MakeTestRunPlanOptions): TestRunPlan
       executionShape: suite.executionShape,
       executorId: options.assignExecutor?.(suite) ?? options.executorId,
       ...(suite.sourceRef === undefined ? {} : { sourceRef: suite.sourceRef }),
-      ...(suite.declaredChecks === undefined ? {} : { declaredChecks: suite.declaredChecks }),
       cases,
     });
   });

@@ -84,8 +84,7 @@ type SuiteProjection = {
   groupKey: HostedTestPresentationGroup;
   cases: ProjectedCase[];
   status: TestLifecycleStatus;
-  executionShape: "cases" | "browser-journeys" | "opaque-aggregate" | "certification-aggregate";
-  declaredChecks: number | null;
+  executionShape: "cases" | "browser-journeys" | "opaque-aggregate";
   counts: TestLifecycleCounts | null;
   pass: number;
   fail: number;
@@ -301,7 +300,6 @@ export function make_hosted_test_case_list(
       cases: [],
       status: "queued",
       executionShape: "cases",
-      declaredChecks: null,
       counts: null,
       pass: 0,
       fail: 0,
@@ -331,7 +329,7 @@ export function make_hosted_test_case_list(
       ? `${state.cases.length} cases · ${state.pass} pass · ${state.fail} fail · ${state.skip} skip`
       : state.counts !== null && state.counts.executed > 0
         ? `${state.counts.executed}/${state.counts.declared} checks · ${state.counts.passed} pass · ${state.counts.failed} fail`
-        : `${state.declaredChecks ?? 0} checks · ${state.status}`;
+        : `${state.counts?.total ?? 0} checks · ${state.status}`;
   }
 
   function render_suite(state: SuiteProjection): void {
@@ -529,7 +527,6 @@ export function make_hosted_test_case_list(
         state.presentation = presentation;
         state.status = suiteRun.status;
         state.executionShape = suiteRun.executionShape;
-        state.declaredChecks = suiteRun.declaredChecks;
         state.counts = suiteRun.counts;
         state.ms = suiteRun.ms ?? undefined;
         for (const plannedCase of suiteRun.cases) {

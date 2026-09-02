@@ -73,7 +73,7 @@ npm run pack
 npm run dev
 ```
 
-For ordinary local packaging, `npm run pack` and `npm run certify` need no
+For ordinary local packaging, `npm run pack` needs no
 runtime-origin environment prefix. Both default `VITE_LIVEHOST_WS_URL` to the
 established local production-simulation origin `ws://127.0.0.1:8787`. Supplying
 `VITE_LIVEHOST_WS_URL` explicitly overrides that default and validates the
@@ -125,8 +125,8 @@ The Worker compatibility origin implements `/session` and `/towl` only, so a
 static build targeting it restores TOWL while leaving circuit verification
 unavailable.
 
-Generate and execute test evidence through `npm run test:cli`, `npm run pack`,
-or `npm run certify`. LiveHost remains the execution substrate for those paths;
+Generate and execute test evidence through `npm run test:cli` or `npm run pack`.
+LiveHost remains the execution substrate for those paths;
 the browser is an evidence consumer, not a test authority.
 
 An explicit runtime `url` remains available for tests and embedding and takes

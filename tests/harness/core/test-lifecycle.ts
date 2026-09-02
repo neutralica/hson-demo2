@@ -258,28 +258,16 @@ export function make_test_lifecycle_adapter(options: Readonly<{
         return;
       }
       if (terminalSuites.has(event.suite)) return;
-      const certification = shape === "certification-aggregate";
-      const counts: TestLifecycleCounts = certification
-        ? Object.freeze({
-            declared: 1,
-            total: 1,
-            executed: event.status === "cancelled" ? 0 : 1,
-            passed: event.status === "pass" ? 1 : 0,
-            failed: event.status === "fail" ? 1 : 0,
-            skipped: 0,
-            unsupported: 0,
-            cancelled: event.status === "cancelled" ? 1 : 0,
-          })
-        : Object.freeze({
-            declared: 0,
-            total: 0,
-            executed: 0,
-            passed: 0,
-            failed: 0,
-            skipped: 0,
-            unsupported: 0,
-            cancelled: 0,
-          });
+      const counts: TestLifecycleCounts = Object.freeze({
+        declared: 0,
+        total: 0,
+        executed: 0,
+        passed: 0,
+        failed: 0,
+        skipped: 0,
+        unsupported: 0,
+        cancelled: 0,
+      });
       terminalSuites.add(event.suite);
       suiteStatuses.set(event.suite, event.status);
       emit({
@@ -345,9 +333,7 @@ export function make_test_lifecycle_adapter(options: Readonly<{
           emit({ t: "suite_finished", suiteId: suite.id, status, durationMs, counts }, suiteExecutorId);
           continue;
         }
-        const declared = suite.executionShape === "certification-aggregate"
-          ? suite.declaredChecks ?? 0
-          : 0;
+        const declared = 0;
         const status = "cancelled" as const;
         terminalSuites.add(suite.id);
         suiteStatuses.set(suite.id, status);

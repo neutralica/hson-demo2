@@ -10,17 +10,10 @@ import {
   type ExternalLibraryLauncherService,
   type ExternalLibraryLauncherAvailability,
   type ExternalLibraryLauncherResult,
-  type SupervisedNodeCommandResult,
 } from "./external-library-launchers";
 import type { ExternalLibraryLauncherTarget } from "../../../../src/shared/testing/external-launcher-contract";
 import { run_fresh_node_selected_test_ids } from "./run-node-selected-test-suites";
-import {
-  resolve_node_command_binding,
-  type NodeCommandSurfaceAvailability,
-  type NodeCommandSurfaceTarget,
-} from "./node-command-surfaces";
 import type { PlaywrightBrowserExecutor } from "./browser/playwright-browser-executor";
-import { execute_h2_verification } from "./h2-isolated-verification";
 
 export const EXTERNAL_LIBRARY_LAUNCHER_CONCURRENCY = 2;
 
@@ -59,7 +52,6 @@ export type NodeSelectedVerificationScheduling =
 export type NodeSelectedVerificationConfiguration = Readonly<{
   externalScheduling?: NodeSelectedVerificationScheduling;
   launcherService?: Pick<ExternalLibraryLauncherService, "run" | "runCommand" | "terminationGeneration">;
-  commandAvailability?: NodeCommandSurfaceAvailability;
   browserExecutor?: PlaywrightBrowserExecutor;
   recordMetrics?: (metrics: NodeSelectedVerificationMetrics) => void;
 }>;
@@ -94,7 +86,6 @@ export function node_selected_verification_metrics(): NodeSelectedVerificationMe
 
 export function create_node_selected_verification_service(
   launcherService: Pick<ExternalLibraryLauncherService, "run" | "runCommand" | "terminationGeneration">,
-  commandAvailability?: NodeCommandSurfaceAvailability,
   browserExecutor?: PlaywrightBrowserExecutor,
 ): NodeSelectedVerificationService {
   let metrics: NodeSelectedVerificationMetrics = EMPTY_NODE_SELECTED_VERIFICATION_METRICS;
@@ -110,7 +101,6 @@ export function create_node_selected_verification_service(
         {
           ...configuration,
           launcherService,
-          ...(commandAvailability === undefined ? {} : { commandAvailability }),
           ...(browserExecutor === undefined ? {} : { browserExecutor }),
           recordMetrics(value) { metrics = value; },
         },
@@ -381,74 +371,6 @@ function external_end_event(result: ExternalLibraryLauncherResult): TestEvent {
   });
 }
 
-function command_state_event(
-  target: NodeCommandSurfaceTarget,
-  status: "queued" | "running",
-): TestEvent {
-  return Object.freeze({
-    t: "external_state",
-    id: target.id,
-    suite: target.id,
-    name: target.title,
-    subject: target.subject,
-    runtime: "supervised-node-command",
-    collections: Object.freeze(["dev"]),
-    status,
-  });
-}
-
-function command_end_event(target: NodeCommandSurfaceTarget, result: SupervisedNodeCommandResult): TestEvent {
-  return Object.freeze({
-    t: "external_end",
-    id: target.id,
-    suite: target.id,
-    name: target.title,
-    subject: target.subject,
-    runtime: "supervised-node-command",
-    collections: Object.freeze(["dev"]),
-    status: result.cancelled ? "cancelled" : result.ok ? "pass" : "fail",
-    ms: result.durationMs,
-    stdout: result.stdout,
-    ordinaryStdout: result.stdout,
-    stderr: result.stderr,
-    stdoutBytes: result.stdoutBytes,
-    stderrBytes: result.stderrBytes,
-    stdoutTruncated: result.stdoutTruncated,
-    stderrTruncated: result.stderrTruncated,
-    exitCode: result.exitCode,
-    signal: result.signal,
-    timedOut: result.timedOut,
-    ...(result.cancelled === undefined ? {} : { cancelled: result.cancelled }),
-    ...(result.forceKilled === undefined ? {} : { forceKilled: result.forceKilled }),
-    ...(result.spawnError === undefined ? {} : { spawnError: result.spawnError }),
-  });
-}
-
-async function run_command_targets(
-  targets: readonly NodeCommandSurfaceTarget[],
-  execute: (target: NodeCommandSurfaceTarget) => Promise<SupervisedNodeCommandResult>,
-  lifecycle: Readonly<{
-    started(target: NodeCommandSurfaceTarget): void;
-    finished(target: NodeCommandSurfaceTarget, result: SupervisedNodeCommandResult): void;
-  }>,
-  concurrency = EXTERNAL_LIBRARY_LAUNCHER_CONCURRENCY,
-  signal?: AbortSignal,
-): Promise<void> {
-  let cursor = 0;
-  const workers = Array.from({ length: Math.min(concurrency, targets.length) }, async () => {
-    while (!signal?.aborted) {
-      const index = cursor;
-      cursor += 1;
-      const target = targets[index];
-      if (target === undefined) return;
-      lifecycle.started(target);
-      const result = await execute(target);
-      lifecycle.finished(target, result);
-    }
-  });
-  await Promise.all(workers);
-}
-
 export async function run_node_selected_verifications(
   registry: TestExecutorRegistry,
   catalog: TestCatalog,
@@ -477,15 +399,7 @@ export async function run_node_selected_verifications(
   const opaqueTargets = aggregateDescriptors
     .filter((descriptor) => descriptor.provenance === "hson-live")
     .map((descriptor) => resolve_external_launcher_binding(availability, descriptor));
-  const commandDescriptors = aggregateDescriptors.filter((descriptor) => descriptor.executionShape === "certification-aggregate");
-  if (commandDescriptors.length > 0 && configuration.commandAvailability === undefined) {
-    throw new Error("HOSTED_TEST_COMMAND_EXECUTOR_UNAVAILABLE: accepted certification work has no Node command availability.");
-  }
-  const commandTargets = commandDescriptors.map((descriptor) => (
-    resolve_node_command_binding(configuration.commandAvailability!, descriptor)
-  ));
   for (const target of opaqueTargets) onEvent(external_state_event(target, "queued"));
-  for (const target of commandTargets) onEvent(command_state_event(target, "queued"));
 
   let canonicalPhaseMs = 0;
   let externalPhaseMs = 0;
@@ -495,9 +409,6 @@ export async function run_node_selected_verifications(
   let externalCases = 0;
   let externalSuiteErrors = 0;
   let externalCompleted = 0;
-  let commandPass = 0;
-  let commandFail = 0;
-  let commandCompleted = 0;
   let browserResult = empty_result();
   const externalFailures: TestFailure[] = [];
   const terminationGeneration = configuration.launcherService?.terminationGeneration()
@@ -531,7 +442,7 @@ export async function run_node_selected_verifications(
     },
     async () => {
       const startedAt = performance.now();
-      const [result, , browser] = await Promise.all([run_external_library_launcher_pool(
+      const [result, browser] = await Promise.all([run_external_library_launcher_pool(
         opaqueTargets,
         async (target) => {
           try {
@@ -586,79 +497,6 @@ export async function run_node_selected_verifications(
           },
         },
         options.signal,
-      ), run_command_targets(
-        commandTargets,
-        async (target) => {
-          if (target.h2 !== undefined) {
-            const startedAt = performance.now();
-            const h2 = await execute_h2_verification(target.h2, target.sourceCatalogId, options.signal);
-            const process = h2.process;
-            return Object.freeze({
-              id: target.id,
-              stdout: process?.stdout ?? "",
-              stderr: [process?.stderr ?? "", h2.failureReason ?? "", JSON.stringify({ h2WorkspacePeakBytes: h2.workspacePeakBytes, h2Cleanup: h2.cleanup })].filter(Boolean).join("\n"),
-              stdoutBytes: process?.stdoutBytes ?? 0,
-              stderrBytes: process?.stderrBytes ?? 0,
-              stdoutTruncated: process?.stdoutTruncated ?? false,
-              stderrTruncated: process?.stderrTruncated ?? false,
-              exitCode: process?.exitCode ?? (h2.status === "PASS" ? 0 : 1),
-              signal: process?.signal ?? null,
-              durationMs: process?.durationMs ?? performance.now() - startedAt,
-              timedOut: process?.timedOut ?? false,
-              cancelled: process?.cancelled ?? options.signal?.aborted === true,
-              outputLimitExceeded: process?.outputLimitExceeded ?? h2.failureReason === "OUTPUT_LIMIT_EXCEEDED",
-              forceKilled: process?.forceKilled ?? false,
-              ok: h2.status === "PASS",
-              ...(process?.spawnError === undefined ? {} : { spawnError: process.spawnError }),
-            });
-          }
-          if (configuration.launcherService === undefined) {
-            throw new Error("HOSTED_TEST_COMMAND_EXECUTOR_UNAVAILABLE: Node process supervisor is not installed.");
-          }
-          return configuration.launcherService.runCommand({
-            id: target.id,
-            cwd: target.cwd,
-            command: target.command,
-            args: target.args,
-            environment: target.environment,
-            timeoutMs: target.timeoutMs,
-          }, {
-            terminationGeneration,
-            ...(options.signal === undefined ? {} : { signal: options.signal }),
-          });
-        },
-        {
-          started(target) {
-            onEvent(Object.freeze({ t: "suite_begin", suite: target.id, totalPlanned: 1 }));
-            onEvent(command_state_event(target, "running"));
-          },
-          finished(target, commandResult) {
-            if (commandResult.cancelled) {
-              // Cancellation is control truth, never an assertion failure.
-            } else if (commandResult.ok) {
-              commandPass += 1;
-              commandCompleted += 1;
-            } else {
-              commandFail += 1;
-              commandCompleted += 1;
-              externalFailures.push(Object.freeze({
-                suite: target.id,
-                name: target.title,
-                err: [
-                  commandResult.timedOut ? "Supervised Node command timed out." : "",
-                  commandResult.forceKilled ? "Supervised Node command required forced termination." : "",
-                  commandResult.spawnError ?? "",
-                  commandResult.stderr,
-                ].filter(Boolean).join("\n"),
-                ms: commandResult.durationMs,
-              }));
-            }
-            onEvent(command_end_event(target, commandResult));
-            onEvent(Object.freeze({ t: "suite_end", suite: target.id, ms: commandResult.durationMs }));
-          },
-        },
-        requestedScheduling.kind === "fixed" ? requestedScheduling.concurrency : requestedScheduling.lowConcurrency,
-        options.signal,
       ), browserIds.length === 0
         ? empty_result()
         : configuration.browserExecutor!.run(catalog, browserIds, onEvent, options)]);
@@ -678,14 +516,14 @@ export async function run_node_selected_verifications(
   });
   if (configuration.recordMetrics === undefined) latestMetrics = completedMetrics;
   else configuration.recordMetrics(completedMetrics);
-  const fail = canonical.summary.fail + externalFail + commandFail + browserResult.summary.fail;
+  const fail = canonical.summary.fail + externalFail + browserResult.summary.fail;
   return Object.freeze({
     ok: options.signal?.aborted !== true && fail === 0 && externalSuiteErrors === 0,
     ...(options.signal?.aborted ? { cancelled: true as const } : {}),
     summary: Object.freeze({
-      suites: canonical.summary.suites + externalCompleted + commandCompleted + browserResult.summary.suites,
-      cases: canonical.summary.cases + externalCases + commandCompleted + browserResult.summary.cases,
-      pass: canonical.summary.pass + externalPass + commandPass + browserResult.summary.pass,
+      suites: canonical.summary.suites + externalCompleted + browserResult.summary.suites,
+      cases: canonical.summary.cases + externalCases + browserResult.summary.cases,
+      pass: canonical.summary.pass + externalPass + browserResult.summary.pass,
       fail,
       skip: canonical.summary.skip + externalSkip + browserResult.summary.skip,
       msTotal: overlappedTotalMs,

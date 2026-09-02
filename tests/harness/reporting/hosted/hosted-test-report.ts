@@ -40,7 +40,6 @@ export function make_initial_hosted_test_report(
       executionShape: plannedSuite.executionShape,
       plannedExecutorId: plannedSuite.executorId ?? runPlan.executorId,
       sourceRef: plannedSuite.sourceRef ?? null,
-      declaredChecks: plannedSuite.declaredChecks ?? null,
       status: "queued",
       queuedAt,
       startedAt: null,
@@ -48,7 +47,7 @@ export function make_initial_hosted_test_report(
       durationMs: null,
       ms: null,
       counts: {
-        declared: plannedSuite.executionShape === "cases" || plannedSuite.executionShape === "browser-journeys" ? plannedSuite.cases.length : plannedSuite.declaredChecks ?? 0,
+        declared: plannedSuite.executionShape === "cases" || plannedSuite.executionShape === "browser-journeys" ? plannedSuite.cases.length : 0,
         total: plannedSuite.executionShape === "cases" || plannedSuite.executionShape === "browser-journeys" ? plannedSuite.cases.length : 0,
         executed: 0,
         passed: 0,

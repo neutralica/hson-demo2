@@ -16,7 +16,6 @@ import { create_node_circuit_verification_application } from "./node-circuit-ver
 import { CIRCUIT_VERIFICATION_HOST_ID } from "../../../../../src/shared/circuit-verification-contract";
 import type { HostedTestTimelineObserver } from "../../../../../src/shared/hosted-tests/hosted-test-timeline";
 import { HOSTED_TEST_AUTHORITY_LIFECYCLE } from "../../../hosted/hosted-test-application";
-import type { H2ExecutorTestHooks } from "../h2-isolated-verification";
 
 export type HostedTestServerOptions = Readonly<{
   host?: string;
@@ -31,8 +30,6 @@ export type HostedTestServerOptions = Readonly<{
   timeline?: HostedTestTimelineObserver;
   /** Internal deployment capture mode: retain original-run structured case diagnostics. */
   retainRichDiagnostics?: boolean;
-  /** Private hosted-harness seam for lifecycle certification. */
-  h2TestHooks?: H2ExecutorTestHooks;
   authorityLifecycle?: Readonly<{
     maxTowlRooms: number;
     towlIdleMs: number;
@@ -76,7 +73,6 @@ export async function start_hosted_test_server(
     ...(options.security === undefined ? {} : { security: options.security }),
     ...(options.timeline === undefined ? {} : { timeline: options.timeline }),
     ...(options.retainRichDiagnostics === true ? { retainRichDiagnostics: true } : {}),
-    ...(options.h2TestHooks === undefined ? {} : { h2TestHooks: options.h2TestHooks }),
     lifecycle: {
       maxReports: authorityLifecycle.maxHostedReports,
       terminalRetentionMs: authorityLifecycle.hostedReportRetentionMs,

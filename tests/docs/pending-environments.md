@@ -15,9 +15,9 @@ capabilities. They are not reasons to exclude a test from hosting.
 
 ## Supervised process executor
 
-Implemented locally in Phase 6A for hson-live launchers and promoted command
-certifications, including process-tree termination, timeouts, server lifecycle,
-bounded stdout/stderr, normalized evidence, and terminal events.
+Implemented locally for hson-live launchers, including process-tree termination,
+timeouts, server lifecycle, bounded stdout/stderr, normalized evidence, and
+terminal events.
 
 This can be a specialization of the deployed Node executor, but the process
 control contract must remain explicit.
@@ -46,13 +46,13 @@ output.
 ## Optional Worker portability
 
 The Worker executor remains an optional portability adapter. Its single
-unhosted census surface explicitly certifies the Cloudflare environment. It is
+unhosted census surface explicitly verifies the Cloudflare environment. It is
 not a dependency of Node LiveHost, and absence of a deployed Worker does not
 reduce general hosted-test availability.
 
 ## Verification executor
 
-TypeScript checks, builds, public-entrypoint certification, Cloudflare typing,
+TypeScript checks, builds, public-entrypoint validation, Cloudflare typing,
 production bundling, inventory/meta checks, and artifact validation use a
 separate verification denominator. A bounded executor needs compiler/build
 tooling, repository inputs, controlled filesystem output, diagnostics, exit

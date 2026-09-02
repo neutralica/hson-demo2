@@ -97,7 +97,7 @@ The file-by-file old-to-new record is in [`docs/migration-inventory.md`](./docs/
 
 Add a suite under the subject it tests, give every suite and case stable names, and register its factory in that subject's `suite-registry.ts` and the canonical hosted registry. Verify discovery, selection, Worker exclusion for Node-only cases, and LiveDemo visibility. Do not create a panel-only list.
 
-Prefer coherent subsystem-focused reported suites of roughly 20–25 checks. Do not hide nearly 100 independently named claims in one aggregate without a real contract or runtime reason, and do not split completed certified corpora merely to raise visible suite counts.
+Prefer coherent subsystem-focused reported suites of roughly 20–25 checks. Do not hide nearly 100 independently named claims in one aggregate without a real contract or runtime reason, and do not split completed corpora merely to raise visible suite counts.
 
 Add fixtures under the matching format or runtime folder and import them from their consumers. The Wikipedia HTML sample is a lazy static Parsing Panels demonstration at `public/fixtures/parse/wikipedia-main-page.html`; it is not a corpus descriptor.
 
