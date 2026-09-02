@@ -40,12 +40,11 @@ export function locus_protocol_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        caseId: "decode-ignores-invalid-optional-hello-fields", name: "decode ignores invalid optional hello fields",
+        caseId: "decode-accepts-hello-without-client-id", name: "decode accepts hello without client ID",
         input: {},
         act: () => {
           const decoded = decode_locus_message(JSON.stringify({
             type: "hello",
-            clientId: 123,
           }));
 
           return {
@@ -62,13 +61,12 @@ export function locus_protocol_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        caseId: "decode-rejects-historical-hello-lastseq-cursor", name: "decode rejects historical hello lastSeq cursor",
+        caseId: "decode-rejects-invalid-hello-client-id", name: "decode rejects invalid hello client ID",
         input: {},
         act: () => {
           const decoded = decode_locus_message(JSON.stringify({
             type: "hello",
-            clientId: "client-a",
-            lastSeq: 0,
+            clientId: 123,
           }));
 
           return {
@@ -78,18 +76,18 @@ export function locus_protocol_suite(): TestSuite {
         },
         expected: {
           ok: false,
-          message: "Locus hello contains a removed field.",
+          message: "Malformed Locus hello message.",
         },
       }),
       read_case({
         suite: SUITE,
-        caseId: "decode-rejects-hello-hostid", name: "decode rejects hello hostId",
+        caseId: "decode-rejects-unknown-hello-fields", name: "decode rejects unknown hello fields",
         input: {},
         act: () => {
           const decoded = decode_locus_message(JSON.stringify({
             type: "hello",
             clientId: "client-a",
-            hostId: "counter-a",
+            unexpected: true,
           }));
 
           return {
@@ -99,49 +97,7 @@ export function locus_protocol_suite(): TestSuite {
         },
         expected: {
           ok: false,
-          message: "Locus hello contains a removed field.",
-        },
-      }),
-      read_case({
-        suite: SUITE,
-        caseId: "decode-rejects-invalid-hello-hostid", name: "decode rejects invalid hello hostId",
-        input: {},
-        act: () => {
-          const decoded = decode_locus_message(JSON.stringify({
-            type: "hello",
-            clientId: "client-a",
-            hostId: 123,
-          }));
-
-          return {
-            ok: decoded.ok,
-            message: decoded.ok ? undefined : decoded.error.message,
-          };
-        },
-        expected: {
-          ok: false,
-          message: "Locus hello contains a removed field.",
-        },
-      }),
-      read_case({
-        suite: SUITE,
-        caseId: "decode-rejects-fractional-historical-hello-cursor", name: "decode rejects fractional historical hello cursor",
-        input: {},
-        act: () => {
-          const decoded = decode_locus_message(JSON.stringify({
-            type: "hello",
-            clientId: "client-a",
-            lastSeq: 1.5,
-          }));
-
-          return {
-            ok: decoded.ok,
-            message: decoded.ok ? undefined : decoded.error.message,
-          };
-        },
-        expected: {
-          ok: false,
-          message: "Locus hello contains a removed field.",
+          message: "Malformed Locus hello message.",
         },
       }),
       read_case({

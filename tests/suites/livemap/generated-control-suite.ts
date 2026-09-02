@@ -12,6 +12,7 @@ import type { LiveControlViewBridgeTarget, LiveInputListenerResult, LiveMapContr
 type BridgeMap = LiveMap;
 type LiveTreeControlViewTarget = LiveControlViewBridgeTarget &
   Readonly<{
+    isDisposed: boolean;
     content: LiveControlViewBridgeTarget["content"];
   }>;
 
@@ -406,6 +407,7 @@ function make_schema_control_rerender_uses_latest_schema_case(suite: string): Te
       };
       const firstBinding = render_livemap_schema_controls_snap(map, tree, firstSchema);
       const firstInput = first_schema_control(tree);
+      const firstInputLabel = firstInput.attrs.get("data-livemap-control-label");
 
       firstBinding.dispose();
       clear_generated_schema_controls(tree);
@@ -422,7 +424,8 @@ function make_schema_control_rerender_uses_latest_schema_case(suite: string): Te
       const secondInput = first_schema_control(tree);
 
       const rows = [
-        equal_row("schema rerender old input label remains detached", firstInput.attrs.get("data-livemap-control-label"), "First"),
+        equal_row("schema rerender captured old input label before disposal", firstInputLabel, "First"),
+        equal_row("schema rerender terminally disposes old input", firstInput.isDisposed, true),
         equal_row("schema rerender latest input label", secondInput.attrs.get("data-livemap-control-label"), "Second"),
         equal_row("schema rerender latest min", secondInput.attrs.get("min"), "5"),
         equal_row("schema rerender latest max", secondInput.attrs.get("max"), "10"),

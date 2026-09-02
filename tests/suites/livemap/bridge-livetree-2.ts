@@ -12,6 +12,7 @@ import type { LiveControlViewBridgeTarget, LiveInputListenerResult } from "../..
 type BridgeMap = LiveMap;
 type LiveTreeControlViewTarget = LiveControlViewBridgeTarget &
   Readonly<{
+    isDisposed: boolean;
     content: LiveControlViewBridgeTarget["content"] &
       Readonly<{
         deep: () => readonly unknown[];
@@ -344,6 +345,7 @@ function make_controls_snap_rerender_replaces_inputs_case(suite: string): TestCa
       const tree = make_control_view_target();
       const firstBinding = render_livemap_controls_snap(map, tree, ["ui"]);
       const firstInput = control_input_by_path(tree, "ui.label");
+      const firstInputPath = firstInput.attrs.get("data-livemap-control-path");
 
       firstBinding.dispose();
       clear_generated_inputs(tree);
@@ -356,7 +358,8 @@ function make_controls_snap_rerender_replaces_inputs_case(suite: string): TestCa
         equal_row("rerender generated controls latest input type", secondInput.attrs.get("type"), "number"),
         equal_row("rerender generated controls binding count", secondBinding.bindings.length, 1),
         equal_row("rerender generated controls replaces markup", tree.content.markup.innerHTML.includes('data-livemap-control-key="label"'), false),
-        equal_row("rerender generated controls old input remains detached", firstInput.attrs.get("data-livemap-control-path"), "ui.label"),
+        equal_row("rerender captured old input path before disposal", firstInputPath, "ui.label"),
+        equal_row("rerender terminally disposes replaced input", firstInput.isDisposed, true),
       ];
       secondBinding.dispose();
 
@@ -378,20 +381,23 @@ function make_controls_snap_rerender_after_dispose_ignores_old_input_case(suite:
       const tree = make_control_view_target();
       const firstBinding = render_livemap_controls_snap(map, tree, ["ui"]);
       const firstInput = control_input_by_path(tree, "ui.label");
+      const firstInputPath = firstInput.attrs.get("data-livemap-control-path");
 
       firstBinding.dispose();
       clear_generated_inputs(tree);
+      const oldListenerRemoved = !TEST_INPUT_LISTENERS.has(firstInput as object);
       map.set(["ui", "label"], "Running");
       const secondBinding = render_livemap_controls_snap(map, tree, ["ui"]);
       const secondInput = control_input_by_path(tree, "ui.label");
 
-      firstInput.form.setValue("Stale", { silent: true });
-      emit_input_if_registered(firstInput as object);
       secondInput.form.setValue("Fresh", { silent: true });
       emit_input(secondInput as object);
 
       const rows = [
-        equal_row("rerender old disposed input does not write back", map.snap(), { ui: { label: "Fresh" } }),
+        equal_row("rerender captured old input before disposal", firstInputPath, "ui.label"),
+        equal_row("rerender terminally disposes old input", firstInput.isDisposed, true),
+        equal_row("rerender removes old input listener", oldListenerRemoved, true),
+        equal_row("rerender current input writes back", map.snap(), { ui: { label: "Fresh" } }),
       ];
       secondBinding.dispose();
 
