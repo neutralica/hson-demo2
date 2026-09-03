@@ -99,4 +99,27 @@ try {
   await preCaseExecutor.dispose();
 }
 
-console.log(JSON.stringify({ suite: "playwright-cancellation", checks: 27 }));
+const missingTerminalResult = Object.freeze({
+  ...cancelledBeforeStart,
+  exitCode: 1,
+  signal: null,
+  cancelled: false,
+});
+const missingTerminalSupervisor: NodeProcessSupervisor = Object.freeze({
+  ...preCaseSupervisor,
+  start: () => Object.freeze({ result: Promise.resolve(missingTerminalResult), terminate: () => undefined }),
+});
+const missingTerminalExecutor = create_playwright_browser_executor(missingTerminalSupervisor);
+const missingTerminalEvents: TestEvent[] = [];
+try {
+  const result = await missingTerminalExecutor.run(discovery.catalog, [selected.id], (event) => missingTerminalEvents.push(event));
+  assert.deepEqual(result.totals, { suites: 1, cases: 1, pass: 0, fail: 0, skip: 0, unsupported: 0, cancelled: 0, error: 1 });
+  const terminal = missingTerminalEvents.filter((event) => event.t === "case_end" || event.t === "case_cancelled");
+  assert.equal(terminal.length, 1);
+  assert.equal(terminal[0]?.t, "case_end");
+  assert.equal(terminal[0]?.t === "case_end" ? terminal[0].status : undefined, "error");
+} finally {
+  await missingTerminalExecutor.dispose();
+}
+
+console.log(JSON.stringify({ suite: "playwright-cancellation", checks: 31 }));
