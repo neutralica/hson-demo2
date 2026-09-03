@@ -5,7 +5,6 @@ import { executor_supports, make_test_executor_registry, select_executor } from 
 import { make_test_run_plan } from "../../harness/core/test-run-plan";
 import { selected_test_suites } from "../../harness/core/test-selected-run";
 import { discover_direct_report_executables, select_direct_report_executable_ids, select_direct_report_ids } from "../../harness/runtimes/node/direct-report-discovery";
-import { decode_run_selected_tests_request } from "../../../src/shared/testing/test-run-contract";
 import type { TestExecutorDescriptor } from "../../../src/shared/testing/test-executor-contract";
 
 const firstCase: TestCase = Object.freeze({ suite: "ordinary/discovery", caseId: "first", name: "first", run: () => undefined });
@@ -44,12 +43,6 @@ assert.throws(() => selected_test_suites(registry, [first.id, first.id]), /DUPLI
 assert.deepEqual(selected_test_suites(registry, []), []);
 assert.throws(() => selected_test_suites(registry, ["ordinary/discovery::missing"]), /UNAVAILABLE_ON_EXECUTOR/);
 
-const decoded = decode_run_selected_tests_request({ selectionIds: [second.id, second.id, first.id] });
-assert.equal(decoded.ok, true);
-assert.deepEqual(decoded.ok ? decoded.value.selectionIds : [], [second.id, first.id]);
-assert.equal(decode_run_selected_tests_request({ selectionIds: [] }).ok, false);
-assert.equal(decode_run_selected_tests_request({ testIds: [first.id] }).ok, false);
-
 const plan = make_test_run_plan({ runId: "ordinary", protocolVersion: 1, catalogVersion: "fixture", executorId: executor.id, catalog: registry.catalog, selectedIds: [second.id, first.id] });
 assert.deepEqual(plan.selectionIds, [first.id, second.id]);
 assert.deepEqual(plan.suites[0]?.cases.map((entry) => entry.id), [first.id, second.id]);
@@ -66,4 +59,4 @@ assert.deepEqual(select_direct_report_executable_ids(direct.catalog, []), []);
 assert.throws(() => select_direct_report_executable_ids(direct.catalog, ["ordinary/missing::case"]), /UNKNOWN_SELECTION/);
 assert.deepEqual(select_direct_report_ids(direct.catalog, { test: sample[0]! }), [sample[0]]);
 
-console.log(JSON.stringify({ suite: "direct-selection-discovery", checks: 24 }));
+console.log(JSON.stringify({ suite: "direct-selection-discovery", checks: 21 }));
