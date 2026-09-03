@@ -1,11 +1,13 @@
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { delimiter, dirname, posix } from "node:path";
+import { delimiter, dirname, posix, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { TestCapability } from "../../../../../src/shared/testing/test-contracts";
 import type { TestSuite } from "../../../core/test-contracts";
 
 const EVENT_PREFIX = "<LOCUS_BROWSER_EVENT>";
+const EXECUTION_SOURCE_PREFIX = "playwright-test:";
+export const PLAYWRIGHT_REPOSITORY_ROOT = resolve(import.meta.dirname, "../../../../..");
 export const PLAYWRIGHT_BROWSER_REQUIREMENTS = Object.freeze([
   "javascript", "node", "process", "browser-dom", "browser", "chromium", "network", "local-server",
 ] as const satisfies readonly TestCapability[]);
@@ -18,6 +20,8 @@ export type PlaywrightDiscoveredTest = Readonly<{
   line: number;
   column: number;
 }>;
+
+export type PlaywrightExecutionLocator = PlaywrightDiscoveredTest;
 
 export function normalize_playwright_source_path(value: string): string {
   return value.replaceAll("\\", "/").replace(/^\.\//, "");
@@ -37,6 +41,32 @@ export function playwright_case_id(test: Pick<PlaywrightDiscoveredTest, "path" |
   const identity = JSON.stringify([normalize_playwright_source_path(test.path), test.titlePath, test.project]);
   const hash = createHash("sha256").update(identity).digest("hex").slice(0, 10);
   return `${id_segment(test.title).slice(0, 48)}-${hash}`;
+}
+
+export function playwright_execution_source_ref(test: PlaywrightDiscoveredTest): string {
+  return `${EXECUTION_SOURCE_PREFIX}${encodeURIComponent(JSON.stringify([
+    normalize_playwright_source_path(test.path), test.title, test.titlePath, test.project, test.line, test.column,
+  ]))}`;
+}
+
+export function playwright_execution_locator(sourceRef: string | undefined): PlaywrightExecutionLocator {
+  if (sourceRef === undefined || !sourceRef.startsWith(EXECUTION_SOURCE_PREFIX)) {
+    throw new Error(`BROWSER_EXECUTOR_SOURCE_INVALID:${sourceRef ?? "missing"}`);
+  }
+  let value: unknown;
+  try { value = JSON.parse(decodeURIComponent(sourceRef.slice(EXECUTION_SOURCE_PREFIX.length))); }
+  catch (cause) { throw new Error(`BROWSER_EXECUTOR_SOURCE_INVALID:${sourceRef}`, { cause }); }
+  if (!Array.isArray(value) || value.length !== 6
+    || typeof value[0] !== "string" || typeof value[1] !== "string"
+    || !Array.isArray(value[2]) || !value[2].every((part) => typeof part === "string")
+    || typeof value[3] !== "string" || !Number.isInteger(value[4]) || Number(value[4]) < 1
+    || !Number.isInteger(value[5]) || Number(value[5]) < 1) {
+    throw new Error(`BROWSER_EXECUTOR_SOURCE_INVALID:${sourceRef}`);
+  }
+  return Object.freeze({
+    path: normalize_playwright_source_path(value[0]), title: value[1], titlePath: Object.freeze([...value[2]]),
+    project: value[3], line: Number(value[4]), column: Number(value[5]),
+  });
 }
 
 function decoded_test(line: string): PlaywrightDiscoveredTest | undefined {
@@ -71,8 +101,10 @@ export function parse_playwright_discovery_output(stdout: string): readonly Play
 }
 
 export function discover_playwright_tests(): readonly PlaywrightDiscoveredTest[] {
-  const stdout = execFileSync(process.execPath, [fileURLToPath(import.meta.resolve("@playwright/test/cli")), "test", "--list"], {
-    cwd: process.cwd(), encoding: "utf8", maxBuffer: 4 * 1024 * 1024,
+  const stdout = execFileSync(process.execPath, [
+    fileURLToPath(import.meta.resolve("@playwright/test/cli")), "test", "--config", resolve(PLAYWRIGHT_REPOSITORY_ROOT, "playwright.config.ts"), "--list",
+  ], {
+    cwd: PLAYWRIGHT_REPOSITORY_ROOT, encoding: "utf8", maxBuffer: 4 * 1024 * 1024,
     env: {
       ...process.env, LIVEHOST_PLAYWRIGHT: "1",
       PATH: `${dirname(process.execPath)}${delimiter}${process.env.PATH ?? ""}`,
@@ -105,6 +137,7 @@ export function playwright_browser_test_suites(tests: readonly PlaywrightDiscove
         suite,
         caseId: playwright_case_id(test),
         name: test.title,
+        descriptor: Object.freeze({ sourceRef: playwright_execution_source_ref(test) }),
         run(): never { throw new Error("Browser journeys must be assigned to the supervised Playwright executor."); },
       }))),
     });

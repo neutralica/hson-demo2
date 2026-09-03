@@ -60,6 +60,7 @@ export type TestDescriptorMetadataOverride = Readonly<{
   subject?: TestSubject;
   requirements?: readonly TestCapability[];
   collections?: readonly TestCollection[];
+  sourceRef?: string;
 }>;
 
 export type TestDescriptor = Readonly<{

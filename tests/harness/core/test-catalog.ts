@@ -46,6 +46,7 @@ export function resolve_test_descriptor(
     title: testCase.name,
     ...metadata,
     provenance: defaults.provenance ?? "hson-demo2",
+    ...(testCase.descriptor?.sourceRef === undefined ? {} : { sourceRef: testCase.descriptor.sourceRef }),
     suiteOrdinal,
     caseOrdinal,
   });

@@ -90,6 +90,7 @@
     "test:server-lifecycle": "node --import=tsx tests/runners/harness/run-server-lifecycle.node.mts",
     "test:playwright-adapter": "node --import=tsx tests/runners/harness/run-playwright-adapter.node.mts",
     "test:playwright-cancellation": "node --import=tsx tests/runners/harness/run-playwright-cancellation.node.mts",
+    "test:playwright-selection": "node --import=tsx tests/runners/harness/run-playwright-selection.node.mts",
     "test:mixed-direct-report": "node --import=tsx tests/runners/harness/run-mixed-direct-report.node.mts",
     "test:report": "node --import=tsx tests/runners/harness/run-test-report.node.mts",
     "test:report-meta": "node --import=tsx tests/runners/harness/run-test-report-meta.node.mts",

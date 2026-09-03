@@ -6,15 +6,6 @@ const appPort = Number(process.env.PLAYWRIGHT_APP_PORT ?? "4173");
 const liveHostUrl = `ws://127.0.0.1:${liveHostPort}`;
 const appUrl = `http://127.0.0.1:${appPort}`;
 const liveHostExecution = process.env.LIVEHOST_PLAYWRIGHT === "1";
-const selectedTitles = (() => {
-  if (!liveHostExecution || process.env.LIVEHOST_PLAYWRIGHT_TITLES === undefined) return undefined;
-  const decoded = JSON.parse(process.env.LIVEHOST_PLAYWRIGHT_TITLES) as unknown;
-  if (!Array.isArray(decoded) || !decoded.every((title) => typeof title === "string" && title.length > 0)) {
-    throw new Error("LIVEHOST_PLAYWRIGHT_TITLES must be a JSON array of non-empty strings.");
-  }
-  const escaped = decoded.map((title) => title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
-  return new RegExp(`(?:${escaped.join("|")})$`);
-})();
 
 export default defineConfig({
   testDir: "tests/integration/browser",
@@ -26,7 +17,6 @@ export default defineConfig({
   reporter: liveHostExecution
     ? [["./tests/integration/browser/livehost-playwright-reporter.ts"]]
     : [["line"]],
-  ...(selectedTitles === undefined ? {} : { grep: selectedTitles }),
   timeout: 30_000,
   expect: { timeout: 5_000 },
   use: {

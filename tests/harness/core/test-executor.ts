@@ -60,6 +60,7 @@ function same_descriptor(left: TestDescriptor, right: TestDescriptor): boolean {
     && left.suiteId === right.suiteId
     && left.caseId === right.caseId
     && left.title === right.title
+    && left.sourceRef === right.sourceRef
     && left.subject === right.subject
     && left.requirements.length === right.requirements.length
     && left.requirements.every((requirement, index) => requirement === right.requirements[index])

@@ -11,7 +11,9 @@ import type { NodeProcessResult, NodeProcessSupervisor } from "../node-process-s
 import {
   normalize_playwright_source_path,
   playwright_case_id,
+  playwright_execution_locator,
   playwright_suite_id,
+  PLAYWRIGHT_REPOSITORY_ROOT,
   type PlaywrightDiscoveredTest,
 } from "./playwright-test-discovery";
 
@@ -132,11 +134,49 @@ function case_status(value: unknown): Extract<TerminalStatus, "pass" | "fail" | 
   return "error";
 }
 
-function suite_source(sourceRef: string | undefined): Readonly<{ path: string; project: string }> {
-  if (sourceRef === undefined || !sourceRef.startsWith("playwright:")) throw new Error(`BROWSER_EXECUTOR_SOURCE_INVALID:${sourceRef ?? "missing"}`);
-  const separator = sourceRef.lastIndexOf("#");
-  if (separator < "playwright:".length) throw new Error(`BROWSER_EXECUTOR_SOURCE_INVALID:${sourceRef}`);
-  return Object.freeze({ path: normalize_playwright_source_path(sourceRef.slice("playwright:".length, separator)), project: sourceRef.slice(separator + 1) });
+export function playwright_execution_arguments(catalog: TestCatalog, selectedIds: readonly string[]): readonly string[] {
+  const browserIds = catalog.tests.filter((descriptor) => (
+    catalog.suites.find((suite) => suite.id === descriptor.suiteId)?.executionShape === "browser-journeys"
+  )).map((descriptor) => descriptor.id);
+  const fullBrowserSelection = selectedIds.length === browserIds.length
+    && selectedIds.every((id) => browserIds.includes(id));
+  const base = [
+    fileURLToPath(import.meta.resolve("@playwright/test/cli")),
+    "test",
+  ];
+  if (fullBrowserSelection) {
+    return Object.freeze([...base, "--config", resolve(PLAYWRIGHT_REPOSITORY_ROOT, "playwright.config.ts")]);
+  }
+  const locators = selectedIds.map((id) => {
+    const descriptor = catalog.tests.find((candidate) => candidate.id === id);
+    if (descriptor === undefined) throw new Error(`BROWSER_EXECUTOR_UNKNOWN_SELECTION: ${id}`);
+    return playwright_execution_locator(descriptor.sourceRef);
+  });
+  const projects = [...new Set(locators.map((locator) => locator.project))];
+  const paths = [...new Set(locators.map((locator) => locator.path))];
+  const titlePattern = `^(?:${locators.map((locator) => locator.titlePath
+    .filter((part) => part.length > 0)
+    .join(" ")
+    .replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})$`;
+  return Object.freeze([
+    ...base,
+    ...paths,
+    "--config", resolve(PLAYWRIGHT_REPOSITORY_ROOT, "playwright.config.ts"),
+    ...projects.flatMap((project) => ["--project", project]),
+    "--grep", titlePattern,
+  ]);
+}
+
+export function playwright_missing_case_reason(
+  selectedCount: number,
+  executorReportedTests: number | undefined,
+  result: Pick<NodeProcessResult, "timedOut" | "exitCode" | "signal">,
+): string {
+  if (executorReportedTests === 0) {
+    return `[BROWSER_SELECTION_ZERO_MATCH] Playwright matched zero tests for ${selectedCount} selected discovered browser journeys.`;
+  }
+  if (result.timedOut) return "[BROWSER_TIMEOUT] Playwright browser execution timed out.";
+  return `[BROWSER_INFRASTRUCTURE] Playwright exited before reporting this journey (exit ${result.exitCode ?? "none"}, signal ${result.signal ?? "none"}).`;
 }
 
 function empty_metrics(): BrowserExecutorMetrics {
@@ -187,12 +227,11 @@ export function create_playwright_browser_executor(
         if (suite?.executionShape !== "browser-journeys") {
           throw new Error(`BROWSER_EXECUTOR_ASSIGNMENT_INVALID: ${id}`);
         }
-        return Object.freeze({ descriptor, suite });
+        const locator = playwright_execution_locator(descriptor.sourceRef);
+        return Object.freeze({ descriptor, suite, locator });
       });
       const selectedKeys = new Set(descriptors.map(({ descriptor }) => descriptor.id));
-      const selectedTitles = descriptors.map(({ descriptor }) => descriptor.title);
-      const selectedPaths = [...new Set(descriptors.map(({ suite }) => suite_source(suite.sourceRef).path))];
-      const selectedTitlePattern = `(?:${selectedTitles.map((title) => title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})$`;
+      const executionArguments = playwright_execution_arguments(catalog, selectedIds);
       const suiteStarted = new Set<string>();
       const suiteEnded = new Set<string>();
       const suiteStartedAt = new Map<string, number>();
@@ -213,6 +252,7 @@ export function create_playwright_browser_executor(
       let contextCreationMs = 0;
       let pageCreationMs = 0;
       let artifactGenerationMs = 0;
+      let executorReportedTests: number | undefined;
       let parserBuffer = "";
       const startedAt = performance.now();
       const startedEpoch = Date.now();
@@ -231,6 +271,7 @@ export function create_playwright_browser_executor(
       const accept = (event: BrowserReporterEvent): void => {
         if (event.t === "executor_started") {
           executorStartedAt = Number(event.timestamp) || Date.now();
+          executorReportedTests = Number.isInteger(event.tests) ? Number(event.tests) : undefined;
           metrics = Object.freeze({
             ...metrics,
             lastChildPid: Number.isInteger(event.pid) ? Number(event.pid) : null,
@@ -254,8 +295,11 @@ export function create_playwright_browser_executor(
         const descriptor = catalog.tests.find((candidate) => candidate.id === id);
         const suite = catalog.suites.find((candidate) => candidate.id === descriptor?.suiteId);
         if (descriptor === undefined || suite?.executionShape !== "browser-journeys" || descriptor.title !== title) return;
-        const source = suite_source(suite.sourceRef);
-        if (source.path !== path || source.project !== project) return;
+        const selected = descriptors.find((entry) => entry.descriptor.id === id)?.locator;
+        if (selected === undefined || selected.path !== path || selected.project !== project
+          || selected.line !== evidence.line || selected.column !== evidence.column
+          || selected.titlePath.length !== titlePath.length
+          || selected.titlePath.some((part, index) => part !== titlePath[index])) return;
         if (event.t === "case_started") {
           if (terminalIds.has(id) || begunIds.has(id)) return;
           if (suiteStarted.has(suite.id) === false) {
@@ -363,7 +407,7 @@ export function create_playwright_browser_executor(
       };
       const [hostedPort, appPort] = await Promise.all([reserve_port(), reserve_port()]);
       const outputToken = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
-      const outputRoot = resolve(process.cwd(), "test-results", "livehost-browser", outputToken);
+      const outputRoot = resolve(PLAYWRIGHT_REPOSITORY_ROOT, "test-results", "livehost-browser", outputToken);
       retainedArtifactRoots.add(outputRoot);
       metrics = Object.freeze({
         ...metrics,
@@ -377,15 +421,9 @@ export function create_playwright_browser_executor(
       let serverSettlementFailed = false;
       try {
         result = await supervisor.start({
-          cwd: process.cwd(),
+          cwd: PLAYWRIGHT_REPOSITORY_ROOT,
           command: process.execPath,
-          args: Object.freeze([
-            fileURLToPath(import.meta.resolve("@playwright/test/cli")),
-            "test",
-            ...selectedPaths,
-            "--grep",
-            selectedTitlePattern,
-          ]),
+          args: executionArguments,
           environment: Object.freeze({
             LIVEHOST_PLAYWRIGHT: "1",
             HOSTED_TEST_PORT: String(hostedPort),
@@ -449,9 +487,7 @@ export function create_playwright_browser_executor(
             suiteStarted.add(suite.id);
             emit({ t: "suite_begin", suite: suite.id, totalPlanned: suiteRemaining.get(suite.id) ?? 0 });
           }
-          const reason = result.timedOut
-            ? "[BROWSER_TIMEOUT] Playwright browser execution timed out."
-            : `[BROWSER_INFRASTRUCTURE] Playwright exited before reporting this journey (exit ${result.exitCode ?? "none"}, signal ${result.signal ?? "none"}).`;
+          const reason = playwright_missing_case_reason(selectedIds.length, executorReportedTests, result);
           error += 1;
           failures.push(Object.freeze({ suite: suite.id, caseId: descriptor.caseId, name: descriptor.title, err: reason, ms: 0 }));
           emit({ t: "case_begin", suite: suite.id, caseId: descriptor.caseId, name: descriptor.title });

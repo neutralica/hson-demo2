@@ -52,6 +52,7 @@ function canonical_descriptor(descriptor: TestDescriptor): string {
     requirements: [...descriptor.requirements].sort(),
     collections: [...descriptor.collections].sort(),
     provenance: descriptor.provenance,
+    sourceRef: descriptor.sourceRef ?? null,
     suiteOrdinal: descriptor.suiteOrdinal,
     caseOrdinal: descriptor.caseOrdinal,
   });
