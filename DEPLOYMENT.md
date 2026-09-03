@@ -1,4 +1,4 @@
-# Hosted-test deployment
+# LiveDemo deployment
 
 ## Worker command
 
@@ -84,9 +84,9 @@ public deployment requirement for an appropriate public `wss://` origin.
 local-only file and serves the matching evidence directory from the packed
 static artifact. No manual copy or environment export is required.
 
-Run `npm run hosted:test-server` separately only when CLI/build tooling or
-internal LiveHost diagnostics require the hosted execution substrate. The
-ordinary browser tests explorer never connects to it.
+Run `npm run local:livehost-server` separately when local TOWL or circuit
+verification behavior needs a LiveHost origin. Test reporting never connects
+to it.
 
 ## Frontend production build
 
@@ -125,9 +125,9 @@ The Worker compatibility origin implements `/session` and `/towl` only, so a
 static build targeting it restores TOWL while leaving circuit verification
 unavailable.
 
-Generate and execute test evidence through `npm run test:cli` or `npm run pack`.
-LiveHost remains the execution substrate for those paths;
-the browser is an evidence consumer, not a test authority.
+Generate and execute test evidence through `npm run test:report`, `npm run
+test:cli`, or `npm run pack`. LocalRunReporter is the report authority; the
+browser is a static evidence consumer.
 
 An explicit runtime `url` remains available for tests and embedding and takes
 precedence over the Vite value.
@@ -212,33 +212,29 @@ public runtime; public Tests are frozen static evidence.
 
 ## Authority lifetime and restart contract
 
-The Node process owns two finite application registries, separate from
+The Node process owns a finite TOWL application registry, separate from
 transport limits:
 
 - TOWL defaults to at most 128 loaded rooms, eligible for eviction 30 minutes
   after connections and resumable-session grace are gone.
-- hosted tests default to at most 16 loaded reports, retained for 10 minutes
-  after terminal execution and subscribers are gone.
-- one unreferenced 30-second sweep applies both policies.
+- one unreferenced sweep applies the TOWL policy.
 
-Configure these with `LOCUS_MAX_TOWL_ROOMS`, `LOCUS_TOWL_IDLE_MS`,
-`LOCUS_MAX_HOSTED_REPORTS`, `LOCUS_HOSTED_REPORT_RETENTION_MS`, and
+Configure these with `LOCUS_MAX_TOWL_ROOMS`, `LOCUS_TOWL_IDLE_MS`, and
 `LOCUS_AUTHORITY_SWEEP_INTERVAL_MS`. Values are finite positive integers.
 TOWL idle time cannot be shorter than its 30-second resumable-session grace,
-and the sweep interval cannot exceed either retention duration. Invalid values
+and the sweep interval cannot exceed the idle duration. Invalid values
 fail before listening.
 
-Running reports, attached clients, resumable sessions inside grace, actions,
-recovery, persistence, and request acquisitions cannot be automatically
-evicted. Capacity exhaustion rejects new room/report creation; it never removes
-an active authority. The hosted-test coordinator and canonical catalog remain
-process-lifetime application state.
+Attached clients, resumable sessions inside grace, actions, recovery,
+persistence, and request acquisitions cannot be automatically evicted.
+Capacity exhaustion rejects new room creation; it never removes an active
+authority.
 
-TOWL rooms and hosted reports are ephemeral data authorities.
+TOWL rooms are ephemeral data authorities.
 Eviction or process restart loses their state, sessions, history, and
 credentials. Returning to the same TOWL room key creates initial game state
 with a new incarnation; old bootstrap state uses the existing incarnation-
-replacement recovery path. Reports are not reconstructed after eviction.
+replacement recovery path.
 Document persistence in `hson-live` does not make these data authorities
 durable.
 
@@ -271,9 +267,8 @@ The `Forwarded` header is intentionally unsupported and rejected in trusted
 mode.
 
 The browser preserves existing query parameters and adds or replaces
-`locus=<selector>` for coordinator, report, and reconnect sockets. The
-application interprets this selector; LiveHost does not assign universal
-topology. Do not
+`locus=<selector>` for TOWL and circuit-verification sockets. The application
+interprets this selector; LiveHost does not assign universal topology. Do not
 configure a proxy that discards those parameters. Choose proxy and platform
 idle timeouts suitable for WebSocket sessions; this protocol has no polling or
 HTTP fallback. The service must remain a persistent process and should be
@@ -285,35 +280,3 @@ public TLS hostname, and enable WebSocket forwarding for live features. Supply
 that service origin as `VITE_LIVEHOST_WS_URL` when preparing the static artifact.
 Build the public frozen test site with its accepted immutable evidence root; it
 has no visitor-triggered hosted-test endpoint requirement.
-
-## Hosted-test timing boundaries
-
-Hosted-test durations use the monotonic `performance.now()` clock:
-
-- `canonical phase` begins when the canonical executor task starts and ends
-  when that task becomes terminal, including a reported failure.
-- `external phase` begins when the external pool task starts and ends after
-  every selected launcher has closed and reported.
-- `runner` or `hosted total` begins when the accepted selection is dispatched
-  to the combined Node runner and ends after both execution phases are
-  terminal.
-- `host` begins immediately before the host invokes the runner and ends when
-  the runner returns, immediately before the terminal report commit.
-- Panel `elapsed` begins when the panel accepts the user's run action, before
-  dispatch, and ends after the terminal mirrored report has been applied. It
-  includes action round-trip and final report application, but excludes
-  application boot and discovery.
-
-The reproducible performance probe is:
-
-```sh
-npm run test:hosted-performance-node -- --repeats=1 --policies=fixed:2 --invocation=verified
-```
-
-The representative production-mode sample derives the current canonical-case
-and opaque-check selection in a fresh Node process. Increase repeats or add
-policies for comparative tuning; `tsx` remains an optional source-loader
-comparison rather than the production baseline. The matrix driver reports the
-two denominators separately, phase medians, inclusive median and range,
-observed concurrency, launcher starts, and pass/fail totals. Timing values are
-diagnostic measurements, not correctness thresholds.

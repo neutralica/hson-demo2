@@ -1,57 +1,27 @@
 # Test-system instructions
 
-`tests/` is the authoritative repository test root. Keep shipped LiveDemo panel code in `src/app/demos/tests`; place harness code, runtime adapters, suites, runners, fixtures, helpers, integrations, tools, and test documentation here according to [`README.md`](./README.md).
+`tests/` is the authoritative repository test root. Keep shipped LiveDemo
+panel code in `src/app/demos/tests`; place harness code, runtime adapters,
+suites, runners, fixtures, helpers, integrations, tools, and test documentation
+here according to [README.md](./README.md).
 
-Do not reintroduce `src/tests`, `src/test-system`, `src/hosted-test`, `src/app/hosted-test`, `tests/browser`, or `tests/cloudflare`.
+Do not reintroduce `src/tests`, `src/test-system`, `src/hosted-test`,
+`src/app/hosted-test`, `tests/browser`, or `tests/cloudflare`.
 
-## Test visibility and execution
+Automated tests must be reachable from direct CLI/build tooling and represented
+truthfully in generated static evidence. Register `TestSuite`/`TestCase`
+factories with their semantic executor registry, preserve accurate subject,
+collection, and runtime metadata, and avoid a second panel-specific inventory.
 
-Any automated test added, restored, split, renamed, or materially expanded must remain reachable from the canonical hosted-test application used by CLI and capture tooling, and must be represented truthfully in generated frozen evidence.
+The browser Tests surface is a frozen evidence explorer. It must perform static
+fetches only and must never initiate TestRunner, subprocess, Playwright,
+LiveHost report, WebSocket report, or remote test actions.
 
-This is part of completing the test change, not optional follow-up work. The ordinary browser surface is a frozen evidence explorer and must not initiate test execution.
+hson-live acceptance launchers own frozen metadata and emit only the established
+child case lifecycle, diagnostics, and terminal protocol. Static source
+discovery is authoritative; do not add expected counts, certification records,
+or aggregate completion gates.
 
-### Tests owned by hson-demo2
-
-Register new `TestSuite` / `TestCase` factories with the canonical hosted-test registry so they are:
-
-- present in `tests.discover`;
-- assigned accurate subject, collection, and execution-context metadata;
-- selectable through `tests.runSelected`;
-- materialized under the appropriate frozen evidence category and suite navigation after capture.
-
-Do not create a second panel-specific test list.
-
-### Tests owned by hson-live
-
-Executable acceptance and runtime-probe suites own an exported, frozen
-`HSON_LIVE_TEST_METADATA` declaration. Keep its stable ID, title, category,
-runtime, and tags accurate. The suite must emit only `<HSON_TEST_EVENT>` case
-lifecycle, diagnostics, and a count-free terminal. Static source discovery is
-authoritative; do not add a launcher manifest, package-script registry, expected
-suite count, or aggregate completion record.
-
-The corresponding hson-demo2 integration must expose it to the internal hosted registry and generated evidence under its functional category. Do not create a separate “library verification” category when the test belongs to LiveHost, LiveMap, LiveTree, Transform, or another established subject.
-
-A test change is not complete until the test is runnable through supported CLI/build tooling and represented in generated evidence, or an unsupported-environment exception is explicitly documented.
-
-### Unsupported environments
-
-If a new automated test genuinely cannot run through an existing LiveDemo executor, do not silently omit it. Document:
-
-- the required execution environment;
-- why the current hosted executor cannot support it truthfully;
-- the smallest required adapter or executor;
-- where the test remains runnable.
-
-Treat the task as incomplete unless this exception is explicit and justified.
-
-### Completion check
-
-Before reporting a test-related task complete, verify that:
-
-- the original CLI command still passes;
-- hosted discovery includes the new test or launcher;
-- executable metadata and discovered categories reflect it;
-- CLI/capture selection executes it;
-- Worker discovery remains free of Node-only tests;
-- no executable identity is discovered twice.
+If a test genuinely needs an unsupported environment, document the requirement,
+the existing direct command, and the smallest missing adapter. Do not silently
+omit it.

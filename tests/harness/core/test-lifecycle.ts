@@ -163,7 +163,6 @@ export function make_test_lifecycle_adapter(options: Readonly<{
           status,
           durationMs: event.ms,
           ...(error === undefined ? {} : { error }),
-          ...(event.diagnostic === undefined ? {} : { diagnostic: event.diagnostic }),
         }, executorId);
         return;
       }

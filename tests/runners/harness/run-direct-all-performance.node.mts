@@ -5,8 +5,9 @@ import {
   run_node_selected_verifications,
 } from "../../harness/runtimes/node/run-node-selected-verifications";
 import { make_local_node_locus_executor_registry } from "../../harness/runtimes/node/livehost-node-executor";
-import { HOSTED_TEST_RUN_OPTIONS } from "../../harness/hosted/hosted-test-scheduling";
 import { make_test_executor_discovery } from "../../harness/core/test-discovery";
+
+const DIRECT_RUN_OPTIONS = Object.freeze({ yieldAfterMs: 8, yieldBetweenSuites: false });
 
 const registry = make_local_node_locus_executor_registry();
 const availability = await resolve_external_library_launchers();
@@ -39,7 +40,7 @@ try {
     availability,
     selectedIds,
     () => undefined,
-    HOSTED_TEST_RUN_OPTIONS,
+    DIRECT_RUN_OPTIONS,
     { externalScheduling: { kind: "fixed", concurrency: 2 } },
   );
   const elapsedMs = performance.now() - startedAt;

@@ -12,7 +12,7 @@ import {
 import { run_external_library_launcher_pool } from "../../harness/runtimes/node/run-node-selected-verifications";
 
 function expect(condition: unknown, message: string): asserts condition {
-  if (!condition) throw new Error(`Phase 3B process cancellation: ${message}`);
+  if (!condition) throw new Error(`External process cancellation: ${message}`);
 }
 
 function test_case(suite: string, caseId: string, name: string, run: TestCase["run"]): TestCase {
@@ -28,7 +28,7 @@ async function eventually(condition: () => boolean, message: string): Promise<vo
     if (condition()) return;
     await tick();
   }
-  throw new Error(`Phase 3B process cancellation did not observe ${message}.`);
+  throw new Error(`External process cancellation did not observe ${message}.`);
 }
 
 const fixturePath = fileURLToPath(new URL("../../fixtures/protocol/external-launcher-protocol-fixture.mjs", import.meta.url));
@@ -37,7 +37,7 @@ let targetPromise: Promise<ExternalLibraryLauncherTarget> | undefined;
 async function target(): Promise<ExternalLibraryLauncherTarget> {
   targetPromise ??= resolve_external_library_launchers().then((availability) => {
     const selected = availability.targets.find((entry) => entry.launcherId === "transform.hson-tokenizer");
-    if (selected === undefined) throw new Error("Phase 3B process fixture requires the manifested tokenizer launcher.");
+    if (selected === undefined) throw new Error("External process fixture requires the manifested tokenizer launcher.");
     return selected;
   });
   return targetPromise;
@@ -94,7 +94,7 @@ const graceful = () => (gracefulEvidence ??= cancelled_scenario("graceful-timeou
 let resistantEvidence: Promise<Awaited<ReturnType<typeof cancelled_scenario>>> | undefined;
 const resistant = () => (resistantEvidence ??= cancelled_scenario("resistant-timeout"));
 
-export function phase3b_process_cancellation_suite(): TestSuite {
+export function external_process_cancellation_suite(): TestSuite {
   const suite = "livehost/cancellation-process";
   return Object.freeze({
     suite,
@@ -141,7 +141,7 @@ export function phase3b_process_cancellation_suite(): TestSuite {
         const base = await target();
         const targets = Object.freeze(Array.from({ length: 3 }, (_, index) => Object.freeze({
           ...base,
-          id: `${base.id}/phase3b-${index}`,
+          id: `${base.id}/process-${index}`,
         })));
         const invocations = Object.fromEntries(targets.map((entry) => [entry.id, Object.freeze({
           kind: "direct" as const,

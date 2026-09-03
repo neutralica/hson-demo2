@@ -3,7 +3,13 @@ import { _colors } from "../../../core/consts/colors.consts";
 import { mk_div_id, mk_div_cls } from "../../../utils/makers";
 import type { TestSummary } from "../../../../shared/testing/test-contracts";
 import { TEST_CHIP_ROWcss, TEST_CHIP_DEFcss, TEST_CHIP_VALUEcss, TEST_CHIP_LABELcss } from "./tp.css";
-import { format_hosted_test_duration } from "../../../../shared/hosted-tests/hosted-test-timing";
+
+function format_test_duration(ms: number): string {
+  const finiteMs = Number.isFinite(ms) && ms >= 0 ? ms : 0;
+  if (finiteMs < 1000) return `${finiteMs.toFixed(1)} ms`;
+  const seconds = finiteMs / 1000;
+  return `${seconds.toFixed(seconds < 10 ? 2 : 1)} s`;
+}
 
 export type ChipDisplay = Readonly<{
   clear: () => void;
@@ -77,11 +83,11 @@ export function create_test_chips(host: LiveTree): ChipDisplay {
   const renderEntries = (entries: readonly TestSummaryEntry[]): void => {
     const keys = entries.map((entry) => entry.key);
     if (new Set(keys).size !== keys.length) {
-      throw new Error("Hosted summary entry keys must be unique.");
+      throw new Error("Test summary entry keys must be unique.");
     }
     const indices = keys.map((key) => TEST_SUMMARY_ENTRY_ORDER.indexOf(key));
     if (indices.some((index) => index < 0) || indices.some((index, position) => position > 0 && index <= (indices[position - 1] ?? -1))) {
-      throw new Error("Hosted summary entry keys must follow the stable semantic order.");
+      throw new Error("Test summary entry keys must follow the stable semantic order.");
     }
     const visible = new Set(keys);
     for (const [key, slot] of slots) slot.show(visible.has(key));
@@ -98,7 +104,7 @@ export function create_test_chips(host: LiveTree): ChipDisplay {
         { key: "tests", label: "tests", value: s.cases },
         { key: "passed", label: "passed", value: s.pass },
         { key: "failed", label: "failed", value: s.fail },
-        { key: "elapsed", label: "elapsed", value: format_hosted_test_duration(s.msTotal) },
+        { key: "elapsed", label: "elapsed", value: format_test_duration(s.msTotal) },
       ]);
     },
     renderEntries,

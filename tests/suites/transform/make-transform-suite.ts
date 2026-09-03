@@ -56,7 +56,7 @@ export function make_transform_test_suite(
         },
 
 
-        run: (context) => {
+        run: () => {
           const base = {
             entry,
             dual: true,
@@ -67,7 +67,7 @@ export function make_transform_test_suite(
           const report = hson._circuit_test(atom, {
             ...base,
             verbose: true,
-            capture: context?.richDiagnostics === true,
+            capture: false,
           });
 
           const didPass = report.ok;
@@ -87,7 +87,6 @@ export function make_transform_test_suite(
                 expected,
               }),
               assertRows: _freeze([{ ok: false, label: msg, actual: didPass, expected: shouldPass }]),
-              ...(context?.richDiagnostics === true ? { loopReport: report } : {}),
             };
           }
 
@@ -99,7 +98,6 @@ export function make_transform_test_suite(
               preview: input.length ? _snip(input) : "—",
               expected,
             }),
-            ...(context?.richDiagnostics === true ? { loopReport: report } : {}),
           };
         },
       }));

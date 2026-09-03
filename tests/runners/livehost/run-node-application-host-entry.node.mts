@@ -45,7 +45,7 @@ async function wait_for(
 const port = await available_port();
 const child = spawn(
   process.execPath,
-  ["--import", "tsx", "tests/harness/runtimes/node/server/hosted-test-server-entry.node.ts"],
+  ["--import", "tsx", "tests/harness/runtimes/node/server/local-livehost-server-entry.node.ts"],
   {
     cwd: process.cwd(),
     env: {
@@ -66,13 +66,13 @@ child.stderr.on("data", (chunk: string) => { stderr += chunk; });
 
 try {
   await wait_for(
-    () => stdout.includes("Hosted-test server listening"),
+    () => stdout.includes("Local LiveHost server listening"),
     5_000,
     () => `entrypoint did not listen\nstdout:\n${stdout}\nstderr:\n${stderr}`,
   );
   const healthResponse = await fetch(`http://127.0.0.1:${port}/healthz`);
   const healthText = await healthResponse.text();
-  const websocket = new WebSocket(`ws://127.0.0.1:${port}/hosted-tests?locus=hosted-tests`);
+  const websocket = new WebSocket(`ws://127.0.0.1:${port}/towl?locus=towl%3Aentry-room`);
   await new Promise<void>((resolve, reject) => {
     websocket.once("open", resolve);
     websocket.once("error", reject);
@@ -80,11 +80,11 @@ try {
   websocket.close();
   expect_entry(
     healthResponse.status === 200
-      && healthText.includes('"name":"hosted-tests"')
       && healthText.includes('"name":"towl"')
+      && healthText.includes('"name":"circuit-verification"')
       && stdout.includes('"type":"host-listening"')
       && stdout.includes('"type":"application-registration"'),
-    "source entrypoint must expose health, both registrations, and structured startup events",
+    "source entrypoint must expose health, product registrations, and structured startup events",
   );
   const exitPromise = child_exit(child);
   child.kill("SIGTERM");

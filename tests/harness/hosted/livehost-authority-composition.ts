@@ -1,7 +1,6 @@
 import type { LocusConnectionContext, LocusSocketLike } from "hson-live/types";
 import type { ApplicationLocusStore } from "./application-locus-store";
 import { towl_room_id_from_host_id } from "../../../src/app/demos/towl/index";
-import type { HostedTestApplication } from "./hosted-test-application";
 import type { TowlAuthorityApplication } from "./towl-authority-application";
 
 export type LocusAuthorityConnector = Readonly<{
@@ -14,7 +13,7 @@ export type LocusAuthorityConnector = Readonly<{
 }>;
 
 export function compose_worker_authority_application(
-  hostedTests: HostedTestApplication,
+  hostedTests: LocusAuthorityConnector,
   towl: TowlAuthorityApplication,
 ): LocusAuthorityConnector {
   let disposed = false;

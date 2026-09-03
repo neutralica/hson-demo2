@@ -6,7 +6,6 @@ import { freeze as _freeze } from "../../helpers/freeze";
 import { TestRecorder } from "../reporting/test-recorder";
 import { assertion_failure_message, normalize_assert_rows } from "../reporting/assert-row-status";
 import type { RunCaseRet, RunOptions, RunResult, TestEvent, TestExpected, TestExpectedError, TestSuite } from "./test-contracts";
-import { normalize_hosted_test_case_diagnostic } from "./hosted-test-case-diagnostic";
 
 export const DEFAULT_TEST_CASE_TIMEOUT_MS = 30_000;
 export const TEST_FAILURE_DETAIL_LIMIT = 16 * 1024;
@@ -44,31 +43,6 @@ function emit(rec: TestRecorder, onEvent: (e: TestEvent) => void, e: TestEvent):
   } catch (error) {
     throw new TestEventDeliveryError(error);
   }
-}
-
-function rich_diagnostic(
-  options: RunOptions,
-  testCase: TestSuite["cases"][number],
-  terminal: Readonly<{ status: "pass" | "fail"; ms: number; err?: string }>,
-  metaPatch: Record<string, string> | undefined,
-  assertRows: ReturnType<typeof normalize_assert_rows>["assertRows"],
-  loopReport: RunCaseRet["loopReport"],
-) {
-  const context = options.richDiagnosticContext;
-  if (context === undefined) return undefined;
-  return normalize_hosted_test_case_diagnostic({
-    runId: context.runId,
-    suite: context.suite,
-    caseSuite: testCase.suite,
-    caseId: testCase.caseId,
-    name: testCase.name,
-    status: terminal.status,
-    ms: terminal.ms,
-    ...(terminal.err === undefined ? {} : { error: terminal.err }),
-    ...(assertRows === undefined ? {} : { assertRows }),
-    metadata: { ...testCase.meta, ...metaPatch },
-    ...(loopReport === undefined ? {} : { loopReport }),
-  });
 }
 
 function default_now(): number {
@@ -330,7 +304,7 @@ export async function run_test_suites(
         let runError: unknown;
         try {
           ret = await run_bounded(
-            () => tc.run(opts.richDiagnostics === undefined ? undefined : { richDiagnostics: opts.richDiagnostics }),
+            () => tc.run(),
             effective_timeout(suite, tc, opts),
             "case",
             `${tc.suite}::${tc.caseId}`,
@@ -365,7 +339,6 @@ export async function run_test_suites(
           : undefined;
 
         const metaPatch = runRet?.metaPatch;
-        const loopReport = runRet?.loopReport;
         const assertRowsStatus = normalize_assert_rows(runRet?.assertRows);
         const assertRows = assertRowsStatus.assertRows;
         const failedRows = assertRowsStatus.failedRows;
@@ -389,20 +362,17 @@ export async function run_test_suites(
               }
               : {}),
           } as const;
-          const diagnostic = rich_diagnostic(opts, tc, endBase, metaPatch, assertRows, loopReport);
-
           emit(
             rec,
             onEvent,
-            !failedAsExpected && (metaPatch || assertRows !== undefined || diagnostic !== undefined)
+            !failedAsExpected && (metaPatch || assertRows !== undefined)
               ? {
                 ...endBase,
                 ...(metaPatch ? { metaPatch } : {}),
                 ...(assertRows !== undefined ? { assertRows } : {}),
-                ...(diagnostic === undefined ? {} : { diagnostic }),
               }
-              : metaPatch || diagnostic !== undefined
-                ? { ...endBase, ...(metaPatch ? { metaPatch } : {}), ...(diagnostic === undefined ? {} : { diagnostic }) }
+              : metaPatch
+                ? { ...endBase, metaPatch }
                 : endBase
           );
 
@@ -422,17 +392,14 @@ export async function run_test_suites(
             ms: now() - c0,
             err: assertion_failure_message(failedRows),
           } as const;
-          const diagnostic = rich_diagnostic(opts, tc, endBase, metaPatch, assertRows, loopReport);
-
           emit(
             rec,
             onEvent,
-            metaPatch || assertRows !== undefined || diagnostic !== undefined
+            metaPatch || assertRows !== undefined
               ? {
                 ...endBase,
                 ...(metaPatch ? { metaPatch } : {}),
                 ...(assertRows !== undefined ? { assertRows } : {}),
-                ...(diagnostic === undefined ? {} : { diagnostic }),
               }
               : endBase
           );
@@ -451,17 +418,14 @@ export async function run_test_suites(
           status: "pass",
           ms: now() - c0,
         } as const;
-        const diagnostic = rich_diagnostic(opts, tc, endBase, metaPatch, assertRows, loopReport);
-
         emit(
           rec,
           onEvent,
-          metaPatch || (opts.includePassedDiagnostics && assertRows !== undefined) || diagnostic !== undefined
+          metaPatch || (opts.includePassedDiagnostics && assertRows !== undefined)
             ? {
               ...endBase,
               ...(metaPatch ? { metaPatch } : {}),
               ...(opts.includePassedDiagnostics && assertRows !== undefined ? { assertRows } : {}),
-              ...(diagnostic === undefined ? {} : { diagnostic }),
             }
             : endBase
         );
@@ -496,13 +460,11 @@ export async function run_test_suites(
             ms: now() - c0,
             expected,
           } as const;
-          const diagnostic = rich_diagnostic(opts, tc, endBase, metaPatch, assertRows, undefined);
-
           emit(
             rec,
             onEvent,
-            metaPatch || diagnostic !== undefined
-              ? { ...endBase, ...(metaPatch ? { metaPatch } : {}), ...(diagnostic === undefined ? {} : { diagnostic }) }
+            metaPatch
+              ? { ...endBase, metaPatch }
               : endBase,
           );
 
@@ -521,17 +483,14 @@ export async function run_test_suites(
           err: malformedRows.length ? assertion_failure_message(malformedRows) : msg,
           ...(expected === "fail" ? { expected } : {}),
         } as const;
-        const diagnostic = rich_diagnostic(opts, tc, endBase, metaPatch, assertRows, undefined);
-
         emit(
           rec,
           onEvent,
-          metaPatch || assertRows !== undefined || diagnostic !== undefined
+          metaPatch || assertRows !== undefined
             ? {
               ...endBase,
               ...(metaPatch ? { metaPatch } : {}),
               ...(assertRows !== undefined ? { assertRows } : {}),
-              ...(diagnostic === undefined ? {} : { diagnostic }),
             }
             : endBase
         );

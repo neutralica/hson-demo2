@@ -1,16 +1,10 @@
 import WebSocket from "ws";
 import type { LiveHostApplication, LiveHostConnection } from "hson-live/livehost";
 import type { TestSuite } from "../../harness/core/test-contracts";
-import { create_external_library_launcher_service } from "../../harness/runtimes/node/external-library-launchers";
-import { make_local_node_locus_executor_registry } from "../../harness/runtimes/node/livehost-node-executor";
-import { create_hosted_test_application } from "../../harness/hosted/hosted-test-application";
-import { make_test_executor_registry, type TestExecutorRegistry } from "../../harness/core/test-executor";
-import { make_test_executor_discovery } from "../../harness/core/test-discovery";
 import { create_towl_authority_application } from "../../harness/hosted/towl-authority-application";
 import {
   start_node_application_host,
 } from "hson-live/livehost/node";
-import { create_node_hosted_tests_application } from "../../harness/runtimes/node/server/node-hosted-tests-application";
 import { create_node_towl_application } from "../../harness/runtimes/node/server/node-towl-application";
 import { make_towl_socket, send_towl_action } from "../towl/towl-test-helpers";
 import type { TowlState } from "../../../src/app/demos/towl/index";
@@ -22,27 +16,6 @@ import {
 
 function expect_node_host(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`node application host: ${message}`);
-}
-
-function make_application_fixture_executor(run: () => Promise<void> = () => Promise.resolve()): TestExecutorRegistry {
-  const suite = "livehost/application-fixture";
-  return make_test_executor_registry(Object.freeze({
-    id: "application-fixture-node",
-    kind: "node",
-    label: "Application fixture Node",
-    location: "local",
-    capabilities: Object.freeze({ provides: Object.freeze(["javascript", "node"] as const) }),
-    supportsStreaming: true,
-    supportsCancellation: true,
-  }), [Object.freeze({
-    suite,
-    descriptor: Object.freeze({ subject: "livehost", requirements: Object.freeze(["javascript", "node"] as const), collections: Object.freeze(["dev"] as const) }),
-    cases: Object.freeze([Object.freeze({ suite, caseId: "execute", name: "execute", run })]),
-  })]);
-}
-
-function application_options(executorRegistry: TestExecutorRegistry) {
-  return Object.freeze({ executorRegistry, discovery: make_test_executor_discovery(executorRegistry) });
 }
 
 type MockApplication = Readonly<{
@@ -346,36 +319,6 @@ export function node_application_host_suite(): TestSuite {
       }),
       Object.freeze({
         suite,
-        caseId: "hosted-tests-and-towl-use-separate-stores-behind-one-node-transport", name: "hosted tests and TOWL use separate stores behind one Node transport",
-        run: async () => {
-          const hosted = await create_node_hosted_tests_application({
-            executorRegistry: make_local_node_locus_executor_registry(),
-          });
-          const towl = create_node_towl_application();
-          const host = await start_node_application_host({
-            port: 0,
-            applications: [hosted.registration, towl.registration],
-          });
-          try {
-            const coordinator = await open_websocket(`${host.url}/hosted-tests?locus=hosted-tests`);
-            const room = await open_websocket(`${host.url}/towl?locus=towl%3Aroom-one`);
-            expect_node_host(
-              hosted.authorities.store.has("hosted-tests")
-                && !hosted.authorities.store.has("towl:room-one")
-                && towl.authorities.store.has("towl:room-one")
-                && !towl.authorities.store.has("hosted-tests")
-                && host.applicationNames.join(",") === "hosted-tests,towl",
-              "transport registration must not merge application authority stores",
-            );
-            coordinator.close();
-            room.close();
-          } finally {
-            await host.dispose();
-          }
-        },
-      }),
-      Object.freeze({
-        suite,
         caseId: "towl-rooms-and-their-disposal-remain-authority-local", name: "TOWL rooms and their disposal remain authority-local",
         run: async () => {
           const application = create_towl_authority_application();
@@ -440,50 +383,6 @@ export function node_application_host_suite(): TestSuite {
           } finally {
             transport.dispose();
             await host.dispose();
-          }
-        },
-      }),
-      Object.freeze({
-        suite,
-        caseId: "equal-report-ids-and-executor-cancellation-remain-application-local", name: "equal report IDs and executor cancellation remain application-local",
-        run: async () => {
-          const executor = make_application_fixture_executor();
-          const selectionId = executor.catalog.tests[0]!.id;
-          const first = create_hosted_test_application({ ...application_options(executor), makeRunId: () => "equal-run" });
-          const second = create_hosted_test_application({ ...application_options(executor), makeRunId: () => "equal-run" });
-          const firstLaunchers = create_external_library_launcher_service();
-          const secondLaunchers = create_external_library_launcher_service();
-          try {
-            const request = {
-              type: "action" as const,
-              id: "equal-report-action",
-              clientId: "equal-client",
-              requestId: "equal-request",
-              name: "tests.runSelected" as const,
-              payload: { selectionIds: [selectionId] },
-            };
-            const [firstRun, secondRun] = await Promise.all([
-              first.coordinator.dispatch_action(request),
-              second.coordinator.dispatch_action(request),
-            ]);
-            const reportId = "hosted-report:equal-run";
-            firstLaunchers.terminate();
-            expect_node_host(
-              first.store !== second.store
-                && first.coordinator !== second.coordinator
-                && firstRun.type === "ack"
-                && secondRun.type === "ack"
-                && first.store.get(reportId) !== undefined
-                && second.store.get(reportId) !== undefined
-                && first.store.get(reportId) !== second.store.get(reportId)
-                && firstLaunchers.terminationGeneration() === 1
-                && secondLaunchers.terminationGeneration() === 0,
-              "equal report IDs, authority state, and cancellation generation must not cross applications",
-            );
-          } finally {
-            first.dispose();
-            second.dispose();
-            secondLaunchers.terminate();
           }
         },
       }),
@@ -570,60 +469,6 @@ export function node_application_host_suite(): TestSuite {
             "evicted room must reject old credentials and mint a new incarnation",
           );
           second.emit_close();
-          await application.dispose();
-        },
-      }),
-      Object.freeze({
-        suite,
-        caseId: "hosted-report-execution-subscribers-retention-and-capacity-are-lifecycle-owned", name: "hosted report execution, subscribers, retention, and capacity are lifecycle-owned",
-        run: async () => {
-          let now = 1_000;
-          let releaseRun!: () => void;
-          const runGate = new Promise<void>((resolve) => { releaseRun = resolve; });
-          let nextRun = 0;
-          const executor = make_application_fixture_executor(() => runGate);
-          const selectionId = executor.catalog.tests[0]!.id;
-          const application = create_hosted_test_application({
-            ...application_options(executor),
-            makeRunId: () => `lifecycle-run-${++nextRun}`,
-            lifecycle: {
-              maxReports: 1,
-              terminalRetentionMs: 100,
-              sweepIntervalMs: 50,
-              now: () => now,
-              schedule: () => () => {},
-            },
-          });
-          const request = (id: string) => ({
-            type: "action" as const,
-            id,
-            clientId: "lifecycle-client",
-            requestId: id,
-            name: "tests.runSelected" as const,
-            payload: { selectionIds: [selectionId] },
-          });
-          const running = application.coordinator.dispatch_action(request("run-one"));
-          for (let index = 0; index < 8 && !application.hasReport("hosted-report:lifecycle-run-1"); index += 1) {
-            await Promise.resolve();
-          }
-          const blocked = await application.evictReport("hosted-report:lifecycle-run-1");
-          const capacity = await application.coordinator.dispatch_action(request("run-two"));
-          expect_node_host(
-            blocked.status === "busy"
-              && capacity.type === "error"
-              && application.reportCount() === 1,
-            "running report must block eviction and finite capacity must reject new work",
-          );
-          releaseRun();
-          const completed = await running;
-          now += 101;
-          expect_node_host(
-            completed.type === "ack"
-              && await application.sweepReports() === 1
-              && application.reportCount() === 0
-              && application.coordinator.activity.snapshot().state === "idle",
-            "terminal report must evict after retention without disposing the coordinator",
-          );
           await application.dispose();
         },
       }),

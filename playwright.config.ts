@@ -1,9 +1,9 @@
 import { defineConfig, devices } from "@playwright/test";
 
 const localDevelopment = process.env.CI !== "true";
-const hostedTestPort = Number(process.env.HOSTED_TEST_PORT ?? "8787");
+const liveHostPort = Number(process.env.LIVEHOST_PORT ?? "8787");
 const appPort = Number(process.env.PLAYWRIGHT_APP_PORT ?? "4173");
-const hostedTestUrl = `ws://127.0.0.1:${hostedTestPort}`;
+const liveHostUrl = `ws://127.0.0.1:${liveHostPort}`;
 const appUrl = `http://127.0.0.1:${appPort}`;
 const liveHostExecution = process.env.LIVEHOST_PLAYWRIGHT === "1";
 const selectedTitles = (() => {
@@ -46,9 +46,9 @@ export default defineConfig({
   }],
   webServer: [
     {
-      command: `PORT=${hostedTestPort} npm run hosted:test-server`,
+      command: `PORT=${liveHostPort} npm run local:livehost-server`,
       env: { HSON_PLAYWRIGHT_OWNER_PID: String(process.pid) },
-      port: hostedTestPort,
+      port: liveHostPort,
       timeout: 30_000,
       gracefulShutdown: { signal: "SIGTERM", timeout: 5_000 },
       reuseExistingServer: liveHostExecution ? false : localDevelopment,
@@ -56,7 +56,7 @@ export default defineConfig({
       stderr: "pipe",
     },
     {
-      command: `VITE_TEST_EVIDENCE_ROOT=/test-evidence/123e4567-e89b-42d3-a456-426614174000 VITE_LIVEHOST_WS_URL=${hostedTestUrl} npm run dev:test -- --host 127.0.0.1 --port ${appPort} --strictPort`,
+      command: `VITE_TEST_EVIDENCE_ROOT=/test-evidence/123e4567-e89b-42d3-a456-426614174000 VITE_LIVEHOST_WS_URL=${liveHostUrl} npm run dev:test -- --host 127.0.0.1 --port ${appPort} --strictPort`,
       env: { HSON_PLAYWRIGHT_OWNER_PID: String(process.pid) },
       url: appUrl,
       timeout: 30_000,

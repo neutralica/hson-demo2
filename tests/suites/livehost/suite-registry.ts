@@ -12,7 +12,6 @@ import { locus_socket_suite } from "./socket-suite";
 import { locus_session_lifecycle_suite } from "./session-lifecycle-suite";
 import { locus_store_suite } from "./store-suite";
 import { locus_sync_suite } from "./sync-suite";
-import { all_phase3b_cancellation_suites } from "./phase3b-cancellation-suite";
 
 export function all_locus_suites(): readonly TestSuite[] {
   const metadata: TestDescriptorMetadata = Object.freeze({
@@ -30,6 +29,5 @@ export function all_locus_suites(): readonly TestSuite[] {
     locus_pair_suite(),
     locus_store_suite(),
     locus_api_suite(),
-    ...all_phase3b_cancellation_suites(),
   ].map((suite) => Object.freeze({ ...suite, descriptor: metadata }));
 }
