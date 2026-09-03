@@ -6,11 +6,6 @@ import ts from "typescript";
 const root = resolve(import.meta.dirname, "../../..");
 const productionRoot = resolve(root, "src");
 const testsRoot = resolve(root, "tests");
-const temporaryPhase7Exceptions = new Set([
-  "src/server/public-livehost-server.ts -> tests/harness/runtimes/node/server/node-circuit-verification-application.ts",
-  "src/server/public-livehost-server.ts -> tests/harness/runtimes/node/server/node-towl-application.ts",
-  "src/server/public-livehost-server.ts -> tests/harness/runtimes/node/server/node-production-security.ts",
-]);
 
 async function source_files(directory: string): Promise<readonly string[]> {
   const found = await Promise.all((await readdir(directory, { withFileTypes: true })).map(async (entry) => {
@@ -50,14 +45,33 @@ async function reachable_from(entry: string): Promise<readonly string[]> {
 }
 
 const observed = new Set<string>();
-for (const file of await source_files(productionRoot)) {
+const productionFiles = await source_files(productionRoot);
+for (const file of productionFiles) {
   const parsed = ts.preProcessFile(await readFile(file, "utf8"), true, true);
   for (const imported of parsed.importedFiles) {
     const target = await resolve_import(file, imported.fileName);
     if (target?.startsWith(`${testsRoot}${sep}`)) observed.add(`${relative(root, file)} -> ${relative(root, target)}`);
   }
 }
-assert.deepEqual([...observed].sort(), [...temporaryPhase7Exceptions].sort(), "production imports tests/ only through the explicit Phase 7 migration targets; remove this exact list in Phase 7");
+assert.deepEqual([...observed].sort(), [], "production source must not import repository-root tests/");
+
+const serverFiles = productionFiles.filter((file) => file.startsWith(`${resolve(productionRoot, "server")}${sep}`));
+const serverImportSpecifiers = (await Promise.all(serverFiles.map(async (file) =>
+  ts.preProcessFile(await readFile(file, "utf8"), true, true).importedFiles.map((entry) => entry.fileName)
+))).flat();
+for (const forbidden of ["playwright", "local-run-reporter", "test-discovery", "test-selection", "external-library-launchers"]) {
+  assert.equal(
+    serverImportSpecifiers.some((specifier) => specifier.toLowerCase().includes(forbidden)),
+    false,
+    `production server must not import test execution infrastructure: ${forbidden}`,
+  );
+}
+const cloudflareSource = (await Promise.all(
+  serverFiles.filter((file) => file.includes(`${sep}cloudflare${sep}`)).map((file) => readFile(file, "utf8")),
+)).join("\n");
+for (const forbidden of ["tests.discover", "tests.runSelected", "cloudflare-test-executor", "hosted-test-report"]) {
+  assert.equal(cloudflareSource.includes(forbidden), false, `Cloudflare production runtime must not contain ${forbidden}`);
+}
 
 const directReportFiles = await reachable_from(resolve(root, "tests/runners/harness/run-test-report.node.mts"));
 const forbiddenDirectReportPaths = [
@@ -82,7 +96,8 @@ for (const forbidden of ["TestRunner", "child_process", "playwright", "new WebSo
 
 console.log(JSON.stringify({
   suite: "production-dependency-boundary",
-  temporaryExceptions: [...observed].sort(),
+  productionTestImports: [...observed].sort(),
+  productionServerModules: serverFiles.length,
   directReportModules: directReportFiles.length,
   frozenPanelModules: frozenPanelFiles.length,
 }));

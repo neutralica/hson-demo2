@@ -45,7 +45,7 @@ async function wait_for(
 const port = await available_port();
 const child = spawn(
   process.execPath,
-  ["--import", "tsx", "tests/harness/runtimes/node/server/local-livehost-server-entry.node.ts"],
+  ["--import", "tsx", "src/server/livehost/local-livehost-server-entry.node.ts"],
   {
     cwd: process.cwd(),
     env: {

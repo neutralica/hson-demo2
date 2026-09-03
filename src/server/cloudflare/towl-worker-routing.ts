@@ -1,6 +1,9 @@
-export const HOSTED_TEST_DURABLE_OBJECT_NAME = "hson-demo2-hosted-tests-v1";
 export const TOWL_WORKER_PATH = "/towl";
 export const TOWL_WORKER_SESSION_PATH = "/session";
+
+// Keep the existing named Durable Object instance so deployed TOWL state stays
+// attached to the provider identity created before hosted testing was retired.
+export const TOWL_DURABLE_OBJECT_INSTANCE_NAME = "hson-demo2-hosted-tests-v1";
 
 const PUBLIC_TOWL_ORIGINS = new Set([
   "https://hson.terminalgothic.com",
@@ -9,12 +12,12 @@ const PUBLIC_TOWL_ORIGINS = new Set([
   "https://terminalgothic.com",
 ]);
 
-type HostedTestDurableObjectId = object;
-type HostedTestDurableObjectStub = Readonly<{ fetch(request: Request): Promise<Response> }>;
+type TowlDurableObjectId = object;
+type TowlDurableObjectStub = Readonly<{ fetch(request: Request): Promise<Response> }>;
 
-export type HostedTestDurableObjectNamespace = Readonly<{
-  idFromName(name: string): HostedTestDurableObjectId;
-  get(id: HostedTestDurableObjectId): HostedTestDurableObjectStub;
+export type TowlDurableObjectNamespace = Readonly<{
+  idFromName(name: string): TowlDurableObjectId;
+  get(id: TowlDurableObjectId): TowlDurableObjectStub;
 }>;
 
 export function request_error(message: string, status: number): Response {
@@ -66,7 +69,7 @@ function towl_session_response(request: Request): Response {
 /** Public compatibility surface: anonymous bootstrap plus TOWL WebSockets only. */
 export async function route_towl_worker_request(
   request: Request,
-  namespace: HostedTestDurableObjectNamespace,
+  namespace: TowlDurableObjectNamespace,
 ): Promise<Response> {
   const url = new URL(request.url);
   if (request.method === "GET" && url.pathname === TOWL_WORKER_SESSION_PATH && !is_websocket_upgrade(request)) {
@@ -82,20 +85,6 @@ export async function route_towl_worker_request(
   if (hostId === undefined || !hostId.startsWith("towl:")) {
     return request_error("TOWL WebSocket requests require a TOWL locus selector.", 400);
   }
-  const id = namespace.idFromName(HOSTED_TEST_DURABLE_OBJECT_NAME);
-  return namespace.get(id).fetch(request);
-}
-
-export async function route_hosted_test_worker_request(
-  request: Request,
-  namespace: HostedTestDurableObjectNamespace,
-): Promise<Response> {
-  if (!is_websocket_upgrade(request)) {
-    return request_error("Expected a WebSocket upgrade request.", 426);
-  }
-  if (locus_id(request) === undefined) {
-    return request_error("Hosted-test WebSocket requests require a non-empty locus query parameter.", 400);
-  }
-  const id = namespace.idFromName(HOSTED_TEST_DURABLE_OBJECT_NAME);
+  const id = namespace.idFromName(TOWL_DURABLE_OBJECT_INSTANCE_NAME);
   return namespace.get(id).fetch(request);
 }

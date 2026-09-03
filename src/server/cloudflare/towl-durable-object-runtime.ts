@@ -1,12 +1,14 @@
-import type { LocusAuthorityConnector } from "../../hosted/livehost-authority-composition";
+import type { LocusResult, LocusSocketLike } from "hson-live/types";
 import {
   make_cloudflare_websocket_locus_socket,
   type CloudflareAcceptedWebSocket,
 } from "./cloudflare-websocket-socket";
 
-type CloudflareHostedTestApplication = Pick<LocusAuthorityConnector, "connectBounded">;
+type TowlAuthorityConnector = Readonly<{
+  connectBounded(hostId: string, socket: LocusSocketLike): Promise<LocusResult<() => void>>;
+}>;
 
-function redact_cloudflare_diagnostic_text(value: string, maxLength: number): string {
+function redact_diagnostic_text(value: string, maxLength: number): string {
   return value
     .replace(/\bBearer\s+[^\s,;]+/gi, "Bearer [redacted]")
     .replace(/\b(authorization|cookie|token|credential|secret|password)\s*[:=]\s*[^\s,;]+/gi, "$1=[redacted]")
@@ -14,94 +16,73 @@ function redact_cloudflare_diagnostic_text(value: string, maxLength: number): st
     .slice(0, maxLength);
 }
 
-function safe_cloudflare_authority(hostId: string): Readonly<Record<string, string>> {
-  if (hostId === "hosted-tests") return Object.freeze({ authorityKind: "hosted-test-coordinator", authorityId: hostId });
-  if (/^hosted-report:[A-Za-z0-9._:-]{1,240}$/.test(hostId)) {
-    return Object.freeze({ authorityKind: "hosted-test-report", authorityId: hostId });
-  }
-  return Object.freeze({
-    authorityKind: hostId.startsWith("towl:") ? "towl" : "unknown",
-    authorityId: "[redacted]",
-  });
-}
-
-function safe_cloudflare_error(error: unknown, depth = 0): Readonly<Record<string, unknown>> {
+function safe_error(error: unknown, depth = 0): Readonly<Record<string, unknown>> {
   if (!(error instanceof Error)) return Object.freeze({ type: error === null ? "null" : typeof error });
   const code = Reflect.get(error, "code");
   return Object.freeze({
     name: error.name,
-    message: redact_cloudflare_diagnostic_text(error.message, 2_048),
+    message: redact_diagnostic_text(error.message, 2_048),
     ...(typeof code === "string" && /^[A-Z][A-Z0-9_]{0,95}$/.test(code) ? { code } : {}),
-    ...(error.stack === undefined ? {} : { stack: redact_cloudflare_diagnostic_text(error.stack, 8_192) }),
-    ...(depth === 0 && error.cause instanceof Error ? { cause: safe_cloudflare_error(error.cause, depth + 1) } : {}),
+    ...(error.stack === undefined ? {} : { stack: redact_diagnostic_text(error.stack, 8_192) }),
+    ...(depth === 0 && error.cause instanceof Error ? { cause: safe_error(error.cause, depth + 1) } : {}),
   });
 }
 
-function log_cloudflare_authority_failure(
+function log_failure(
   operation: "authority.connect" | "websocket.error" | "websocket.message",
-  hostId: string,
   error: unknown,
   rejectionCode?: unknown,
 ): void {
   const safeRejectionCode = typeof rejectionCode === "string" && /^[A-Z][A-Z0-9_]{0,95}$/.test(rejectionCode)
     ? rejectionCode
     : undefined;
-  console.error(`[hosted-tests:cloudflare] ${operation} failed`, Object.freeze({
-    application: "hosted-tests",
+  console.error(`[towl:cloudflare] ${operation} failed`, Object.freeze({
+    application: "towl",
     operation,
-    ...safe_cloudflare_authority(hostId),
+    authorityKind: "towl",
+    authorityId: "[redacted]",
     ...(safeRejectionCode === undefined ? {} : { rejectionCode: safeRejectionCode }),
-    error: safe_cloudflare_error(error),
+    error: safe_error(error),
   }));
 }
 
-export type HostedTestDurableObjectRuntime = Readonly<{
+export type TowlDurableObjectRuntime = Readonly<{
   accept(hostId: string, websocket: CloudflareAcceptedWebSocket): Promise<void>;
   dispose(): void;
 }>;
 
-export function make_hosted_test_durable_object_runtime(
-  application: CloudflareHostedTestApplication,
-): HostedTestDurableObjectRuntime {
+export function make_towl_durable_object_runtime(application: TowlAuthorityConnector): TowlDurableObjectRuntime {
   const connections = new Map<CloudflareAcceptedWebSocket, () => void>();
   let disposed = false;
 
   async function accept(hostId: string, websocket: CloudflareAcceptedWebSocket): Promise<void> {
     if (disposed) {
-      websocket.close(1012, "Hosted-test authority is restarting.");
+      websocket.close(1012, "TOWL authority is restarting.");
       return;
     }
 
-    // Ordinary acceptance is intentional. Keeping the socket attached to the
-    // live object prevents reconstruction while this in-memory authority is in use.
     websocket.accept();
     const transport = make_cloudflare_websocket_locus_socket(websocket);
-    let connected: Awaited<ReturnType<CloudflareHostedTestApplication["connectBounded"]>>;
+    let connected: Awaited<ReturnType<TowlAuthorityConnector["connectBounded"]>>;
     try {
       connected = await application.connectBounded(hostId, transport.socket);
     } catch (cause) {
-      log_cloudflare_authority_failure("authority.connect", hostId, cause);
+      log_failure("authority.connect", cause);
       transport.closed();
       throw cause;
     }
     if (!connected.ok) {
-      log_cloudflare_authority_failure(
-        "authority.connect",
-        hostId,
-        new Error(redact_cloudflare_diagnostic_text(connected.error.message, 2_048)),
-        connected.error.code,
-      );
-      websocket.close(1008, connected.error.code ?? "Unknown hosted-test Locus.");
+      log_failure("authority.connect", new Error(redact_diagnostic_text(connected.error.message, 2_048)), connected.error.code);
+      websocket.close(1008, connected.error.code ?? "Unknown TOWL room.");
       transport.closed();
       return;
     }
 
     let closed = false;
     const onMessage = (event: MessageEvent): void => {
-      try {
-        transport.receive(event.data as string | ArrayBuffer);
-      } catch (cause) {
-        log_cloudflare_authority_failure("websocket.message", hostId, cause);
+      try { transport.receive(event.data as string | ArrayBuffer); }
+      catch (cause) {
+        log_failure("websocket.message", cause);
         throw cause;
       }
     };
@@ -116,7 +97,7 @@ export function make_hosted_test_durable_object_runtime(
       connections.delete(websocket);
     };
     const onError = (): void => {
-      log_cloudflare_authority_failure("websocket.error", hostId, new Error("Cloudflare WebSocket error event."));
+      log_failure("websocket.error", new Error("Cloudflare WebSocket error event."));
       transport.errored();
       cleanup();
     };
@@ -132,7 +113,7 @@ export function make_hosted_test_durable_object_runtime(
       if (disposed) return;
       disposed = true;
       for (const [websocket, cleanup] of [...connections]) {
-        websocket.close(1012, "Hosted-test authority is restarting.");
+        websocket.close(1012, "TOWL authority is restarting.");
         cleanup();
       }
       connections.clear();

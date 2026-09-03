@@ -17,13 +17,13 @@
   },
   "include": [
     "src/vite-env.d.ts",
-    "tests/harness/runtimes/cloudflare/**/*.ts",
+    "src/server/cloudflare/**/*.ts",
     "tests/harness/runtimes/dom/jsdom.types.d.ts"
   ],
   "exclude": [
     "dist",
     "node_modules",
     "**/node_modules",
-    "tests/harness/runtimes/cloudflare/worker-configuration.d.ts"
+    "src/server/cloudflare/worker-configuration.d.ts"
   ]
 }

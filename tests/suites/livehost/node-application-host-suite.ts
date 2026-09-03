@@ -1,11 +1,11 @@
 import WebSocket from "ws";
 import type { LiveHostApplication, LiveHostConnection } from "hson-live/livehost";
 import type { TestSuite } from "../../harness/core/test-contracts";
-import { create_towl_authority_application } from "../../harness/hosted/towl-authority-application";
+import { create_towl_authority_application } from "../../../src/server/towl/towl-authority-application";
 import {
   start_node_application_host,
 } from "hson-live/livehost/node";
-import { create_node_towl_application } from "../../harness/runtimes/node/server/node-towl-application";
+import { create_node_towl_application } from "../../../src/server/towl/node-towl-application";
 import { make_towl_socket, send_towl_action } from "../towl/towl-test-helpers";
 import type { TowlState } from "../../../src/app/demos/towl/index";
 import { create_towl_client } from "../../../src/app/demos/towl/index";

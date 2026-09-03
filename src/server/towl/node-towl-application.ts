@@ -5,12 +5,12 @@ import type {
 } from "hson-live/livehost";
 import type { NodeApplicationSecurity } from "hson-live/livehost/node";
 import type { LocusSocketLike } from "hson-live/types";
-import { towl_room_id_from_host_id } from "../../../../../src/app/demos/towl/index";
+import { towl_room_id_from_host_id } from "../../app/demos/towl/index";
 import {
   create_towl_authority_application,
   type TowlAuthorityApplication,
   type TowlAuthorityLifecycleOptions,
-} from "../../../hosted/towl-authority-application";
+} from "./towl-authority-application";
 
 export const NODE_TOWL_APPLICATION_NAME = "towl";
 export const NODE_TOWL_CONNECTION_PATH = "/towl";

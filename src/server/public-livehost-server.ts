@@ -4,12 +4,12 @@ import {
   type NodeApplicationHost,
   type NodeHostOperationalEvent,
 } from "hson-live/livehost/node";
-import { create_node_circuit_verification_application } from "../../tests/harness/runtimes/node/server/node-circuit-verification-application";
-import { create_node_towl_application } from "../../tests/harness/runtimes/node/server/node-towl-application";
+import { create_node_circuit_verification_application } from "./circuit/node-circuit-verification-application";
+import { create_node_towl_application } from "./towl/node-towl-application";
 import {
   create_node_production_security,
   create_node_session_security,
-} from "../../tests/harness/runtimes/node/server/node-production-security";
+} from "./security/node-production-security";
 
 export const PUBLIC_SESSION_APPLICATION_NAME = "session";
 

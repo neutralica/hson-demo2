@@ -1,7 +1,7 @@
 // api-suite.ts
 
 import { hson } from "hson-live";
-import { create_application_locus_store } from "../../harness/hosted/application-locus-store";
+import { create_application_locus_store } from "../../../src/server/livehost/application-locus-store";
 import type { TestSuite } from "../../harness/core/test-contracts";
 import { read_case } from "../livemap/handle-helpers";
 

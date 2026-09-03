@@ -35,6 +35,7 @@ LiveHost remains ordinary product infrastructure for TOWL, circuit
 verification, Locus protocol behavior, lifecycle, recovery, security, and
 generic WebSocket tests. It is not a test-report transport.
 
-The Cloudflare hosted-test executor and Durable Object registry remain isolated
-Phase 7 migration targets. They are not part of local reporting or the public
-Tests UI.
+The Cloudflare Worker is production-owned under `src/server/cloudflare` and
+serves only `/session` and `/towl`. Its historical Durable Object class and
+binding names remain solely as provider migration identity; hosted-test
+discovery, selection, execution, registry, and report authority are gone.

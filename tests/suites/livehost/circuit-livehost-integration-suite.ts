@@ -18,13 +18,13 @@ import {
   type CircuitVerificationResult,
   type CircuitVerificationSubmitter,
 } from "../../../src/shared/circuit-verification-contract";
-import { create_circuit_verification_livehost } from "../../harness/hosted/circuit-verification-livehost";
+import { create_circuit_verification_livehost } from "../../../src/server/circuit/circuit-verification-livehost";
 import {
   CircuitVerificationServiceError,
   create_circuit_verification_service,
   revision_is_current,
-} from "../../harness/runtimes/node/circuit-verification-service";
-import { create_node_circuit_verification_application } from "../../harness/runtimes/node/server/node-circuit-verification-application";
+} from "../../../src/server/circuit/circuit-verification-service";
+import { create_node_circuit_verification_application } from "../../../src/server/circuit/node-circuit-verification-application";
 
 const SUITE = "livehost/circuit-worker-action";
 

@@ -5,6 +5,7 @@ import {
   type LocalLiveHostServerOptions,
 } from "./local-livehost-server";
 
+/** Environment consumed by the production local LiveHost process entry. */
 export type LocalLiveHostServerEnvironment = Readonly<{
   HOST?: string;
   PORT?: string;

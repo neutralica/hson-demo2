@@ -66,7 +66,7 @@ Run the environment-specific integrations:
 
 ```sh
 npm run test:browser
-npm run test:hosted-cloudflare
+npm run test:towl-worker-compatibility
 ```
 
 Run the permanent Node infrastructure suites directly:

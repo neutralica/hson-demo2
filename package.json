@@ -10,7 +10,7 @@
   "scripts": {
     "dev": "vite --mode frozen-local",
     "dev:test": "vite --mode test",
-    "local:livehost-server": "tsx tests/harness/runtimes/node/server/local-livehost-server-entry.node.ts",
+    "local:livehost-server": "tsx src/server/livehost/local-livehost-server-entry.node.ts",
     "host": "osascript -e 'tell application \"Terminal\" to do script \"cd \\\"'\"$PWD\"'\\\" && npm run local:livehost-server\"' -e 'tell application \"Terminal\" to do script \"cd \\\"'\"$PWD\"'\\\" && npm run dev\"' -e 'tell application \"Terminal\" to activate'",
     "build:hson-live": "npm --prefix ../hson-live run build",
     "hson-schema:generate": "hson-schema generate --project tsconfig.json",
@@ -25,14 +25,14 @@
     "test:cli": "node scripts/package.mjs",
     "pack": "node scripts/package.mjs pack",
     "artifact:location": "node scripts/package.mjs location",
-    "build:node-production": "npm run build:hson-live && esbuild src/server/public-livehost-production-entry.node.ts --bundle --platform=node --format=esm --packages=external --target=node22 --outfile=dist-node/livehost-server.mjs && esbuild tests/harness/runtimes/node/circuit-verification-worker.mjs --bundle --platform=node --format=esm --packages=external --target=node22 --outfile=dist-node/circuit-verification-worker.mjs",
+    "build:node-production": "npm run build:hson-live && esbuild src/server/public-livehost-production-entry.node.ts --bundle --platform=node --format=esm --packages=external --target=node22 --outfile=dist-node/livehost-server.mjs && esbuild src/server/circuit/circuit-verification-worker.mjs --bundle --platform=node --format=esm --packages=external --target=node22 --outfile=dist-node/circuit-verification-worker.mjs",
     "start:production": "node dist-node/livehost-server.mjs",
     
     "check:cloudflare": "tsc -p tsconfig.cloudflare.json --noEmit",
     "cloudflare:dev": "wrangler dev --config wrangler.jsonc",
     "cloudflare:deploy": "wrangler deploy --config wrangler.jsonc",
     "preflight:cloudflare": "test -n \"${CLOUDFLARE_API_TOKEN:-}\" || (echo 'CLOUDFLARE_API_TOKEN is required for Worker deployment.' >&2; exit 1)",
-    "cloudflare:types": "wrangler types --config wrangler.jsonc --include-runtime false tests/harness/runtimes/cloudflare/worker-configuration.d.ts",
+    "cloudflare:types": "wrangler types --config wrangler.jsonc --include-runtime false src/server/cloudflare/worker-configuration.d.ts",
     "deploy:worker": "npm run build:hson-live && npm run check:cloudflare && npm run preflight:cloudflare && npm run cloudflare:deploy",
     "preview": "vite preview",
 
@@ -60,7 +60,6 @@
     "test:livehost-bootstrap-integration": "node --import=tsx tests/runners/livehost/run-livehost-bootstrap-integration.node.mts",
     "test:node-production-runtime": "node --import=tsx tests/runners/livehost/run-node-production-runtime.node.mts",
     "test:towl-worker-compatibility": "node --import=tsx tests/integration/cloudflare/run-towl-worker-compatibility.node.mts",
-    "test:hosted-cloudflare": "node --import=tsx tests/integration/cloudflare/run-hosted-cloudflare.node.mts",
     "test:hosted-jsdom-runtime-node": "tsx tests/runners/livehost/run-hosted-jsdom-runtime.node.mts",
     "test:hosted-dom-collection-node": "tsx tests/runners/livehost/run-hosted-dom-collection.node.mts",
     "test:hosted-dom-compatibility-node": "tsx tests/runners/livehost/run-hosted-dom-compatibility.node.mts",

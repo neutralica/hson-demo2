@@ -5,13 +5,13 @@ import type {
   LocusSocketLike,
 } from "hson-live/types";
 import { create_livehost_locus_registry, type LiveHostLocusEvictionResult } from "hson-live/livehost";
-import { create_application_locus_store, type ApplicationLocusStore } from "./application-locus-store";
-import { create_application_idle_sweep, type ApplicationIdleSweep } from "./application-idle-sweep";
+import { create_application_locus_store, type ApplicationLocusStore } from "../livehost/application-locus-store";
+import { create_application_idle_sweep, type ApplicationIdleSweep } from "../livehost/application-idle-sweep";
 import {
   create_towl_runtime,
   towl_room_id_from_host_id,
   type TowlRuntime,
-} from "../../../src/app/demos/towl/index";
+} from "../../app/demos/towl/index";
 
 export type TowlAuthorityApplication = Readonly<{
   store: ApplicationLocusStore;

@@ -24,7 +24,7 @@
         "node_modules",
         "**/node_modules",
         "vite.config.mjs",
-        "tests/harness/runtimes/cloudflare",
+        "src/server/cloudflare/worker-configuration.d.ts",
         "tests/integration"
     ]
 }

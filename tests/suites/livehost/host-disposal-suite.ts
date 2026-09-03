@@ -1,5 +1,5 @@
 import { create_locus } from "hson-live/locus";
-import { create_application_locus_store } from "../../harness/hosted/application-locus-store";
+import { create_application_locus_store } from "../../../src/server/livehost/application-locus-store";
 import type { LocusDisposer, LocusSocketLike } from "hson-live/locus";
 import type { TestCase, TestSuite } from "../../harness/core/test-contracts";
 import { equal_row, preview_value } from "../livemap/test-helpers";

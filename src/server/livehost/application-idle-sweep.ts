@@ -24,7 +24,7 @@ export type ApplicationIdleSweep = Readonly<{
   dispose(): void;
 }>;
 
-/** Application-private idle-age gate for explicit Hosted Test/TOWL sweep controls. */
+/** Application-private idle-age gate for explicit authority sweep controls. */
 export function create_application_idle_sweep(
   options: ApplicationIdleSweepOptions,
 ): ApplicationIdleSweep {

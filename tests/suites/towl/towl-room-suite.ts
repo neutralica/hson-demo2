@@ -12,7 +12,7 @@ import {
   towl_room_id_from_host_id,
   type TowlState,
 } from "../../../src/app/demos/towl/index";
-import { create_towl_authority_application } from "../../harness/hosted/towl-authority-application";
+import { create_towl_authority_application } from "../../../src/server/towl/towl-authority-application";
 import { make_towl_socket, send_towl_action, towl_case } from "./towl-test-helpers";
 
 function empty_application() {

@@ -12,6 +12,7 @@ import type {
   ProjectedLocusOptions,
 } from "hson-live/types";
 
+/** Production-owned registry for application Locus authorities. */
 export type ApplicationLocusStore = Readonly<{
   has(key: string): boolean;
   get(key: string): Locus | undefined;

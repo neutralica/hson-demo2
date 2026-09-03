@@ -1,12 +1,12 @@
 import type { LiveHostApplication, LiveHostApplicationContext, LiveHostConnection } from "hson-live/livehost";
 import type { NodeApplicationSecurity } from "hson-live/livehost/node";
 import type { LocusSocketLike } from "hson-live/types";
-import { CIRCUIT_VERIFICATION_HOST_ID } from "../../../../../src/shared/circuit-verification-contract";
-import { create_circuit_verification_livehost } from "../../../hosted/circuit-verification-livehost";
+import { CIRCUIT_VERIFICATION_HOST_ID } from "../../shared/circuit-verification-contract";
+import { create_circuit_verification_livehost } from "./circuit-verification-livehost";
 import {
   create_circuit_verification_service,
   type CircuitVerificationService,
-} from "../circuit-verification-service";
+} from "./circuit-verification-service";
 
 export const NODE_CIRCUIT_VERIFICATION_APPLICATION_NAME = "circuit-verification";
 export const NODE_CIRCUIT_VERIFICATION_CONNECTION_PATH = "/circuit-verification";

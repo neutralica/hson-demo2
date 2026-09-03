@@ -6,7 +6,7 @@ import {
   decode_circuit_verification_request,
   type CircuitVerificationActions,
   type CircuitVerificationSubmitter,
-} from "../../../src/shared/circuit-verification-contract";
+} from "../../shared/circuit-verification-contract";
 
 /** Application-specific Locus action seam for the Node-owned verifier. */
 export function create_circuit_verification_livehost(

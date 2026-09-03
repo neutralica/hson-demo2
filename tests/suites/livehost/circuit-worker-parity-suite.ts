@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { verify_universal_circuit } from "hson-live/diagnostics/universal-circuit";
 import { hsonTransform } from "hson-live/transform";
 import type { TestCase, TestSuite } from "../../harness/core/test-contracts";
-import { create_circuit_verification_service } from "../../harness/runtimes/node/circuit-verification-service";
+import { create_circuit_verification_service } from "../../../src/server/circuit/circuit-verification-service";
 
 const SUITE = "livehost/circuit-worker-parity";
 

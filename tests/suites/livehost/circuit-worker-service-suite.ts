@@ -11,7 +11,7 @@ import {
   create_circuit_verification_service,
   revision_is_current,
   type CircuitVerificationServiceOptions,
-} from "../../harness/runtimes/node/circuit-verification-service";
+} from "../../../src/server/circuit/circuit-verification-service";
 
 const SUITE = "livehost/circuit-worker-service";
 

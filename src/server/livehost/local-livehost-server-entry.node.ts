@@ -1,5 +1,7 @@
 import { run_local_livehost_server_process } from "./local-livehost-server-process";
 
+// Production process entrypoint; tests spawn this module as a consumer.
+
 try {
   await run_local_livehost_server_process();
 } catch (error) {

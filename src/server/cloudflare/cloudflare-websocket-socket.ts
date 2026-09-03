@@ -61,7 +61,7 @@ export function make_cloudflare_websocket_locus_socket(
     closed: detach,
     errored() {
       if (detached) return;
-      websocket.close(1011, "Hosted-test WebSocket error.");
+      websocket.close(1011, "TOWL WebSocket error.");
       detach();
     },
   });

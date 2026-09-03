@@ -4,8 +4,8 @@ import { create_browser_locus_socket, type BrowserWebSocketConstructor } from "h
 import { create_echo } from "hson-live/echo";
 import { start_node_application_host } from "hson-live/livehost/node";
 import type { CircuitVerificationActions, CircuitVerificationResult } from "../../../src/shared/circuit-verification-contract";
-import { create_circuit_verification_service } from "../../harness/runtimes/node/circuit-verification-service";
-import { create_node_circuit_verification_application } from "../../harness/runtimes/node/server/node-circuit-verification-application";
+import { create_circuit_verification_service } from "../../../src/server/circuit/circuit-verification-service";
+import { create_node_circuit_verification_application } from "../../../src/server/circuit/node-circuit-verification-application";
 
 function rounded(value: number): number {
   return Math.round(value * 1_000) / 1_000;
@@ -105,7 +105,7 @@ let currentWorker: Worker | undefined;
 const replacementService = create_circuit_verification_service({
   workerFactory() {
     currentWorker = new Worker(
-      new URL("../../harness/runtimes/node/circuit-verification-worker.mjs", import.meta.url),
+      new URL("../../../src/server/circuit/circuit-verification-worker.mjs", import.meta.url),
       { name: "hson-circuit-verifier-measurement" },
     );
     return currentWorker;

@@ -1,6 +1,7 @@
 import { parentPort } from "node:worker_threads";
 import { verify_universal_circuit } from "hson-live/diagnostics/universal-circuit";
 
+// Production worker-thread implementation used by the circuit service.
 const PROTOCOL_VERSION = 1;
 const MAX_SOURCE_LENGTH = 262_144;
 const MAX_PANEL_ID_LENGTH = 128;

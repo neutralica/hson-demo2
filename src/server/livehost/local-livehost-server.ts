@@ -5,8 +5,8 @@ import {
   type NodeHostDeployment,
   type NodeHostOperationalEvent,
 } from "hson-live/livehost/node";
-import { create_node_towl_application } from "./node-towl-application";
-import { create_node_circuit_verification_application } from "./node-circuit-verification-application";
+import { create_node_towl_application } from "../towl/node-towl-application";
+import { create_node_circuit_verification_application } from "../circuit/node-circuit-verification-application";
 
 export type LocalLiveHostServerOptions = Readonly<{
   host?: string;

@@ -5,6 +5,7 @@ import {
   type NodeHostDeployment,
 } from "hson-live/livehost/node";
 
+/** Production security inputs for the public Node LiveHost server. */
 export type NodeProductionSecurityOptions = Readonly<{
   allowedOrigins: readonly string[];
   bearerToken: string;
