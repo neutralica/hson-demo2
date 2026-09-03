@@ -80,7 +80,7 @@ const packageManifest = JSON.parse(await readFile(resolve(root, "package.json"),
 };
 for (const scriptName of ["build", "build:node-production", "check:cloudflare"] as const) {
   const command = packageManifest.scripts?.[scriptName];
-  assert.equal(typeof command, "string", `${scriptName} must remain a declared production command`);
+  if (typeof command !== "string") assert.fail(`${scriptName} must remain a declared production command`);
   assert.equal(/(^|[\s'\"])(?:\.\/)?tests(?:\/|[\s'\"]|$)/.test(command), false, `${scriptName} must not resolve through tests/`);
 }
 
