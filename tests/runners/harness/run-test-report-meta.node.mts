@@ -26,5 +26,19 @@ await check("direct materialization decodes progressively through the explorer c
   const detail = validate_frozen_row_artifact(JSON.parse(await readFile(join(site, testCase.evidence.file), "utf8")), { suite, testCase, reference: testCase.evidence });
   assert.equal(detail.status, "fail"); assert.equal(detail.diagnostics[0]?.kind, "test");
 });
+await check("emitted categories materialize dynamically in deterministic safe order", async () => {
+  const reporter = new LocalRunReporter(base);
+  for (const [suite, category] of [["zeta/suite", "zeta"], ["alpha/suite", "../Alpha Category"]] as const) {
+    reporter.event({ t: "suite_begin", suite, title: suite, category });
+    reporter.event({ t: "case_begin", suite, caseId: "case", name: "case" });
+    reporter.event({ t: "case_end", suite, caseId: "case", name: "case", status: "pass", ms: 1 });
+    reporter.event({ t: "suite_end", suite, ms: 1 });
+  }
+  const report = await reporter.finalize();
+  const index = JSON.parse(await readFile(join(base, ".test-reports", report.id, "site", "index.json"), "utf8"));
+  assert.deepEqual(index.categories.map((category: { id: string }) => category.id), ["../Alpha Category", "zeta"]);
+  assert.equal(index.categories.every((category: { file: string }) => /^categories\/[a-z0-9-]+\.json$/.test(category.file)), true);
+  assert.deepEqual(index.suites.map((suite: { id: string }) => suite.id), ["alpha/suite", "zeta/suite"]);
+});
 await check("retention keeps ten terminal runs and prunes only old owned incomplete directories", async () => { for (let i = 0; i < 11; i++) await emit(i % 2 ? "fail" : "pass"); const reports = await readdir(join(base, ".test-reports"), { withFileTypes: true }); assert.ok(reports.filter((e) => e.isDirectory() && !e.name.startsWith(".incomplete-")).length <= 10); const old = await begin_run(base, "old"); await utimes(old, new Date(Date.now() - 25 * 3600e3), new Date(Date.now() - 25 * 3600e3)); const young = await begin_run(base, "young"); await mkdir(join(base, ".test-reports", "unrelated")); await prune_reports(join(base, ".test-reports")); const after = await readdir(join(base, ".test-reports")); assert.ok(!after.includes(".incomplete-old") && after.includes(".incomplete-young") && after.includes("unrelated")); });
 console.log(`# ${checks} report meta checks passed`);
