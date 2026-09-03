@@ -1,3 +1,5 @@
+import target from "../../../deployment/towl-worker-target.json";
+
 export const TOWL_WORKER_PATH = "/towl";
 export const TOWL_WORKER_SESSION_PATH = "/session";
 
@@ -5,12 +7,7 @@ export const TOWL_WORKER_SESSION_PATH = "/session";
 // attached to the provider identity created before hosted testing was retired.
 export const TOWL_DURABLE_OBJECT_INSTANCE_NAME = "hson-demo2-hosted-tests-v1";
 
-const PUBLIC_TOWL_ORIGINS = new Set([
-  "https://hson.terminalgothic.com",
-  "https://hson-deploy.pages.dev",
-  "https://terminal-gothic.com",
-  "https://terminalgothic.com",
-]);
+const PUBLIC_TOWL_ORIGINS = new Set(target.productionStaticOrigins);
 
 type TowlDurableObjectId = object;
 type TowlDurableObjectStub = Readonly<{ fetch(request: Request): Promise<Response> }>;

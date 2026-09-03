@@ -83,5 +83,9 @@ under `src/server/cloudflare`, and its tests import that production code.
 Before deploying, authenticate Wrangler with `wrangler login` or provide the
 standard Cloudflare API token/account environment configuration. Convert the
 existing Worker's generated `https://...workers.dev` hostname to a `wss://`
-origin and supply it as `VITE_LIVEHOST_WS_URL` when preparing the static build.
+origin and supply it as `HSON_TOWL_WORKER_WS_ORIGIN`. Downstream production
+deployment embeds that exact origin as `VITE_LIVEHOST_WS_URL` and fails before
+upload if the static artifact and Worker target disagree. Worker identity comes
+from `wrangler.jsonc`; public deployment metadata and accepted static origins
+come from `deployment/towl-worker-target.json`.
 The ordinary browser test explorer does not use this endpoint.

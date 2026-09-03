@@ -80,7 +80,13 @@ The Worker is a TOWL/session production compatibility adapter, not a deployment
 test runner. Typecheck it with `npm run check:cloudflare`, test its production
 adapter directly with `npm run test:towl-worker-compatibility`, and deploy only
 when explicitly requested with `npm run deploy:worker`. That deploy script
-builds and typechecks; it does not execute tests or update submodules.
+builds the required `hson-live` dependency once, typechecks the Worker, verifies
+the production target, and deploys only the Worker. It does not execute product
+tests, build the Vite application, package npm artifacts, or update submodules.
+Set `HSON_TOWL_WORKER_WS_ORIGIN` to the existing credential-free `wss://`
+Worker origin. The deployment target derives its Worker name and entrypoint from
+`wrangler.jsonc`; the explicit public origin and accepted production browser
+origins are governed by `deployment/towl-worker-target.json`.
 
 See [`CLOUDFLARE.md`](./CLOUDFLARE.md) for routes, lifecycle, and provider
 identity constraints.
