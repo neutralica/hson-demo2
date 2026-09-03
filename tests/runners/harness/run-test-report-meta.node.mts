@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import { mkdtemp, readFile, readdir, mkdir, writeFile, utimes } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -13,6 +14,18 @@ const emit = async (status: "pass" | "fail" | "skip" | "cancelled", err?: string
 await check("pass, failure, timeout and cancellation retain terminal evidence", async () => { assert.equal((await emit("pass")).status, "pass"); assert.equal((await emit("fail", "[TEST_CASE_TIMEOUT] timeout")).status, "fail"); assert.equal((await emit("cancelled")).status, "cancelled"); });
 await check("terminal reducer preserves specified precedence", async () => { assert.equal(reduce_status(["skip", "unsupported"]), "unsupported"); assert.equal(reduce_status(["pass", "fail"]), "fail"); assert.equal(reduce_status(["pass", "cancelled"]), "cancelled"); assert.equal(reduce_status(["fail", "error"]), "error"); });
 await check("redaction happens before local persistence", async () => { const report = await emit("fail", `${process.env.HOME}/secret Authorization: Bearer abc.def token=sensitive`); const raw = await readFile(join(base, ".test-reports", report.id, "run.json"), "utf8"); assert.match(raw, /<home>|<repo>/); assert.match(raw, /Authorization: <redacted>/); assert.doesNotMatch(raw, /abc\.def|sensitive/); });
+await check("repository evidence resolves the sibling hson-live checkout", async () => {
+  const workspace = await mkdtemp(join(tmpdir(), "hson-report-repositories-"));
+  const demo = join(workspace, "hson-demo2"), live = join(workspace, "hson-live");
+  await mkdir(demo); await mkdir(live);
+  for (const repository of [demo, live]) {
+    execFileSync("git", ["init", "--quiet", repository]);
+    execFileSync("git", ["-C", repository, "-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "commit", "--quiet", "--allow-empty", "-m", "fixture"]);
+  }
+  const report = await new LocalRunReporter(demo).finalize();
+  assert.equal(report.repositories.find((entry) => entry.name === "hson-live")?.revision, execFileSync("git", ["-C", live, "rev-parse", "HEAD"], { encoding: "utf8" }).trim());
+  assert.equal(report.repositories.find((entry) => entry.name === "hson-live")?.dirty, false);
+});
 await check("materializer error finalizes an error report and advances complete current", async () => { const r = new LocalRunReporter(base); const report = await r.finalize({ injectMaterializerFailure: true }); assert.equal(report.status, "error"); const current = JSON.parse(await readFile(join(base, ".test-reports", "current.json"), "utf8")); assert.equal(current.runId, report.id); });
 await check("direct materialization decodes progressively through the explorer contract", async () => {
   const report = await emit("fail", "assertion failed");
