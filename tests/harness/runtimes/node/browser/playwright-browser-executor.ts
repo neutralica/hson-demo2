@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 import type { TestCatalog } from "../../../../../src/shared/testing/test-catalog-contract";
 import type { TestExecutorDescriptor } from "../../../../../src/shared/testing/test-executor-contract";
 import type { TestFailure } from "../../../../../src/shared/testing/test-contracts";
-import { empty_totals } from "../../../../../src/shared/testing/test-run-contract";
+import { empty_totals, type TerminalStatus } from "../../../../../src/shared/testing/test-run-contract";
 import type { RunOptions, RunResult, TestEvent } from "../../../core/test-contracts";
 import type { NodeProcessResult, NodeProcessSupervisor } from "../node-process-supervisor";
 import {
@@ -124,10 +124,12 @@ function reporter_error(event: BrowserReporterEvent): string | undefined {
   }).join("\n");
 }
 
-function case_status(value: unknown): "pass" | "fail" | "skip" {
+function case_status(value: unknown): Extract<TerminalStatus, "pass" | "fail" | "skip" | "cancelled" | "error"> {
   if (value === "passed") return "pass";
   if (value === "skipped") return "skip";
-  return "fail";
+  if (value === "failed") return "fail";
+  if (value === "interrupted") return "cancelled";
+  return "error";
 }
 
 function suite_source(sourceRef: string | undefined): Readonly<{ path: string; project: string }> {
@@ -192,14 +194,17 @@ export function create_playwright_browser_executor(
       const selectedPaths = [...new Set(descriptors.map(({ suite }) => suite_source(suite.sourceRef).path))];
       const selectedTitlePattern = `(?:${selectedTitles.map((title) => title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})$`;
       const suiteStarted = new Set<string>();
+      const suiteEnded = new Set<string>();
       const suiteStartedAt = new Map<string, number>();
       const suiteRemaining = new Map<string, number>();
       for (const { suite } of descriptors) suiteRemaining.set(suite.id, (suiteRemaining.get(suite.id) ?? 0) + 1);
       const terminalIds = new Set<string>();
+      const begunIds = new Set<string>();
       const failures: TestFailure[] = [];
       let pass = 0;
       let fail = 0;
       let skip = 0;
+      let cancelled = 0;
       let error = 0;
       let artifactCount = 0;
       let executorStartedAt = 0;
@@ -215,6 +220,14 @@ export function create_playwright_browser_executor(
         ...event,
         executorId: LOCAL_PLAYWRIGHT_BROWSER_EXECUTOR.id,
       }) as TestEvent);
+      const finish_case = (suiteId: string): void => {
+        const remaining = Math.max(0, (suiteRemaining.get(suiteId) ?? 1) - 1);
+        suiteRemaining.set(suiteId, remaining);
+        if (remaining === 0 && !suiteEnded.has(suiteId)) {
+          suiteEnded.add(suiteId);
+          emit({ t: "suite_end", suite: suiteId, ms: performance.now() - (suiteStartedAt.get(suiteId) ?? startedAt) });
+        }
+      };
       const accept = (event: BrowserReporterEvent): void => {
         if (event.t === "executor_started") {
           executorStartedAt = Number(event.timestamp) || Date.now();
@@ -244,6 +257,7 @@ export function create_playwright_browser_executor(
         const source = suite_source(suite.sourceRef);
         if (source.path !== path || source.project !== project) return;
         if (event.t === "case_started") {
+          if (terminalIds.has(id) || begunIds.has(id)) return;
           if (suiteStarted.has(suite.id) === false) {
             suiteStarted.add(suite.id);
             suiteStartedAt.set(suite.id, performance.now());
@@ -254,6 +268,7 @@ export function create_playwright_browser_executor(
             activeJourneys: metrics.activeJourneys + 1,
             maximumActiveJourneys: Math.max(metrics.maximumActiveJourneys, metrics.activeJourneys + 1),
           });
+          begunIds.add(id);
           emit({ t: "case_begin", suite: suite.id, caseId: descriptor.caseId, name: descriptor.title });
           return;
         }
@@ -265,26 +280,32 @@ export function create_playwright_browser_executor(
         journeyMs += durationMs;
         if (status === "pass") pass += 1;
         else if (status === "skip") skip += 1;
-        else fail += 1;
-        const error = reporter_error(event);
+        else if (status === "fail") fail += 1;
+        else if (status === "cancelled") cancelled += 1;
+        else error += 1;
+        const caseError = reporter_error(event);
         if (status === "fail") {
           failures.push(Object.freeze({
             suite: suite.id,
             caseId: descriptor.caseId,
             name: descriptor.title,
-            err: error ?? "Playwright journey failed.",
+            err: caseError ?? "Playwright journey failed.",
             ms: durationMs,
           }));
         }
-        emit({
-          t: "case_end",
-          suite: suite.id,
-          caseId: descriptor.caseId,
-          name: descriptor.title,
-          status,
-          ms: durationMs,
-          ...(error === undefined ? {} : { err: error }),
-        });
+        if (status === "cancelled") {
+          emit({ t: "case_cancelled", suite: suite.id, caseId: descriptor.caseId, name: descriptor.title, ms: durationMs });
+        } else {
+          emit({
+            t: "case_end",
+            suite: suite.id,
+            caseId: descriptor.caseId,
+            name: descriptor.title,
+            status,
+            ms: durationMs,
+            ...(caseError === undefined ? {} : { err: caseError }),
+          });
+        }
         for (const content of string_array(event.stdout)) {
           const ordinaryLines: string[] = [];
           for (const line of content.split(/(?<=\n)/)) {
@@ -324,15 +345,7 @@ export function create_playwright_browser_executor(
             });
           }
         }
-        const remaining = (suiteRemaining.get(suite.id) ?? 1) - 1;
-        suiteRemaining.set(suite.id, remaining);
-        if (remaining === 0) {
-          emit({
-            t: "suite_end",
-            suite: suite.id,
-            ms: performance.now() - (suiteStartedAt.get(suite.id) ?? performance.now()),
-          });
-        }
+        finish_case(suite.id);
       };
       const parseChunk = (chunk: string): void => {
         parserBuffer += chunk;
@@ -404,7 +417,31 @@ export function create_playwright_browser_executor(
         });
       }
       parseChunk("\n");
-      if (!result.cancelled) {
+      if (result.cancelled) {
+        for (const { descriptor, suite } of descriptors) {
+          if (!begunIds.has(descriptor.id) || terminalIds.has(descriptor.id)) continue;
+          terminalIds.add(descriptor.id);
+          cancelled += 1;
+          emit({
+            t: "case_cancelled",
+            suite: suite.id,
+            caseId: descriptor.caseId,
+            name: descriptor.title,
+            ms: Math.max(0, performance.now() - (suiteStartedAt.get(suite.id) ?? startedAt)),
+          });
+          finish_case(suite.id);
+        }
+        for (const { suite } of descriptors) {
+          if (suiteEnded.has(suite.id)) continue;
+          if (!suiteStarted.has(suite.id)) {
+            suiteStarted.add(suite.id);
+            suiteStartedAt.set(suite.id, performance.now());
+            emit({ t: "suite_begin", suite: suite.id, title: suite.title, category: suite.subject, totalPlanned: suiteRemaining.get(suite.id) ?? 0 });
+          }
+          suiteEnded.add(suite.id);
+          emit({ t: "suite_end", suite: suite.id, ms: performance.now() - (suiteStartedAt.get(suite.id) ?? startedAt), status: "cancelled" });
+        }
+      } else {
         for (const { descriptor, suite } of descriptors) {
           if (terminalIds.has(descriptor.id)) continue;
           terminalIds.add(descriptor.id);
@@ -421,7 +458,10 @@ export function create_playwright_browser_executor(
           emit({ t: "case_end", suite: suite.id, caseId: descriptor.caseId, name: descriptor.title, status: "error", ms: 0, err: reason });
           const remaining = (suiteRemaining.get(suite.id) ?? 1) - 1;
           suiteRemaining.set(suite.id, remaining);
-          if (remaining === 0) emit({ t: "suite_end", suite: suite.id, ms: performance.now() - startedAt });
+          if (remaining === 0 && !suiteEnded.has(suite.id)) {
+            suiteEnded.add(suite.id);
+            emit({ t: "suite_end", suite: suite.id, ms: performance.now() - startedAt });
+          }
         }
       }
       const reportOverheadStarted = performance.now();
@@ -459,7 +499,7 @@ export function create_playwright_browser_executor(
           fail,
           skip,
           unsupported: 0,
-          cancelled: 0,
+          cancelled,
           error,
         }),
         failures: Object.freeze(failures),

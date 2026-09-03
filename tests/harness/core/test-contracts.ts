@@ -8,7 +8,7 @@ import type {
   TestFailure,
   TestSubject,
 } from "../../../src/shared/testing/test-contracts";
-import type { ReportTotals } from "../../../src/shared/testing/test-run-contract";
+import type { ReportTotals, TerminalStatus } from "../../../src/shared/testing/test-run-contract";
 
 export type Named<T> = Readonly<{ name: string; value: T; }>;
 
@@ -23,7 +23,7 @@ type TestEventExecutor = Readonly<{ executorId?: string }>;
 
 export type TestEvent = (
   | { t: "suite_begin"; suite: string; totalPlanned?: number; title?: string; category?: string }
-  | { t: "suite_end"; suite: string; ms: number }
+  | { t: "suite_end"; suite: string; ms: number; status?: TerminalStatus }
   | { t: "case_begin"; suite: string; caseId: string; name: string; meta?: Record<string, string> }
   | {
     t: "case_end";
