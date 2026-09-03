@@ -97,6 +97,10 @@ Categories come from the report, and run, suite, and case results preserve the t
 
 Test execution occurs through CLI and build tooling. The public explorer is static-only: it does not discover, run, cancel, certify, or recover tests, and it never fetches the mutable local `current.json` pointer.
 
+Current test commands, report locations, and architecture are documented in
+[`tests/README.md`](./tests/README.md) and
+[`tests/docs/workflow.md`](./tests/docs/workflow.md).
+
 ---
 
 ### [parse]

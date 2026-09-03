@@ -77,7 +77,7 @@ const EMPTY_NODE_SELECTED_VERIFICATION_METRICS: NodeSelectedVerificationMetrics 
   maximumSpecialLauncherConcurrency: 0,
 });
 // Direct CLI verification exposes its most recent process result through the
-// legacy accessor. Node hosted-tests registrations use an instance recorder.
+// compatibility accessor. Concurrent callers use an instance recorder.
 let latestMetrics = EMPTY_NODE_SELECTED_VERIFICATION_METRICS;
 
 export function node_selected_verification_metrics(): NodeSelectedVerificationMetrics {

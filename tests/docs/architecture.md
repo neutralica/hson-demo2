@@ -1,41 +1,57 @@
-# Direct test architecture
-
-The active test path is:
+# Current test architecture
 
 ```text
-executable TestSuite/TestCase factories
+source-owned executable metadata
         ↓
-direct descriptor discovery and exact selection
+direct discovery and exact selection
         ↓
-TestRunner, subprocess, and Playwright events
+TestRunner / external process / Playwright
+        ↓
+truthful case events and one terminal record
         ↓
 LocalRunReporter
         ↓
-run.json plus progressive static evidence
+run.json and progressive static report
         ↓
 frozen Tests explorer
 ```
 
-`TestSuite` and `TestCase` remain executable authority. Immutable descriptors
-provide stable `suite::case` identities, subject and collection metadata, and
-runtime requirements. Executor registries bind those descriptors to executable
-cases and reject duplicate, missing, or capability-incompatible registrations.
+## Executable discovery
 
-The canonical Node CLI selects by subject, suite, or exact ID and executes the
-selected cases directly. External launchers and Playwright children emit
-truthful bounded process events. `LocalRunReporter` reduces those events into
-the terminal report and progressively materialized static evidence.
+Executable suites and metadata beside those suites are authoritative. Discovery
+combines registered `TestSuite`/`TestCase` factories, source-owned hson-live
+metadata, and Playwright journeys. Suite and case identity is stable; counts are
+derived from what is discovered and observed.
 
-The public Tests UI imports only the frozen explorer. It fetches an immutable
-index followed by category, suite, case, and admitted attachment resources on
-demand. It has no test discovery, execution, cancellation, LiveHost, or
-WebSocket path.
+## Execution
 
-LiveHost remains ordinary product infrastructure for TOWL, circuit
-verification, Locus protocol behavior, lifecycle, recovery, security, and
-generic WebSocket tests. It is not a test-report transport.
+Selected work runs through `TestRunner`, supervised external processes, or the
+Playwright adapter. Runtime requirements determine the executor. Failure,
+cancellation, skip, unsupported capability, and infrastructure error are
+terminal evidence, not admission failures.
 
-The Cloudflare Worker is production-owned under `src/server/cloudflare` and
-serves only `/session` and `/towl`. Its historical Durable Object class and
-binding names remain solely as provider migration identity; hosted-test
-discovery, selection, execution, registry, and report authority are gone.
+External processes emit real case lifecycle events and exactly one final
+terminal record. Supervisors enforce timeout, cancellation, bounded output,
+graceful then forced process-tree termination, and cleanup. Late output cannot
+change a terminal attempt.
+
+## Reporting and retention
+
+`LocalRunReporter` reduces observed events into `.test-reports/<run-id>/run.json`
+and progressively materializes a static site beside it. Terminal reports are
+retained locally; incomplete owned directories are bounded and pruned by the
+report store. Report generation requires no LiveHost service.
+
+## Public Tests
+
+The shipped Tests explorer is frozen and read-only. It fetches a selected
+immutable static report progressively—index, category, suite, case, and admitted
+attachments—and has no discovery, execution, cancellation, or WebSocket path.
+
+## Production boundary
+
+LiveHost, Locus, TOWL, and circuit verification are product runtime behavior,
+even when tested by these suites. Production source is separate from the test
+harness and must not import repository-root tests. The Cloudflare Worker serves
+production compatibility routes only. Deployment consumes built artifacts
+downstream; it does not run tests or update submodules.

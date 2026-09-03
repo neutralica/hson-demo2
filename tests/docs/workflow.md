@@ -1,10 +1,6 @@
-# hson-demo2 test workflow
+# Test workflow
 
-Tests use ordinary `TestSuite` and `TestCase` factories. Describe the
-smallest truthful runtime requirements and register executable suites with the
-appropriate direct executor registry.
-
-Canonical IDs are `<suite>::<case-id>`. They support direct CLI selection:
+Use the direct runner for focused iteration:
 
 ```sh
 npm run test:canonical-node -- --subject livehost
@@ -12,29 +8,31 @@ npm run test:canonical-node -- --suite livehost/core
 npm run test:canonical-node -- --test "livehost/core::create"
 ```
 
-Run the complete local report directly:
+Generate a complete or selected terminal report with:
 
 ```sh
 npm run test:report
+npm run test:report -- --suite transform/hson-number
 ```
 
-The command executes native suites, supervised subprocess suites, and
-Playwright suites directly. `LocalRunReporter` writes `run.json` and
-progressive static evidence. No LiveHost application, hosted-test server,
-report LiveMap, or report WebSocket participates.
+`LocalRunReporter` writes `.test-reports/<run-id>/run.json`, materializes the
+progressive static site in `.test-reports/<run-id>/site/`, and updates the local
+`current.json` pointer only after terminal materialization. Inspect the JSON and
+static artifacts directly, or serve one frozen report locally:
 
-The browser Tests UI is a read-only frozen explorer. It consumes the immutable
-`VITE_TEST_EVIDENCE_ROOT` through static HTTP fetches and cannot launch a
-runner, subprocess, Playwright, or remote test action.
+```sh
+VITE_TEST_EVIDENCE_ROOT=/test-evidence/<run-id> \
+HSON_LOCAL_FROZEN_EVIDENCE_DIRECTORY="$PWD/.test-reports/<run-id>/site" \
+npm run dev
+```
 
-LiveHost/Locus/TOWL/circuit tests remain ordinary semantic suites. Runtime
-capabilities such as Node, filesystem, synthetic DOM, browser DOM, WebSocket,
-and process supervision should be declared only where behavior actually
-requires them.
+The Tests UI reads that static evidence only. Local report generation does not
+need the local LiveHost server. Start LiveHost separately only when developing
+TOWL or circuit-verification product behavior.
 
-Tests owned by hson-live keep frozen launcher metadata and emit the established
-child event protocol. Their observed case events determine report totals; do
-not add expected corpus counts or aggregate certification state.
+External child processes must emit real case identities and exactly one final
+terminal record. Preserve timeout, cancellation, bounded output, graceful and
+forced process-tree termination, and cleanup behavior when changing an adapter.
 
-Cloudflare Worker hosted execution is retained only as a Phase 7 migration
-target and is not a local report dependency.
+Run build and deployment commands separately after testing. Deployment is a
+downstream concern and must not execute tests or update submodules.

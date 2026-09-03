@@ -1,111 +1,79 @@
 # hson-demo2 tests
 
-This directory is the authoritative home for the repository's test system. The only test-related code outside it is the shipped LiveDemo test application in [`src/app/demos/tests`](../src/app/demos/tests).
+This directory is the authoritative home for executable tests. The shipped,
+read-only Tests explorer is application code under
+[`src/app/demos/tests`](../src/app/demos/tests).
 
-## Start here
+## Architecture
 
-The canonical harness entry is [`harness/index.ts`](./harness/index.ts). It intentionally exposes only the stable runtime-independent surface. The main runner is [`harness/core/test-runner.ts`](./harness/core/test-runner.ts), and executable commands live separately under [`runners/`](./runners).
+[`harness/index.ts`](./harness/index.ts) exposes the stable harness contracts.
+The direct test path is implemented by:
 
-| Responsibility | Owner |
+| Responsibility | Current owner |
 | --- | --- |
-| Catalog construction and stable descriptor IDs | [`harness/core/test-catalog.ts`](./harness/core/test-catalog.ts) |
-| Discovery protocol and catalog fingerprint | [`harness/core/test-discovery.ts`](./harness/core/test-discovery.ts) |
-| Exact subject, suite, and case selection | [`harness/core/test-selection.ts`](./harness/core/test-selection.ts) |
-| Executor registration and capability matching | [`harness/core/test-executor.ts`](./harness/core/test-executor.ts) |
-| Selected-case orchestration | [`harness/core/run-selected-test-suites.ts`](./harness/core/run-selected-test-suites.ts) |
-| Case execution, timeouts, cleanup, and events | [`harness/core/test-runner.ts`](./harness/core/test-runner.ts) |
-| Event normalization | [`harness/core/test-run-events.ts`](./harness/core/test-run-events.ts) |
-| Reports and report protocol | [`harness/reporting/`](./harness/reporting) |
-| Isolated command execution and workspace safety | [`harness/runtimes/node/isolated-command-runner.ts`](./harness/runtimes/node/isolated-command-runner.ts) |
-| Build/static output validation | [`harness/runtimes/node/build-static-artifact-validator.ts`](./harness/runtimes/node/build-static-artifact-validator.ts) |
-| Hosted application protocol and suite registration | [`harness/hosted/`](./harness/hosted) |
-| Node, DOM, Cloudflare, and socket implementations | [`harness/runtimes/`](./harness/runtimes) |
+| Suite and case contracts | [`harness/core/test-contracts.ts`](./harness/core/test-contracts.ts) |
+| Executable catalog and discovery | [`harness/core/test-catalog.ts`](./harness/core/test-catalog.ts), [`harness/core/test-discovery.ts`](./harness/core/test-discovery.ts) |
+| Exact selection and execution | [`harness/core/test-run-plan.ts`](./harness/core/test-run-plan.ts), [`harness/core/test-runner.ts`](./harness/core/test-runner.ts) |
+| Direct Node/external/Playwright discovery | [`harness/runtimes/node/direct-report-discovery.ts`](./harness/runtimes/node/direct-report-discovery.ts) |
+| External process supervision | [`harness/runtimes/node/node-process-supervisor.ts`](./harness/runtimes/node/node-process-supervisor.ts) |
+| Terminal reports and static materialization | [`harness/reporting/local/`](./harness/reporting/local) |
 
-The high-level flow is:
+Suite-owned metadata and executable discovery define identity. Reports derive
+their contents and totals from observed events.
 
-```text
-catalog → discovery → selection → execution → events → report → panel/application mirror
-```
+## Layout
 
-The browser panel consumes shared contracts and reports, but it does not own discovery, suites, runners, or runtime adapters.
+- `suites/<subject>/` contains `TestSuite` and `TestCase` factories and their
+  metadata. Subject registries use `suite-registry.ts`.
+- `runners/` contains executable entrypoints; runners do not own a second suite
+  inventory.
+- `integration/browser/` contains Playwright journeys.
+- `integration/cloudflare/` tests the production Worker compatibility adapter.
+- `fixtures/` contains static and declarative inputs.
+- `helpers/` contains helpers shared by more than one suite or subsystem.
+- `harness/runtimes/` contains direct environment adapters and process safety.
+- `harness/reporting/local/` owns retained terminal reports and progressive
+  static artifacts.
 
-## Where things go
+## Run tests
 
-- `suites/<subject>/`: `TestSuite` and `TestCase` definitions grouped by the behavior they claim. A subject registry uses the explicit name `suite-registry.ts`.
-- `runners/<subject>/`: executable `run-*.node.mts` and `run-*.ts` entrypoints. A runner imports a suite registry; it does not own suite definitions.
-- `fixtures/`: static or declarative inputs. Transform fixtures are split into `hson`, `json`, `html`, and `large`; browser and protocol fixtures have their own folders.
-- `helpers/`: helpers shared by multiple suites or subsystems. Helpers used by only one suite remain beside that suite.
-- `integration/browser/`: Playwright journeys. `integration/cloudflare/`: Worker/Durable Object integration entrypoints.
-- `tools/`: non-suite development tools such as the JSON fuzzer.
-- `docs/`: architecture, hosted server, environment, workflow, inventory, and migration detail.
-
-Keep benchmarks in the repository-level `benchmarks/` directory.
-
-## Running tests
-
-Run a direct report from executable discovery:
-
-```sh
-npm run test:report -- --suite transform/hson-number
-```
-
-Run the fixed hson-demo2 catalog only:
-
-```sh
-npm run test:canonical-node
-```
-
-Run one subject or suite through the canonical runner:
+Run a selected direct suite or case:
 
 ```sh
 npm run test:canonical-node -- --subject livemap
 npm run test:canonical-node -- --suite livemap/replay
+npm run test:canonical-node -- --test "livemap/replay::replays"
 ```
 
-Run the environment-specific integrations:
+Create a complete or selected local report:
+
+```sh
+npm run test:report
+npm run test:report -- --suite transform/hson-number
+```
+
+Run environment-specific integration paths directly when needed:
 
 ```sh
 npm run test:browser
 npm run test:towl-worker-compatibility
 ```
 
-Run the permanent Node infrastructure suites directly:
+`LocalRunReporter` retains terminal `run.json` files and their static sites
+under `.test-reports/<run-id>/`. Failed, cancelled, skipped, unsupported, and
+infrastructure-error runs remain inspectable evidence.
 
-```sh
-npm run test:direct-selection-discovery
-npm run test:reporter-lifecycle
-npm run test:node-process-supervisor
-npm run test:external-command-scheduler
-npm run test:isolated-command-runner
-npm run test:build-static-artifacts
-npm run test:production-dependency-boundary
-npm run test:server-lifecycle
-npm run test:playwright-adapter
-npm run test:playwright-cancellation
-npm run test:mixed-direct-report
-```
+## Add coverage
 
-These suites are intentionally Node-only because they exercise operating-system
-processes, isolated filesystem workspaces, build trees, loopback servers, or a
-real Chromium child. They are semantic owners of those runtime guarantees; they
-do not mint certificates, establish expected corpus totals, or participate in
-browser/Worker discovery.
+Add the suite under the subject it tests, give every suite and case stable
+identity, keep discovery metadata beside the executable suite, and register the
+factory with its direct executor. Declare the smallest truthful runtime
+requirements. Do not create a panel-only list or an expected-count gate.
 
-The file-by-file old-to-new record is in [`docs/migration-inventory.md`](./docs/migration-inventory.md). Native suite descriptors, hson-live suite-owned metadata, and Playwright discovery own executable identity. Reports count actual emitted case terminals; package scripts are invocation conveniences rather than inventory authority.
+External processes must emit real case begin/end records and exactly one final
+terminal record. Preserve bounded timeouts, cancellation, stdout/stderr limits,
+and full process-tree cleanup. Production modules must not import from
+repository-root `tests/`.
 
-## Adding coverage
-
-Add a suite under the subject it tests, give every suite and case stable names, and register its factory in that subject's `suite-registry.ts` and the canonical hosted registry. Verify discovery, selection, Worker exclusion for Node-only cases, and LiveDemo visibility. Do not create a panel-only list.
-
-Prefer coherent subsystem-focused reported suites of roughly 20–25 checks. Do not hide nearly 100 independently named claims in one aggregate without a real contract or runtime reason, and do not split completed corpora merely to raise visible suite counts.
-
-Add fixtures under the matching format or runtime folder and import them from their consumers. The Wikipedia HTML sample is a lazy static Parsing Panels demonstration at `public/fixtures/parse/wikipedia-main-page.html`; it is not a corpus descriptor.
-
-Shared helpers belong in `helpers/` only when multiple suites or subsystems use them. Otherwise keep them local to their owner.
-
-## Authoritative surfaces
-
-Native executable suites, hson-live suite-owned metadata, Playwright discovery,
-and environment-specific adapters own their test identities. Reports derive
-totals from actual case terminals. See [`docs/architecture.md`](./docs/architecture.md)
-and [`docs/pending-environments.md`](./docs/pending-environments.md) for runtime boundaries.
+See [`docs/architecture.md`](./docs/architecture.md) for the system boundary and
+[`docs/workflow.md`](./docs/workflow.md) for ordinary use.

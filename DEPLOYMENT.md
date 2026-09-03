@@ -1,282 +1,86 @@
-# LiveDemo deployment
+# LiveDemo build and deployment boundary
 
-## Worker command
+This repository builds the static browser application, the production Node
+LiveHost runtime, and the Cloudflare TOWL compatibility Worker. Deployment is a
+separate downstream operation: it does not run tests and it does not update Git
+submodules.
 
-From the parent deployment workspace, `npm run deploy:worker` deploys only
-this Cloudflare Worker and Durable Object adapter. It does not publish the
-static Vite application, deploy the persistent Node service, commit a release,
-or push Git state. The parent command verifies clean, gitlink-pinned
-`hson-live` and `hson-demo2` checkouts; builds; checks the `hson-live` public
-entrypoints and built package surface; and typechecks this package before it
-checks for either `CLOUDFLARE_API_TOKEN` or an authenticated local Wrangler
-session and invokes Wrangler. See
-[`../DEPLOYMENT.md`](../DEPLOYMENT.md) for the full local preflight.
+Run tests and create local evidence independently with `npm run test:report`.
+See [`tests/docs/workflow.md`](./tests/docs/workflow.md). Failed, cancelled,
+unsupported, and infrastructure-error reports remain valid terminal evidence;
+they are not deployment admission records.
 
-## Architecture
+## Static application
 
-The browser application is a static Vite build. The repository contains no
-provider manifest, container, process declaration, or deployment workflow. The
-live site redirects to `https://hson.terminalgothic.com` and is served through
-Cloudflare, but the proxy hides the origin provider. Neither this package nor
-the parent deployment package defines a persistent Node process or a WebSocket
-upgrade route.
-
-The default complete deployment model requires two services:
-
-1. a static host for the Vite `dist/` output; and
-2. a WebSocket-capable host running the public Node LiveHost process.
-
-The repository also contains the existing Cloudflare Workers + Durable Objects
-TOWL compatibility service. See [CLOUDFLARE.md](./CLOUDFLARE.md). It is
-explicitly non-hibernating and exposes only anonymous `/session` compatibility
-and `/towl`; the Node service remains the complete future LiveHost deployment.
-
-### TOWL client/authority compatibility gate
-
-The static browser bundle and WebSocket authority must be rebuilt from the same
-compatible `hson-live` source. data state recovery snapshots are Hson
-protocol data; deploying a newer strict parser beside an older Worker serializer
-can let the socket and session attach succeed but fail the first recovery
-snapshot before TOWL state is installed.
-
-After a Worker compatibility deployment and before promoting a static bundle
-that targets it, run:
+Build the Vite application with:
 
 ```sh
-TOWL_DEPLOYED_WS_URL=wss://<worker-host>/towl npm run diagnose:towl-deployed
+npm run build
 ```
 
-The probe creates a fresh ephemeral TOWL room, creates a session, consumes the
-revision-zero recovery snapshot with the current client, and exits nonzero on
-any compatibility failure. A release is healthy only when it prints
-`"compatible": true`. Redeploying only the static bundle is insufficient when
-this gate reports a Worker-emitted snapshot parse failure.
+The static host publishes `dist/`. It must preserve the checked-in
+`public/_redirects` SPA fallback so direct `/towl?room=<room-id>` navigation
+retains the query string.
 
-For the TOWL-only compatibility lane, point `VITE_LIVEHOST_WS_URL` at the
-existing Worker's secure origin. The browser derives `/towl`, and the Worker
-provides the no-cookie `/session` bootstrap required by the generic origin
-contract. `/circuit-verification` remains unavailable on that origin.
-
-The `hson-demo2` package is a parent-workspace member with its own
-`package.json` and lockfile. It resolves `hson-live` from the sibling
-`../hson-live` directory. A server build context must therefore contain both
-sibling directories in that layout. `ws` is a direct runtime dependency of
-`hson-demo2`; `@types/ws` is a direct development dependency.
-
-## Local development
-
-The browser tests explorer is frozen in local development as well as production.
-Generate its exact immutable evidence root and start the frontend:
+The Tests explorer requires one immutable static report root:
 
 ```sh
-npm run pack
-npm run dev
+VITE_TEST_EVIDENCE_ROOT=/test-evidence/<run-id> npm run build
 ```
 
-For ordinary local packaging, `npm run pack` needs no
-runtime-origin environment prefix. Both default `VITE_LIVEHOST_WS_URL` to the
-established local production-simulation origin `ws://127.0.0.1:8787`. Supplying
-`VITE_LIVEHOST_WS_URL` explicitly overrides that default and validates the
-supplied origin before capture. This local default does not change the separate
-public deployment requirement for an appropriate public `wss://` origin.
+Publish the matching `.test-reports/<run-id>/site/` content at that exact
+public path. The explorer progressively fetches static JSON and admitted
+attachments. It never runs tests, opens a report WebSocket, or falls back to a
+mutable local pointer.
 
-`pack` writes the generated `.env.frozen-local.local` pointer. Vite reads that
-local-only file and serves the matching evidence directory from the packed
-static artifact. No manual copy or environment export is required.
+Live browser features use `VITE_LIVEHOST_WS_URL`, a `ws://` or `wss://` origin
+without an application path. Production requires `wss://`; loopback `ws://` is
+for local development. TOWL derives `/towl`, and circuit verification derives
+`/circuit-verification`.
 
-Run `npm run local:livehost-server` separately when local TOWL or circuit
-verification behavior needs a LiveHost origin. Test reporting never connects
-to it.
+## Production Node runtime
 
-## Frontend production build
-
-The stable same-origin TOWL entry is `/towl`, with invitations shaped as
-`/towl?room=<room-id>`. Vite development and preview servers return the SPA
-entry document for direct navigation to that path. The checked-in
-`public/_redirects` file supplies the equivalent production fallback:
-
-```text
-/*      /index.html 200
-```
-
-The static host must publish that file or configure the equivalent internal
-rewrite for `/towl` (including direct refreshes) while preserving the query
-string. It must not redirect the invitation to `/` or discard `room`. No
-subdomain is required; keeping TOWL on the LiveDemo origin preserves room
-credentials in the same local-storage boundary and reuses the same assets and
-WebSocket configuration.
-
-Frozen public test exploration is built with an accepted immutable evidence root:
-
-```sh
-VITE_TEST_EVIDENCE_ROOT=/test-evidence/<exact-40-hex-hson-deploy-commit> npm run build
-```
-
-The frozen browser explorer uses ordinary HTTP to load its index and explicit row
-evidence artifacts; it never starts hosted tests or opens a hosted-test
-WebSocket in either development or production. Live browser applications use
-`VITE_LIVEHOST_WS_URL`, the browser-visible generic runtime origin. TOWL derives
-`/towl` and circuit verification derives
-`/circuit-verification` while preserving intentional query parameters and
-replacing `locus`. The value is an origin, not an application URL, and production
-requires `wss://` except for explicit localhost simulation. Missing frozen
-evidence is a visible frozen infrastructure error, never a live-test fallback.
-The Worker compatibility origin implements `/session` and `/towl` only, so a
-static build targeting it restores TOWL while leaving circuit verification
-unavailable.
-
-Generate and execute test evidence through `npm run test:report`, `npm run
-test:cli`, or `npm run pack`. LocalRunReporter is the report authority; the
-browser is a static evidence consumer.
-
-An explicit runtime `url` remains available for tests and embedding and takes
-precedence over the Vite value.
-
-## Server production runtime
-
-The Node service is the default hosted authority. It runs from the parent
-deployment workspace, which must retain sibling `hson-demo2` and `hson-live`
-directories, their installed runtime packages, and these build artifacts:
-
-- `hson-demo2/dist-node/livehost-server.mjs`;
-- `hson-demo2/dist-node/circuit-verification-worker.mjs`; and
-- `hson-live/dist/` resolved through `hson-demo2`'s unchanged
-  `file:../hson-live` dependency.
-
-The production server artifact is bundled from application source, so TypeScript
-source files are not required after build. It retains only its public runtime
-imports: `hson-live` and `ws`. Install and validate from that sibling layout;
-do not copy individual artifacts into a different package boundary.
-
-```sh
-cd ..
-npm ci
-LOCUS_ALLOWED_ORIGINS=https://hson.example.com \
-LOCUS_BEARER_TOKEN="$LOCUS_BEARER_TOKEN" \
-npm run prepare:node-production
-```
-
-`prepare:node-production` is repository-side preparation, not a deployment.
-It verifies, builds, checks, and validates the Node production contract. Start
-the deterministic JavaScript artifact on supported Node `>=22.12.0 <25`:
+Build the Node artifacts with:
 
 ```sh
 npm run build:node-production
+```
+
+The command produces `dist-node/livehost-server.mjs` and
+`dist-node/circuit-verification-worker.mjs`. Start the bundled server on a
+supported Node release with:
+
+```sh
 HOST=0.0.0.0 PORT="$PORT" \
 LOCUS_ALLOWED_ORIGINS=https://hson.example.com \
 LOCUS_BEARER_TOKEN="$LOCUS_BEARER_TOKEN" \
-npm -w hson-demo2 run start:production
+npm run start:production
 ```
 
-`HOST` defaults to `127.0.0.1` and `PORT` defaults to `8787` for local use.
-Production platforms normally supply `PORT`; bind `HOST` to `0.0.0.0` so the
-platform proxy can reach the process. A bind address such as
-`ws://0.0.0.0:8787` is diagnostic only and must never be used as the browser
-configuration. The production entry defaults to
-`LOCUS_DEPLOYMENT=production` and fails before listening when origins,
-credentials, runtime, or numeric configuration are invalid. It runs
-`dist-node/livehost-server.mjs`, not TypeScript or `tsx`.
+`LOCUS_ALLOWED_ORIGINS` and a high-entropy `LOCUS_BEARER_TOKEN` are required in
+production. `HOST` defaults to `127.0.0.1`, `PORT` to `8787`, and
+`SHUTDOWN_TIMEOUT_MS` to `5000`. Optional TOWL limits are
+`LOCUS_MAX_TOWL_ROOMS`, `LOCUS_TOWL_IDLE_MS`, and
+`LOCUS_AUTHORITY_SWEEP_INTERVAL_MS`.
 
-### Production environment contract
+The service exposes product routes `GET /session`, `/towl`, and
+`/circuit-verification`; LiveHost owns `GET /healthz`. The process must sit
+behind TLS with WebSocket upgrade headers, paths, and query strings preserved.
+It contains no public test route.
 
-| Variable | Production contract |
-| --- | --- |
-| `LOCUS_DEPLOYMENT` | Optional; production entry defaults it to `production`. Set only to `production` for this service. |
-| `LOCUS_ALLOWED_ORIGINS` | Required; comma-separated exact browser origins. |
-| `LOCUS_BEARER_TOKEN` | Required high-entropy deployment secret (use at least 32 random bytes encoded without cookie delimiters). Operational clients may use it as a Bearer token. |
-| `HOST` | Optional bind address; defaults to `127.0.0.1`. Production providers normally use `0.0.0.0`. |
-| `PORT` | Optional integer from 1 through 65535; defaults to `8787`. |
-| `SHUTDOWN_TIMEOUT_MS` | Optional positive integer; defaults to `5000`. |
-| `LOCUS_AUTH_COOKIE_NAME` | Optional cookie name; defaults to `locus_auth`. |
-| `LOCUS_TRUSTED_PROXY_PEERS` | Optional comma-separated immediate proxy peer addresses. Leave unset for direct mode. |
-| `LOCUS_FORWARDED_FOR_HOP` | Optional only with trusted peers; `first` or `last`. |
-| `LOCUS_MAX_TOWL_ROOMS`, `LOCUS_TOWL_IDLE_MS`, `LOCUS_AUTHORITY_SWEEP_INTERVAL_MS` | Optional positive-integer TOWL lifecycle limits. The idle and sweep relationships are validated before listening. |
-| `VITE_TEST_EVIDENCE_ROOT` | Required immutable public frozen-test evidence root: `/test-evidence/<exact-40-hex-hson-deploy-commit>`. |
-| `VITE_LIVEHOST_WS_URL` | Required browser-visible WebSocket origin of the deployed Node/LiveHost service. It contains no application path; TOWL and circuit verification derive their routes and bootstrap anonymous service admission at `/session`. |
-| `CLOUDFLARE_API_TOKEN`, `TOWL_DEPLOYED_WS_URL` | Worker compatibility deployment/probe only; not required by the Node authority. |
+## Local product development
 
-The local readiness endpoint is unauthenticated `GET /healthz`. It returns 200
-with `{ "ready": true }` only after every public application is ready, and 503
-otherwise. A provider should check this endpoint locally through its proxy;
-the repository does not provision that proxy, TLS, DNS, process supervisor, or
-public endpoint.
+Start Vite with `npm run dev`. Start `npm run local:livehost-server` separately
+only when TOWL or circuit-verification product behavior needs a local origin.
+Test report generation does not use that server.
 
-The public process registers exactly `GET /session`, `/towl`, and
-`/circuit-verification`; `/healthz` is owned by LiveHost. `GET /session` is
-anonymous service admission, not a login: an exact allowed browser Origin
-receives a host-only, browser-session `HttpOnly; Secure; SameSite=Strict;
-Path=/` cookie and exact-origin credentialed CORS headers. Missing, `null`, and
-unlisted Origins receive no cookie. TOWL's room/seat credentials remain a
-separate protocol concern. `/hosted-tests` is intentionally absent from this
-public runtime; public Tests are frozen static evidence.
+## Cloudflare compatibility Worker
 
-## Authority lifetime and restart contract
+The Worker is a TOWL/session production compatibility adapter, not a deployment
+test runner. Typecheck it with `npm run check:cloudflare`, test its production
+adapter directly with `npm run test:towl-worker-compatibility`, and deploy only
+when explicitly requested with `npm run deploy:worker`. That deploy script
+builds and typechecks; it does not execute tests or update submodules.
 
-The Node process owns a finite TOWL application registry, separate from
-transport limits:
-
-- TOWL defaults to at most 128 loaded rooms, eligible for eviction 30 minutes
-  after connections and resumable-session grace are gone.
-- one unreferenced sweep applies the TOWL policy.
-
-Configure these with `LOCUS_MAX_TOWL_ROOMS`, `LOCUS_TOWL_IDLE_MS`, and
-`LOCUS_AUTHORITY_SWEEP_INTERVAL_MS`. Values are finite positive integers.
-TOWL idle time cannot be shorter than its 30-second resumable-session grace,
-and the sweep interval cannot exceed the idle duration. Invalid values
-fail before listening.
-
-Attached clients, resumable sessions inside grace, actions, recovery,
-persistence, and request acquisitions cannot be automatically evicted.
-Capacity exhaustion rejects new room creation; it never removes an active
-authority.
-
-TOWL rooms are ephemeral data authorities.
-Eviction or process restart loses their state, sessions, history, and
-credentials. Returning to the same TOWL room key creates initial game state
-with a new incarnation; old bootstrap state uses the existing incarnation-
-replacement recovery path.
-Document persistence in `hson-live` does not make these data authorities
-durable.
-
-The supported Node topology is one process and one application registry owning
-each logical authority. Multi-process service of one authority namespace is
-unsupported; a shared database alone is not distributed locking. Cloudflare
-Durable Objects retain their platform-keyed ownership and existing Worker
-behavior instead of using this Node policy.
-
-## Proxy and network requirements
-
-The public service must terminate TLS and expose a `wss://` URL. Its reverse
-proxy must forward HTTP Upgrade and Connection headers to the Node process and
-must retain the full path and query string. Exact browser origins are required
-through `LOCUS_ALLOWED_ORIGINS`; missing and `null` origins reject in this
-production composition. Bootstrap HTTP and WebSocket requests independently
-authenticate the same principal. Non-browser clients may use an
-`Authorization: Bearer` header. Browser deployments provision an HttpOnly
-`locus_auth` cookie (name configurable with
-`LOCUS_AUTH_COOKIE_NAME`) at the proxy/application identity boundary; this
-server does not create login routes or cookies. The token is never placed in
-bootstrap state or query parameters.
-
-Direct mode ignores all forwarded identity headers. To trust a TLS-terminating
-proxy, set `LOCUS_TRUSTED_PROXY_PEERS` to the comma-separated immediate peer
-addresses and optionally `LOCUS_FORWARDED_FOR_HOP=first|last`. Only trusted
-peers influence effective scheme, host, and client address through
-`X-Forwarded-For`, `X-Forwarded-Proto`, and `X-Forwarded-Host`.
-The `Forwarded` header is intentionally unsupported and rejected in trusted
-mode.
-
-The browser preserves existing query parameters and adds or replaces
-`locus=<selector>` for TOWL and circuit-verification sockets. The application
-interprets this selector; LiveHost does not assign universal topology. Do not
-configure a proxy that discards those parameters. Choose proxy and platform
-idle timeouts suitable for WebSocket sessions; this protocol has no polling or
-HTTP fallback. The service must remain a persistent process and should be
-restarted by the platform if it exits.
-
-Provider dashboard work remains intentionally provider-specific: create the
-persistent Node service, set its build context and start command, attach a
-public TLS hostname, and enable WebSocket forwarding for live features. Supply
-that service origin as `VITE_LIVEHOST_WS_URL` when preparing the static artifact.
-Build the public frozen test site with its accepted immutable evidence root; it
-has no visitor-triggered hosted-test endpoint requirement.
+See [`CLOUDFLARE.md`](./CLOUDFLARE.md) for routes, lifecycle, and provider
+identity constraints.

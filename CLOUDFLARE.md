@@ -36,8 +36,9 @@ wss://<worker-host>/towl?locus=towl:<room-id>
 bootstrap. It admits only the existing public LiveDemo origins (plus loopback
 development origins) and grants no account or service credential. `/towl`
 requires a WebSocket upgrade, an accepted browser Origin when one is present,
-and a `towl:` Locus selector. Hosted Tests and `/circuit-verification` return
-404 and do not reach the Durable Object.
+and a `towl:` Locus selector. No hosted test execution exists;
+`/circuit-verification` and unknown routes return 404 without reaching the
+Durable Object.
 
 The Worker passes valid TOWL upgrades to one stable Durable Object selected with:
 
@@ -45,10 +46,9 @@ The Worker passes valid TOWL upgrades to one stable Durable Object selected with
 idFromName("hson-demo2-hosted-tests-v1")
 ```
 
-The historical instance name is provider state identity only. The implementation
-contains no hosted-test discovery, selection, execution, registry, or report
-authority. TOWL browser URL construction and the Locus wire protocol are
-unchanged.
+The historical `HostedTestDurableObject`, `HOSTED_TESTS`, and instance names are
+provider migration identity only. The implementation is TOWL-only. TOWL browser
+URL construction and the Locus wire protocol are unchanged.
 
 ## Local development
 
