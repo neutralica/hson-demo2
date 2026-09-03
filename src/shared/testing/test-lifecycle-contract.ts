@@ -6,6 +6,7 @@ export const TEST_LIFECYCLE_STATUSES = Object.freeze([
   "skip",
   "unsupported",
   "cancelled",
+  "error",
 ] as const);
 
 export type TestLifecycleStatus = typeof TEST_LIFECYCLE_STATUSES[number];
@@ -30,31 +31,6 @@ export type TestLifecycleError = Readonly<{
   actual?: string;
 }>;
 
-export type TestLifecycleCounts = Readonly<{
-  declared: number;
-  total: number;
-  executed: number;
-  passed: number;
-  failed: number;
-  skipped: number;
-  unsupported: number;
-  cancelled: number;
-}>;
-
-export type TestOpaqueExecutionEvidence = Readonly<{
-  id: string;
-  name: string;
-  subject: string;
-  runtime: string;
-  collections: readonly string[];
-  stdout?: string;
-  stderr?: string;
-  exitCode?: number | null;
-  signal?: string | null;
-  timedOut?: boolean;
-  spawnError?: string | null;
-}>;
-
 export type TestLifecycleEventBase = Readonly<{
   runId: string;
   executorId: string;
@@ -65,15 +41,13 @@ export type TestLifecycleEventBase = Readonly<{
 export type TestLifecycleEvent =
   | (TestLifecycleEventBase & Readonly<{ t: "run_planned"; suiteIds: readonly string[] }>)
   | (TestLifecycleEventBase & Readonly<{ t: "suite_queued"; suiteId: string }>)
-  | (TestLifecycleEventBase & Readonly<{ t: "suite_started"; suiteId: string; opaque?: TestOpaqueExecutionEvidence }>)
+  | (TestLifecycleEventBase & Readonly<{ t: "suite_started"; suiteId: string }>)
   | (TestLifecycleEventBase & Readonly<{
       t: "suite_finished";
       suiteId: string;
       status: TestLifecycleTerminalStatus;
       durationMs: number;
-      counts?: TestLifecycleCounts;
       errors?: readonly TestLifecycleError[];
-      opaque?: TestOpaqueExecutionEvidence;
     }>)
   | (TestLifecycleEventBase & Readonly<{ t: "case_queued"; suiteId: string; caseId: string }>)
   | (TestLifecycleEventBase & Readonly<{ t: "case_started"; suiteId: string; caseId: string; title?: string }>)

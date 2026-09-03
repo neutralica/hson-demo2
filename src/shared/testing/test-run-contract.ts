@@ -66,7 +66,7 @@ export function decode_run_selected_tests_request(value: unknown): RunSelectedTe
     if (!is_canonical_test_id(selectionId)) {
       return Object.freeze({
         ok: false,
-        issues: Object.freeze([`tests.runSelected selectionIds[${index}] must be a canonical case or opaque-suite ID.`]),
+        issues: Object.freeze([`tests.runSelected selectionIds[${index}] must be a canonical case or external-suite ID.`]),
       });
     }
     if (seen.has(selectionId)) continue;

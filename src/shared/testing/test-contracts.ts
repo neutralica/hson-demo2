@@ -43,7 +43,7 @@ export const TEST_SUBJECT_IDENTIFIERS = Object.freeze([
 export type TestSubject = typeof TEST_SUBJECT_IDENTIFIERS[number];
 export type TestCollection = "unit" | "dev";
 export type TestProvenance = "hson-demo2" | "hson-live";
-export type TestExecutionShape = "cases" | "browser-journeys" | "opaque-aggregate";
+export type TestExecutionShape = "cases" | "browser-journeys";
 
 export type TestDescriptorMetadata = Readonly<{
   subject: TestSubject;

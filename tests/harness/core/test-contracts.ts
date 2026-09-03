@@ -11,7 +11,7 @@ import type {
 
 export type Named<T> = Readonly<{ name: string; value: T; }>;
 
-export type TestStatus = "pass" | "fail" | "skip";
+export type TestStatus = "pass" | "fail" | "skip" | "unsupported" | "error";
 export type TestExpected = "ok" | "fail";
 export type TestExpectedError = Readonly<{
   message?: string;
@@ -74,7 +74,7 @@ export type TestEvent = (
     forceKilled?: boolean;
     spawnError?: string;
     protocolError?: string;
-    terminalStatus?: "pass" | "fail" | "skip" | "unsupported" | "cancelled";
+    terminalStatus?: "pass" | "fail" | "skip" | "unsupported" | "cancelled" | "error";
     terminalAcceptedBeforeCancellation?: boolean;
     ordinaryStdout?: string;
     stdoutBytes?: number;

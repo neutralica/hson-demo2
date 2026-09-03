@@ -7,7 +7,7 @@ function end(caseId, status = "pass") { event({ t: "case_end", caseId, status })
 function terminal(status = "pass", id = suiteId) { event({ t: "terminal", suiteId: id, status }); }
 function valid_cases(statuses = ["pass", "pass"]) {
   statuses.forEach((status, index) => { const id = `case-${index + 1}`; begin(id, `Case ${index + 1}`); end(id, status); });
-  terminal(statuses.includes("fail") ? "fail" : statuses.includes("pass") ? "pass" : "skip");
+  terminal(statuses.includes("error") ? "error" : statuses.includes("fail") ? "fail" : statuses.includes("cancelled") ? "cancelled" : statuses.includes("pass") ? "pass" : statuses.every((status) => status === "skip") ? "skip" : "unsupported");
 }
 async function write(stream, value) { if (stream.write(value)) return; await new Promise((resolve) => stream.once("drain", resolve)); }
 
@@ -15,6 +15,8 @@ switch (scenario) {
   case "valid":
     process.stdout.write("ordinary diagnostic\n"); valid_cases();
     break;
+  case "unsupported": valid_cases(["unsupported"]); break;
+  case "error": valid_cases(["error"]); break;
   case "invalid-json": process.stdout.write(`${EVENT_PREFIX}{not-json}\n`); break;
   case "invalid-control": process.stdout.write(`${EVENT_PREFIX}[]\n`); break;
   case "unknown-event": event({ t: "mystery" }); break;

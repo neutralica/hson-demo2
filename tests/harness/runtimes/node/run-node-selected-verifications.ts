@@ -391,15 +391,15 @@ export async function run_node_selected_verifications(
   if (browserIds.length > 0 && configuration.browserExecutor === undefined) {
     throw new Error("HOSTED_TEST_BROWSER_EXECUTOR_UNAVAILABLE: accepted browser work has no Playwright executor.");
   }
-  const aggregateDescriptors = selectedIds.filter((id) => !is_test_case_id(id)).map((id) => {
+  const externalDescriptors = selectedIds.filter((id) => !is_test_case_id(id)).map((id) => {
     const descriptor = catalog.suites.find((suite) => suite.id === id);
     if (descriptor === undefined) throw new Error(`HOSTED_TEST_AGGREGATE_SELECTION_UNKNOWN: ${id} is not in the accepted catalog.`);
     return descriptor;
   });
-  const opaqueTargets = aggregateDescriptors
+  const externalTargets = externalDescriptors
     .filter((descriptor) => descriptor.provenance === "hson-live")
     .map((descriptor) => resolve_external_launcher_binding(availability, descriptor));
-  for (const target of opaqueTargets) onEvent(external_state_event(target, "queued"));
+  for (const target of externalTargets) onEvent(external_state_event(target, "queued"));
 
   let canonicalPhaseMs = 0;
   let externalPhaseMs = 0;
@@ -443,7 +443,7 @@ export async function run_node_selected_verifications(
     async () => {
       const startedAt = performance.now();
       const [result, browser] = await Promise.all([run_external_library_launcher_pool(
-        opaqueTargets,
+        externalTargets,
         async (target) => {
           try {
             return await (configuration.launcherService?.run ?? run_external_library_launcher)(availability, target.id, {
@@ -467,10 +467,10 @@ export async function run_node_selected_verifications(
               else if (event.t === "case_end") {
                 externalCases += 1;
                 if (event.status === "pass") externalPass += 1;
-                else if (event.status === "fail") externalFail += 1;
+                else if (event.status === "fail" || event.status === "error") externalFail += 1;
                 else if (event.status === "skip" || event.status === "unsupported") externalSkip += 1;
                 if (event.status === "cancelled") onEvent(Object.freeze({ t: "case_cancelled", suite: target.id, caseId: event.caseId, name: event.name, ms: 0 }));
-                else onEvent(Object.freeze({ t: "case_end", suite: target.id, caseId: event.caseId, name: event.name, status: event.status === "unsupported" ? "skip" : event.status, ms: 0 }));
+                else onEvent(Object.freeze({ t: "case_end", suite: target.id, caseId: event.caseId, name: event.name, status: event.status, ms: 0 }));
               }
             }
             if (launcherResult.cancelled) {

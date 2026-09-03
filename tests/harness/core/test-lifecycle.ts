@@ -2,12 +2,10 @@ import type { TestEvent } from "./test-contracts";
 import type { TestRunPlan } from "../../../src/shared/testing/test-run-contract";
 import type {
   TestErrorKind,
-  TestLifecycleCounts,
   TestLifecycleError,
   TestLifecycleEvent,
   TestLifecycleEventBase,
   TestLifecycleTerminalStatus,
-  TestOpaqueExecutionEvidence,
 } from "../../../src/shared/testing/test-lifecycle-contract";
 
 export type TestLifecycleAdapter = Readonly<{
@@ -42,10 +40,13 @@ function classify_case_error(message: string): TestErrorKind {
 
 function terminal_from_cases(statuses: ReadonlyMap<string, TestLifecycleTerminalStatus>): TestLifecycleTerminalStatus {
   const values = [...statuses.values()];
+  if (values.some((status) => status === "error")) return "error";
   if (values.some((status) => status === "fail")) return "fail";
   if (values.some((status) => status === "cancelled")) return "cancelled";
+  if (values.some((status) => status === "pass")) return "pass";
   if (values.length > 0 && values.every((status) => status === "unsupported")) return "unsupported";
   if (values.length > 0 && values.every((status) => status === "skip")) return "skip";
+  if (values.some((status) => status === "unsupported")) return "unsupported";
   return "pass";
 }
 
@@ -70,7 +71,6 @@ export function make_test_lifecycle_adapter(options: Readonly<{
 }>): TestLifecycleAdapter {
   let sequence = options.initialSequence ?? 0;
   const clock = options.now ?? Date.now;
-  const shapes = new Map(options.runPlan?.suites.map((suite) => [suite.id, suite.executionShape]) ?? []);
   const startedSuites = new Set<string>();
   const terminalSuites = new Set<string>();
   const suiteStatuses = new Map<string, TestLifecycleTerminalStatus>();
@@ -93,10 +93,10 @@ export function make_test_lifecycle_adapter(options: Readonly<{
     }) as TestLifecycleEvent);
   };
 
-  const startSuite = (suiteId: string, opaque?: TestOpaqueExecutionEvidence, executorId = options.executorId): void => {
+  const startSuite = (suiteId: string, executorId = options.executorId): void => {
     if (startedSuites.has(suiteId) || terminalSuites.has(suiteId)) return;
     startedSuites.add(suiteId);
-    emit({ t: "suite_started", suiteId, ...(opaque === undefined ? {} : { opaque }) }, executorId);
+    emit({ t: "suite_started", suiteId }, executorId);
   };
 
   return Object.freeze({
@@ -130,12 +130,12 @@ export function make_test_lifecycle_adapter(options: Readonly<{
         return;
       }
       if (event.t === "suite_begin") {
-        if (shapes.get(event.suite) === "cases" || shapes.get(event.suite) === "browser-journeys") startSuite(event.suite, undefined, executorId);
+        startSuite(event.suite, executorId);
         return;
       }
       if (event.t === "case_begin") {
         caseExecutors.set(`${event.suite}::${event.caseId}`, executorId);
-        startSuite(event.suite, undefined, executorId);
+        startSuite(event.suite, executorId);
         emit({ t: "case_started", suiteId: event.suite, caseId: event.caseId, title: event.name }, executorId);
         return;
       }
@@ -201,19 +201,12 @@ export function make_test_lifecycle_adapter(options: Readonly<{
         }, executorId);
         return;
       }
-      const opaque = Object.freeze({
-        id: event.id,
-        name: event.name,
-        subject: event.subject,
-        runtime: event.runtime,
-        collections: Object.freeze([...event.collections]),
-      });
       if (event.t === "external_state") {
-        if (event.status === "running") startSuite(event.suite, opaque);
+        if (event.status === "running") startSuite(event.suite);
         return;
       }
 
-      startSuite(event.suite, opaque);
+      startSuite(event.suite);
       const ordinaryStdout = event.ordinaryStdout ?? event.stdout;
       if (ordinaryStdout.length > 0) {
         emit({
@@ -251,43 +244,7 @@ export function make_test_lifecycle_adapter(options: Readonly<{
         suiteErrors.set(event.suite, errors);
         emit({ t: "infrastructure_error", suiteId: event.suite, error: classifiedError });
       }
-      const shape = shapes.get(event.suite);
-      if (shape === "cases" || shape === "browser-journeys") {
-        externalStatuses.set(event.suite, event.status);
-        return;
-      }
-      if (terminalSuites.has(event.suite)) return;
-      const counts: TestLifecycleCounts = Object.freeze({
-        declared: 0,
-        total: 0,
-        executed: 0,
-        passed: 0,
-        failed: 0,
-        skipped: 0,
-        unsupported: 0,
-        cancelled: 0,
-      });
-      terminalSuites.add(event.suite);
-      suiteStatuses.set(event.suite, event.status);
-      emit({
-        t: "suite_finished",
-        suiteId: event.suite,
-        status: event.status,
-        durationMs: event.ms,
-        counts,
-        ...(classifiedError === undefined || classifiedError.kind === "cancelled"
-          ? {}
-          : { errors: Object.freeze([classifiedError]) }),
-        opaque: Object.freeze({
-          ...opaque,
-          stdout: event.stdout,
-          stderr: event.stderr,
-          exitCode: event.exitCode,
-          signal: event.signal,
-          timedOut: event.timedOut,
-          spawnError: event.spawnError ?? null,
-        }),
-      });
+      externalStatuses.set(event.suite, event.terminalStatus ?? event.status);
     },
     finishRun(status, durationMs) {
       emit({ t: "run_finished", status, durationMs });
@@ -299,64 +256,30 @@ export function make_test_lifecycle_adapter(options: Readonly<{
       }
       for (const suite of options.runPlan.suites) {
         if (terminalSuites.has(suite.id)) continue;
-        if (suite.executionShape === "cases" || suite.executionShape === "browser-journeys") {
-          const suiteExecutorId = suiteExecutors.get(suite.id) ?? options.executorId;
-          const statuses = caseStatuses.get(suite.id) ?? new Map<string, TestLifecycleTerminalStatus>();
-          for (const testCase of suite.cases) {
-            if (statuses.has(testCase.caseId)) continue;
-            statuses.set(testCase.caseId, "cancelled");
-            emit({
-              t: "case_finished",
-              suiteId: suite.id,
-              caseId: testCase.caseId,
-              title: testCase.title,
-              status: "cancelled",
-              durationMs: 0,
-            }, caseExecutors.get(testCase.id) ?? suiteExecutorId);
-          }
-          caseStatuses.set(suite.id, statuses);
-          const values = [...statuses.values()];
-          const status = terminal_from_cases(statuses);
-          const counts: TestLifecycleCounts = Object.freeze({
-            declared: suite.cases.length,
-            total: suite.cases.length,
-            executed: values.filter((value) => value !== "cancelled").length,
-            passed: values.filter((value) => value === "pass").length,
-            failed: values.filter((value) => value === "fail").length,
-            skipped: values.filter((value) => value === "skip").length,
-            unsupported: values.filter((value) => value === "unsupported").length,
-            cancelled: values.filter((value) => value === "cancelled").length,
-          });
-          terminalSuites.add(suite.id);
-          suiteStatuses.set(suite.id, status);
-          emit({ t: "suite_finished", suiteId: suite.id, status, durationMs, counts }, suiteExecutorId);
-          continue;
+        const suiteExecutorId = suiteExecutors.get(suite.id) ?? options.executorId;
+        const statuses = caseStatuses.get(suite.id) ?? new Map<string, TestLifecycleTerminalStatus>();
+        for (const testCase of suite.cases) {
+          if (statuses.has(testCase.caseId)) continue;
+          statuses.set(testCase.caseId, "cancelled");
+          emit({
+            t: "case_finished",
+            suiteId: suite.id,
+            caseId: testCase.caseId,
+            title: testCase.title,
+            status: "cancelled",
+            durationMs: 0,
+          }, caseExecutors.get(`${suite.id}::${testCase.caseId}`) ?? suiteExecutorId);
         }
-        const declared = 0;
-        const status = "cancelled" as const;
+        caseStatuses.set(suite.id, statuses);
+        const status = statuses.size === 0 ? "cancelled" : terminal_from_cases(statuses);
         terminalSuites.add(suite.id);
         suiteStatuses.set(suite.id, status);
-        emit({
-          t: "suite_finished",
-          suiteId: suite.id,
-          status,
-          durationMs,
-          counts: Object.freeze({
-            declared,
-            total: declared,
-            executed: 0,
-            passed: 0,
-            failed: 0,
-            skipped: 0,
-            unsupported: 0,
-            cancelled: declared,
-          }),
-        });
+        emit({ t: "suite_finished", suiteId: suite.id, status, durationMs }, suiteExecutorId);
       }
       const statuses = [...suiteStatuses.values()];
       emit({
         t: "run_finished",
-        status: statuses.some((status) => status === "fail") ? "fail" : "cancelled",
+        status: statuses.some((status) => status === "fail" || status === "error") ? "fail" : "cancelled",
         durationMs,
       });
     },

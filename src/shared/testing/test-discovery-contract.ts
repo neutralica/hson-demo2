@@ -178,8 +178,7 @@ function decode_suite_descriptor(value: unknown, path: string, issues: string[])
     add_issue(issues, `${path}.provenance`, "expected supported provenance");
   }
   if (!non_negative_integer(input.order)) add_issue(issues, `${path}.order`, "expected non-negative safe integer");
-  if (input.executionShape !== "cases" && input.executionShape !== "browser-journeys"
-    && input.executionShape !== "opaque-aggregate") {
+  if (input.executionShape !== "cases" && input.executionShape !== "browser-journeys") {
     add_issue(issues, `${path}.executionShape`, "expected supported execution shape");
   }
   if (input.sourceRef !== undefined && typeof input.sourceRef !== "string") add_issue(issues, `${path}.sourceRef`, "expected string when present");
@@ -190,8 +189,7 @@ function decode_suite_descriptor(value: unknown, path: string, issues: string[])
     || typeof input.subject !== "string" || !SUBJECTS.includes(input.subject as TestSubject)
     || typeof input.provenance !== "string" || !PROVENANCES.includes(input.provenance as TestProvenance)
     || !non_negative_integer(input.order)
-    || (input.executionShape !== "cases" && input.executionShape !== "browser-journeys"
-      && input.executionShape !== "opaque-aggregate")
+    || (input.executionShape !== "cases" && input.executionShape !== "browser-journeys")
     || (input.sourceRef !== undefined && typeof input.sourceRef !== "string")
     || requirements === undefined || collections === undefined) return undefined;
   return Object.freeze({

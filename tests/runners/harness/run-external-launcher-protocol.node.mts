@@ -40,6 +40,15 @@ const valid = await run("valid");
 assert.equal(valid.result.ok, true);
 assert.equal(valid.result.events?.filter((event) => event.t === "case_end").length, 2);
 assert.doesNotMatch(valid.result.ordinaryStdout, /HSON_TEST_EVENT/);
+const unsupported = await run("unsupported");
+assert.equal(unsupported.result.ok, true);
+assert.equal(unsupported.result.terminalStatus, "unsupported");
+assert.deepEqual(unsupported.result.events?.filter((event) => event.t === "case_end").map((event) => event.status), ["unsupported"]);
+const infrastructureError = await run("error");
+assert.equal(infrastructureError.result.ok, false);
+assert.equal(infrastructureError.result.protocolError, undefined);
+assert.equal(infrastructureError.result.terminalStatus, "error");
+assert.deepEqual(infrastructureError.result.events?.filter((event) => event.t === "case_end").map((event) => event.status), ["error"]);
 
 for (const [scenario, pattern] of [
   ["invalid-json", /JSON\/control frame/], ["invalid-control", /JSON\/control frame/], ["unknown-event", /unknown test event/],
@@ -67,6 +76,25 @@ try {
   assert.equal(parentReport.totals.cases, 0, "protocol infrastructure failures do not synthesize failed child cases");
   assert.equal(parentReport.suites[0]?.status, "error", "protocol infrastructure failure is suite-level error");
 } finally { parentService.terminate(); }
+
+for (const [scenario, expectedStatus, expectedOk] of [
+  ["unsupported", "unsupported", true],
+  ["error", "error", false],
+] as const) {
+  const service = create_external_library_launcher_service();
+  const availability = fixture_availability(target, scenario);
+  const registry = make_local_node_locus_executor_registry();
+  const catalog = make_test_executor_discovery(registry, availability.targets).catalog;
+  const reporter = new LocalRunReporter(await mkdtemp(join(tmpdir(), `hson-external-${scenario}-report-`)));
+  try {
+    const result = await run_node_selected_verifications(registry, catalog, availability, [target.id], (event) => reporter.event(event), {}, { launcherService: service });
+    const report = await reporter.finalize();
+    assert.equal(result.ok, expectedOk);
+    assert.equal(report.totals.cases, 1);
+    assert.equal(report.suites[0]?.status, expectedStatus);
+    assert.deepEqual(report.suites[0]?.cases.map((testCase) => [testCase.id, testCase.status]), [["case-1", expectedStatus]]);
+  } finally { service.terminate(); }
+}
 
 const failed = await run("failed");
 assert.equal(failed.result.ok, false);
@@ -96,4 +124,4 @@ for (const [scenario, limit, field] of [["large-stdout", EXTERNAL_LIBRARY_LAUNCH
   assert.ok(Buffer.byteLength(observed.result[field], "utf8") <= limit);
   assert.match(observed.result[field], new RegExp(EXTERNAL_LIBRARY_LAUNCHER_TRUNCATION_MARKER));
 }
-console.log("external launcher case-event protocol: ok (22 process-boundary cases)");
+console.log("external launcher case-event protocol: ok (26 process-boundary cases)");

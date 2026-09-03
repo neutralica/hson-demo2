@@ -7,7 +7,7 @@ export type NormalizedTestRunEvent =
   | Readonly<{
       type: "test-finished";
       test: TestDescriptor;
-      status: "pass" | "fail" | "skip" | "cancelled";
+      status: "pass" | "fail" | "skip" | "unsupported" | "error" | "cancelled";
       durationMs: number;
       error?: string;
       assertRows?: readonly TestAssertRow[];

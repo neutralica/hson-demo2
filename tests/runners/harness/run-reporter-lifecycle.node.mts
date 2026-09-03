@@ -36,5 +36,11 @@ const cancelled = new TestEventAdapter(create_local_redactor(process.cwd()));
 cancelled.ingest(external({ status: "cancelled", cancelled: true, exitCode: null, signal: "SIGTERM" }));
 assert.equal(cancelled.finalize()[0]?.status, "cancelled");
 assert.equal(cancelled.finalize()[0]?.subprocess?.cancelled, true);
+const unsupported = new TestEventAdapter(create_local_redactor(process.cwd()));
+unsupported.ingest(external({ status: "pass", terminalStatus: "unsupported", exitCode: 0 }));
+assert.equal(unsupported.finalize()[0]?.status, "unsupported", "child terminal status remains authoritative");
+const infrastructure = new TestEventAdapter(create_local_redactor(process.cwd()));
+infrastructure.ingest(external({ status: "fail", terminalStatus: "error", exitCode: 0 }));
+assert.equal(infrastructure.finalize()[0]?.status, "error", "child infrastructure status remains explicit");
 
-console.log(JSON.stringify({ suite: "reporter-lifecycle", checks: 13 }));
+console.log(JSON.stringify({ suite: "reporter-lifecycle", checks: 15 }));

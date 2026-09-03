@@ -27,7 +27,7 @@ export function make_test_run_plan(options: MakeTestRunPlanOptions): TestRunPlan
 
   const suiteById = new Map(options.catalog.suites.map((descriptor) => [descriptor.id, descriptor]));
   const casesBySuite = new Map<string, typeof options.catalog.tests[number][]>();
-  const aggregateSuites = new Set<string>();
+  const externalSuites = new Set<string>();
   for (const id of selected) {
     if (is_test_case_id(id)) {
       const descriptor = options.catalog.tests.find((candidate) => candidate.id === id);
@@ -43,11 +43,11 @@ export function make_test_run_plan(options: MakeTestRunPlanOptions): TestRunPlan
       || (suite.executionShape === "cases" && suite.provenance !== "hson-live")) {
       throw new SelectedTestResolutionError(id, options.executorId);
     }
-    aggregateSuites.add(id);
+    externalSuites.add(id);
   }
 
   const selectedSuiteDescriptors = options.catalog.suites
-    .filter((suite) => casesBySuite.has(suite.id) || aggregateSuites.has(suite.id))
+    .filter((suite) => casesBySuite.has(suite.id) || externalSuites.has(suite.id))
     .sort(compare_test_suites);
   const suites = selectedSuiteDescriptors.map((suite, order) => {
     const cases = (casesBySuite.get(suite.id) ?? []).sort(compare_test_descriptors)
@@ -73,7 +73,7 @@ export function make_test_run_plan(options: MakeTestRunPlanOptions): TestRunPlan
   });
   Object.freeze(suites);
   const selectionIds = Object.freeze(suites.flatMap((suite) => (
-    suite.provenance === "hson-live" || (suite.executionShape !== "cases" && suite.executionShape !== "browser-journeys")
+    suite.provenance === "hson-live"
       ? [suite.id]
       : suite.cases.map((testCase) => testCase.id)
   )));

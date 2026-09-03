@@ -53,7 +53,7 @@ try {
   originalConsole.log(JSON.stringify({
     selectedIds: selectedIds.length,
     canonicalCases: registry.catalog.tests.length,
-    opaqueSuites: availability.targets.length,
+    externalSuites: availability.targets.length,
     elapsedMs,
     memory: {
       baselineRss: memoryBaseline.rss,

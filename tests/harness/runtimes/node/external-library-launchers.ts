@@ -22,6 +22,7 @@ export const EXTERNAL_LIBRARY_LAUNCHER_TRUNCATION_MARKER = "<HSON_LIVE_TEST_OUTP
 export const HSON_LIVE_TEST_EVENT_PREFIX = "<HSON_TEST_EVENT>";
 const CONTROL_LINE_LIMIT = 16 * 1024;
 export const NODE_TSX_IMPORT_PATH = fileURLToPath(import.meta.resolve("tsx"));
+type ExternalChildStatus = "pass" | "fail" | "skip" | "unsupported" | "cancelled" | "error";
 
 type ExternalLibraryLauncherInvocation = Readonly<{
   kind: "direct";
@@ -54,7 +55,7 @@ export type ExternalLibraryLauncherResult = Readonly<{
   timedOut: boolean;
   spawnError?: string;
   events?: readonly ExternalLibraryChildEvent[];
-  terminalStatus?: "pass" | "fail" | "skip" | "unsupported" | "cancelled";
+  terminalStatus?: ExternalChildStatus;
   protocolError?: string;
   forceKilled?: boolean;
   cancelled?: boolean;
@@ -66,8 +67,8 @@ export type ExternalLibraryLauncherResult = Readonly<{
 export type ExternalLibraryChildEvent = Readonly<
   | { t: "case_begin"; caseId: string; name: string }
   | { t: "diagnostic"; caseId: string; kind: string; message: string }
-  | { t: "case_end"; caseId: string; name: string; status: "pass" | "fail" | "skip" | "unsupported" | "cancelled" }
-  | { t: "terminal"; suiteId: string; status: "pass" | "fail" | "skip" | "unsupported" | "cancelled" }
+  | { t: "case_end"; caseId: string; name: string; status: ExternalChildStatus }
+  | { t: "terminal"; suiteId: string; status: ExternalChildStatus }
 >;
 type ExternalLibraryLauncherState = {
   readonly processSupervisor: NodeProcessSupervisor;
@@ -310,18 +311,18 @@ export function resolve_external_launcher_binding(
 ): ExternalLibraryLauncherTarget {
   if (descriptor.executionShape !== "cases" || descriptor.provenance !== "hson-live"
     || descriptor.sourceRef === undefined || !descriptor.sourceRef.startsWith("hson-live:")) {
-    throw new Error(`HOSTED_TEST_OPAQUE_DESCRIPTOR_INVALID: ${descriptor.id} has no valid hson-live sourceRef binding.`);
+    throw new Error(`EXTERNAL_LAUNCHER_DESCRIPTOR_INVALID: ${descriptor.id} has no valid hson-live sourceRef binding.`);
   }
   const matches = availability.targets.filter((target) => target.sourceRef === descriptor.sourceRef);
   if (matches.length !== 1) {
     throw new Error(
-      `HOSTED_TEST_OPAQUE_BINDING_INVALID: ${descriptor.id} sourceRef "${descriptor.sourceRef}" resolved to ${matches.length} launchers.`,
+      `EXTERNAL_LAUNCHER_BINDING_INVALID: ${descriptor.id} sourceRef "${descriptor.sourceRef}" resolved to ${matches.length} launchers.`,
     );
   }
   const target = matches[0]!;
   if (target.id !== descriptor.id || target.displayName !== descriptor.title
     || target.subject !== descriptor.subject) {
-    throw new Error(`HOSTED_TEST_OPAQUE_BINDING_MISMATCH: ${descriptor.id} binding disagrees with the accepted catalog descriptor.`);
+    throw new Error(`EXTERNAL_LAUNCHER_BINDING_MISMATCH: ${descriptor.id} binding disagrees with executable metadata.`);
   }
   return target;
 }
@@ -332,15 +333,14 @@ type ExternalTestEventScan = Readonly<{
   error?: string;
 }>;
 
-function child_status(value: unknown): ExternalLibraryChildEvent extends infer _T
-  ? "pass" | "fail" | "skip" | "unsupported" | "cancelled" | undefined
-  : never {
-  return value === "pass" || value === "fail" || value === "skip" || value === "unsupported" || value === "cancelled"
+function child_status(value: unknown): ExternalChildStatus | undefined {
+  return value === "pass" || value === "fail" || value === "skip" || value === "unsupported" || value === "cancelled" || value === "error"
     ? value
     : undefined;
 }
 
-function derived_child_status(statuses: readonly ("pass" | "fail" | "skip" | "unsupported" | "cancelled")[]): "pass" | "fail" | "skip" | "unsupported" | "cancelled" | undefined {
+function derived_child_status(statuses: readonly ExternalChildStatus[]): ExternalChildStatus | undefined {
+  if (statuses.includes("error")) return "error";
   if (statuses.includes("fail")) return "fail";
   if (statuses.includes("cancelled")) return "cancelled";
   if (statuses.includes("pass")) return "pass";
@@ -353,11 +353,11 @@ class ExternalTestEventScanner {
   readonly #decoder = new StringDecoder("utf8");
   readonly #events: ExternalLibraryChildEvent[] = [];
   readonly #active = new Map<string, string>();
-  readonly #completed = new Map<string, "pass" | "fail" | "skip" | "unsupported" | "cancelled">();
+  readonly #completed = new Map<string, ExternalChildStatus>();
   readonly #ordinary = new BoundedOutputCapture(EXTERNAL_LIBRARY_LAUNCHER_STDOUT_LIMIT_BYTES, EXTERNAL_LIBRARY_LAUNCHER_TRUNCATION_MARKER);
   #pending = "";
   #discardingLongLine = false;
-  #terminal: "pass" | "fail" | "skip" | "unsupported" | "cancelled" | undefined;
+  #terminal: ExternalChildStatus | undefined;
   #error: string | undefined;
 
   constructor(readonly target: ExternalLibraryLauncherTarget) {}
@@ -571,7 +571,7 @@ async function run_external_library_launcher_with_state(
       ? finishedEvents
       : Object.freeze({ events: eventsAcceptedBeforeCancellation, ordinaryStdout: finishedEvents.ordinaryStdout });
     const eventTerminal = eventResult.events?.at(-1);
-    const eventFailed = eventResult.events?.some((event) => event.t === "case_end" && event.status === "fail") === true;
+    const eventFailed = eventResult.events?.some((event) => event.t === "case_end" && (event.status === "fail" || event.status === "error")) === true;
     return Object.freeze({
       target: selectedTarget,
       stdout: processResult.stdout,
