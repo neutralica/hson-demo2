@@ -72,7 +72,8 @@ const parentReporter = new LocalRunReporter(await mkdtemp(join(tmpdir(), "hson-e
 try {
   const parentResult = await run_node_selected_verifications(parentRegistry, parentCatalog, invalidAvailability, [target.id], (event) => parentReporter.event(event), {}, { launcherService: parentService });
   const parentReport = await parentReporter.finalize();
-  assert.equal(parentResult.ok, false); assert.equal(parentResult.summary.cases, 0);
+  assert.equal(parentResult.ok, false); assert.equal(parentResult.totals.cases, 0);
+  assert.deepEqual(parentResult.totals, parentReport.totals);
   assert.equal(parentReport.totals.cases, 0, "protocol infrastructure failures do not synthesize failed child cases");
   assert.equal(parentReport.suites[0]?.status, "error", "protocol infrastructure failure is suite-level error");
 } finally { parentService.terminate(); }
@@ -91,6 +92,7 @@ for (const [scenario, expectedStatus, expectedOk] of [
     const report = await reporter.finalize();
     assert.equal(result.ok, expectedOk);
     assert.equal(report.totals.cases, 1);
+    assert.deepEqual(result.totals, report.totals);
     assert.equal(report.suites[0]?.status, expectedStatus);
     assert.deepEqual(report.suites[0]?.cases.map((testCase) => [testCase.id, testCase.status]), [["case-1", expectedStatus]]);
   } finally { service.terminate(); }

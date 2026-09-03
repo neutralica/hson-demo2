@@ -85,8 +85,8 @@ await check_async("synchronous throw is a bounded failure", async () => {
     Object.freeze({ suite: "runner/sync-throw", caseId: "throw", name: "throw", run() { throw new Error(hostile); } }),
   ])]);
   assert.equal(observed.result.ok, false);
-  assert.match(observed.result.summary.failures[0]?.err ?? "", /TEST_FAILURE_DETAIL_TRUNCATED/);
-  assert.ok((observed.result.summary.failures[0]?.err.length ?? Infinity) <= TEST_FAILURE_DETAIL_LIMIT);
+  assert.match(observed.result.failures[0]?.err ?? "", /TEST_FAILURE_DETAIL_TRUNCATED/);
+  assert.ok((observed.result.failures[0]?.err.length ?? Infinity) <= TEST_FAILURE_DETAIL_LIMIT);
 });
 
 await check_async("resolved promise is awaited", async () => {
@@ -111,7 +111,7 @@ await check_async("rejected promise is reported", async () => {
     }),
   ])]);
   assert.equal(observed.result.ok, false);
-  assert.match(observed.result.summary.failures[0]?.err ?? "", /returned rejection/);
+  assert.match(observed.result.failures[0]?.err ?? "", /returned rejection/);
 });
 
 await check_async("never-settling promise times out", async () => {
@@ -124,7 +124,7 @@ await check_async("never-settling promise times out", async () => {
     }),
   ])]);
   assert.equal(observed.result.ok, false);
-  assert.match(observed.result.summary.failures[0]?.err ?? "", /\[TEST_CASE_TIMEOUT\].*20ms/);
+  assert.match(observed.result.failures[0]?.err ?? "", /\[TEST_CASE_TIMEOUT\].*20ms/);
 });
 
 await check_async("late resolve cannot replace the timeout terminal", async () => {
@@ -217,8 +217,8 @@ await check_async("cleanup failure replaces a would-be pass", async () => {
     }),
   ])]);
   assert.equal(observed.result.ok, false);
-  assert.equal(observed.result.summary.fail, 2);
-  assert.ok(observed.result.summary.failures.every((failure) => failure.err.includes("TEST_CASE_CLEANUP_FAILED")));
+  assert.equal(observed.result.totals.fail, 2);
+  assert.ok(observed.result.failures.every((failure) => failure.err.includes("TEST_CASE_CLEANUP_FAILED")));
 });
 
 await check_async("cleanup runs after timeout", async () => {
@@ -233,7 +233,7 @@ await check_async("cleanup runs after timeout", async () => {
     }),
   ])]);
   assert.equal(cleaned, true);
-  assert.match(observed.result.summary.failures[0]?.err ?? "", /TEST_CASE_TIMEOUT/);
+  assert.match(observed.result.failures[0]?.err ?? "", /TEST_CASE_TIMEOUT/);
 });
 
 await check_async("invalid timeout values reject before execution", async () => {
@@ -297,9 +297,9 @@ await check_async("streamed and terminal counts reconcile", async () => {
     Object.freeze({ suite: "runner/reconcile", caseId: "fail", name: "fail", run() { throw new Error("no"); } }),
   ])]);
   const ends = terminal(observed.events);
-  assert.equal(ends.length, observed.result.summary.cases);
-  assert.equal(ends.filter((event) => event.status === "pass").length, observed.result.summary.pass);
-  assert.equal(ends.filter((event) => event.status === "fail").length, observed.result.summary.fail);
+  assert.equal(ends.length, observed.result.totals.cases);
+  assert.equal(ends.filter((event) => event.status === "pass").length, observed.result.totals.pass);
+  assert.equal(ends.filter((event) => event.status === "fail").length, observed.result.totals.fail);
 });
 
 await check_async("abort during active work settles after cleanup as cancellation", async () => {
@@ -318,7 +318,7 @@ await check_async("abort during active work settles after cleanup as cancellatio
   assert.equal(cleaned, true);
   assert.equal(observed.result.ok, false);
   assert.equal(observed.result.cancelled, true);
-  assert.equal(observed.result.summary.failures.length, 0);
+  assert.equal(observed.result.failures.length, 0);
   assert.equal(observed.events.some((event) => event.t === "case_cancelled" && event.caseId === "active"), true);
 });
 
@@ -350,12 +350,33 @@ check("recorder rejects duplicate or incomplete terminal accounting", () => {
     () => recorder.ingest({ t: "case_begin", suite: "runner/recorder", caseId: "case", name: "case" }),
     /TEST_RECORDER_DUPLICATE_CASE_BEGIN/,
   );
-  assert.throws(() => recorder.summary(), /TEST_RECORDER_INCOMPLETE_CASES/);
+  assert.throws(() => recorder.result(), /TEST_RECORDER_INCOMPLETE_CASES/);
   recorder.ingest({ t: "case_end", suite: "runner/recorder", caseId: "case", name: "case", status: "pass", ms: 1 });
   assert.throws(
     () => recorder.ingest({ t: "case_end", suite: "runner/recorder", caseId: "case", name: "case", status: "pass", ms: 1 }),
     /TEST_RECORDER_CASE_END_WITHOUT_BEGIN/,
   );
+});
+
+check("recorder preserves all six terminal statuses", () => {
+  const recorder = new TestRecorder();
+  for (const status of ["pass", "fail", "skip", "unsupported", "error"] as const) {
+    recorder.ingest({ t: "case_begin", suite: "runner/statuses", caseId: status, name: status });
+    recorder.ingest({ t: "case_end", suite: "runner/statuses", caseId: status, name: status, status, ms: 1 });
+  }
+  recorder.ingest({ t: "case_begin", suite: "runner/statuses", caseId: "cancelled", name: "cancelled" });
+  recorder.ingest({ t: "case_cancelled", suite: "runner/statuses", caseId: "cancelled", name: "cancelled", ms: 1 });
+  const recorded = recorder.result();
+  assert.deepEqual(recorded.totals, {
+    suites: 0,
+    cases: 6,
+    pass: 1,
+    fail: 1,
+    skip: 1,
+    unsupported: 1,
+    cancelled: 1,
+    error: 1,
+  });
 });
 
 await check_async("report-stream failure rejects after case cleanup rather than returning green", async () => {
@@ -376,5 +397,5 @@ await check_async("report-stream failure rejects after case cleanup rather than 
   assert.equal(cleaned, true);
 });
 
-assert.equal(checks, 20);
+assert.equal(checks, 21);
 process.stdout.write(`1..${checks}\n`);

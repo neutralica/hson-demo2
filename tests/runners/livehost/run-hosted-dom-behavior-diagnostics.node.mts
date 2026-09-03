@@ -42,12 +42,12 @@ try {
         yieldBetweenSuites: false,
       });
       return {
-        cases: result.summary.cases,
-        pass: result.summary.pass,
-        fail: result.summary.fail,
+        cases: result.totals.cases,
+        pass: result.totals.pass,
+        fail: result.totals.fail,
         windowMatches,
         documentMatches,
-        failures: result.summary.failures.map((failure) => ({
+        failures: result.failures.map((failure) => ({
           name: failure.name,
           error: failure.err.split("\nError:")[0],
         })),

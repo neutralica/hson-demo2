@@ -518,10 +518,14 @@ export async function run_test_suites(
       lastYieldAt = now();
     }
 
-    if (opts.bail && rec.summary().fail > 0) break;
+    if (opts.bail && rec.hasFailure()) break;
   }
 
   const totalMs = now() - t0;
-  const summary = _freeze({ ...rec.summary(), msTotal: totalMs });
-  return _freeze({ ok: !cancelled && summary.fail === 0, summary, ...(cancelled ? { cancelled: true as const } : {}) });
+  const result = rec.result(totalMs);
+  return _freeze({
+    ok: !cancelled && result.totals.fail === 0 && result.totals.error === 0,
+    ...result,
+    ...(cancelled ? { cancelled: true as const } : {}),
+  });
 }

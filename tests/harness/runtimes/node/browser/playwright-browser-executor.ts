@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import type { TestCatalog } from "../../../../../src/shared/testing/test-catalog-contract";
 import type { TestExecutorDescriptor } from "../../../../../src/shared/testing/test-executor-contract";
 import type { TestFailure } from "../../../../../src/shared/testing/test-contracts";
+import { empty_totals } from "../../../../../src/shared/testing/test-run-contract";
 import type { RunOptions, RunResult, TestEvent } from "../../../core/test-contracts";
 import type { NodeProcessResult, NodeProcessSupervisor } from "../node-process-supervisor";
 import {
@@ -172,7 +173,9 @@ export function create_playwright_browser_executor(
       if (selectedIds.length === 0) {
         return Object.freeze({
           ok: true,
-          summary: Object.freeze({ suites: 0, cases: 0, pass: 0, fail: 0, skip: 0, msTotal: 0, failures: Object.freeze([]) }),
+          totals: empty_totals(),
+          failures: Object.freeze([]),
+          durationMs: 0,
         });
       }
       const descriptors = selectedIds.map((id) => {
@@ -197,6 +200,7 @@ export function create_playwright_browser_executor(
       let pass = 0;
       let fail = 0;
       let skip = 0;
+      let error = 0;
       let artifactCount = 0;
       let executorStartedAt = 0;
       let journeyMs = 0;
@@ -403,6 +407,7 @@ export function create_playwright_browser_executor(
       if (!result.cancelled) {
         for (const { descriptor, suite } of descriptors) {
           if (terminalIds.has(descriptor.id)) continue;
+          terminalIds.add(descriptor.id);
           if (!suiteStarted.has(suite.id)) {
             suiteStarted.add(suite.id);
             emit({ t: "suite_begin", suite: suite.id, totalPlanned: suiteRemaining.get(suite.id) ?? 0 });
@@ -410,10 +415,10 @@ export function create_playwright_browser_executor(
           const reason = result.timedOut
             ? "[BROWSER_TIMEOUT] Playwright browser execution timed out."
             : `[BROWSER_INFRASTRUCTURE] Playwright exited before reporting this journey (exit ${result.exitCode ?? "none"}, signal ${result.signal ?? "none"}).`;
-          fail += 1;
+          error += 1;
           failures.push(Object.freeze({ suite: suite.id, caseId: descriptor.caseId, name: descriptor.title, err: reason, ms: 0 }));
           emit({ t: "case_begin", suite: suite.id, caseId: descriptor.caseId, name: descriptor.title });
-          emit({ t: "case_end", suite: suite.id, caseId: descriptor.caseId, name: descriptor.title, status: "fail", ms: 0, err: reason });
+          emit({ t: "case_end", suite: suite.id, caseId: descriptor.caseId, name: descriptor.title, status: "error", ms: 0, err: reason });
           const remaining = (suiteRemaining.get(suite.id) ?? 1) - 1;
           suiteRemaining.set(suite.id, remaining);
           if (remaining === 0) emit({ t: "suite_end", suite: suite.id, ms: performance.now() - startedAt });
@@ -445,17 +450,20 @@ export function create_playwright_browser_executor(
         forcedTerminations: metrics.forcedTerminations + (result.forceKilled ? 1 : 0),
       });
       return Object.freeze({
-        ok: !result.cancelled && fail === 0 && result.ok,
+        ok: !result.cancelled && fail === 0 && error === 0 && result.ok,
         ...(result.cancelled ? { cancelled: true as const } : {}),
-        summary: Object.freeze({
+        totals: Object.freeze({
           suites: new Set(descriptors.map(({ suite }) => suite.id)).size,
           cases: terminalIds.size,
           pass,
           fail,
           skip,
-          msTotal: wallMs,
-          failures: Object.freeze(failures),
+          unsupported: 0,
+          cancelled: 0,
+          error,
         }),
+        failures: Object.freeze(failures),
+        durationMs: wallMs,
       });
     },
     metrics: () => metrics,

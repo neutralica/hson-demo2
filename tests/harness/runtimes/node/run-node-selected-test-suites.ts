@@ -1,5 +1,6 @@
 import type { RunOptions, RunResult, TestEvent, TestSuite } from "../../core/test-contracts";
-import type { TestFailure, TestSummary } from "../../../../src/shared/testing/test-contracts";
+import type { TestFailure } from "../../../../src/shared/testing/test-contracts";
+import { empty_totals, TERMINAL_STATUSES } from "../../../../src/shared/testing/test-run-contract";
 import type { TestExecutorRegistry } from "../../core/test-executor";
 import {
   NODE_LIVEHOST_HOSTED_TEST_EXECUTOR,
@@ -37,17 +38,21 @@ export function plan_node_selected_test_suites(
 }
 
 function combine(results: readonly RunResult[], startedAt: number): RunResult {
-  const failures: readonly TestFailure[] = Object.freeze(results.flatMap((result) => result.summary.failures));
-  const summary: TestSummary = Object.freeze({
-    suites: results.reduce((total, result) => total + result.summary.suites, 0),
-    cases: results.reduce((total, result) => total + result.summary.cases, 0),
-    pass: results.reduce((total, result) => total + result.summary.pass, 0),
-    fail: results.reduce((total, result) => total + result.summary.fail, 0),
-    skip: results.reduce((total, result) => total + result.summary.skip, 0),
-    msTotal: performance.now() - startedAt,
+  const failures: readonly TestFailure[] = Object.freeze(results.flatMap((result) => result.failures));
+  const totals = { ...empty_totals() };
+  totals.suites = results.reduce((total, result) => total + result.totals.suites, 0);
+  totals.cases = results.reduce((total, result) => total + result.totals.cases, 0);
+  for (const status of TERMINAL_STATUSES) {
+    totals[status] = results.reduce((total, result) => total + result.totals[status], 0);
+  }
+  const cancelled = results.some((result) => result.cancelled === true);
+  return Object.freeze({
+    ok: !cancelled && totals.fail === 0 && totals.error === 0,
+    totals: Object.freeze(totals),
     failures,
+    durationMs: performance.now() - startedAt,
+    ...(cancelled ? { cancelled: true as const } : {}),
   });
-  return Object.freeze({ ok: summary.fail === 0, summary });
 }
 
 export async function run_node_selected_test_ids(

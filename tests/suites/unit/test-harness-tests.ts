@@ -62,7 +62,7 @@ export function unit_test_harness(): TestSuite {
           expect_true("expected case_end event", caseEnd !== undefined);
           expect_true("expected failed case_end status", caseEnd?.status === "fail");
           expect_true("expected RunResult.ok false", result.ok === false);
-          expect_true("expected RunResult summary fail count", result.summary.fail === 1);
+          expect_true("expected RunResult summary fail count", result.totals.fail === 1);
 
         },
       },
@@ -98,12 +98,12 @@ export function unit_test_harness(): TestSuite {
             recorder.ingest(event);
           }
 
-          const recorderSummary = recorder.summary();
-          expect_true("expected recorder downgrade fail count", recorderSummary.fail === 1);
-          expect_true("expected recorder downgrade pass count", recorderSummary.pass === 0);
+          const recorded = recorder.result();
+          expect_true("expected recorder downgrade fail count", recorded.totals.fail === 1);
+          expect_true("expected recorder downgrade pass count", recorded.totals.pass === 0);
           expect_true(
             "expected recorder failure list to include case",
-            recorderSummary.failures.some((failure) => (
+            recorded.failures.some((failure) => (
               failure.suite === nestedSuite &&
               failure.name === nestedCase
             )),
@@ -152,7 +152,7 @@ export function unit_test_harness(): TestSuite {
             },
           );
           await new Promise<void>((resolve) => setImmediate(resolve));
-          expect_true("elapsed-budget nested run passes", result.ok && result.summary.cases === total);
+          expect_true("elapsed-budget nested run passes", result.ok && result.totals.cases === total);
           expect_true("synthetic elapsed clock advances exactly once per case", syntheticNow === total * elapsedPerCase);
           expect_true(
             "a macrotask observes partial progress before terminal completion",

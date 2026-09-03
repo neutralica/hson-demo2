@@ -41,10 +41,14 @@ const result = await run_node_selected_test_ids(registry, selected.map((descript
 console.log(JSON.stringify({
   executor: registry.executor.id,
   selected: selected.length,
-  suites: result.summary.suites,
-  passed: result.summary.pass,
-  failed: result.summary.fail,
-  skipped: result.summary.skip,
+  suites: result.totals.suites,
+  passed: result.totals.pass,
+  failed: result.totals.fail,
+  skipped: result.totals.skip,
+  unsupported: result.totals.unsupported,
+  cancelled: result.totals.cancelled,
+  errors: result.totals.error,
+  durationMs: result.durationMs,
   events: events.length,
 }));
 if (!result.ok) process.exitCode = 1;

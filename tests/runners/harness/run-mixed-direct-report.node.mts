@@ -32,7 +32,7 @@ try {
   assert.equal(externalSuite.category, external.category);
   assert.equal(browserSuite.category, browser.subject);
   assert.equal(report.totals.cases, report.suites.reduce((total, suite) => total + suite.cases.length, 0));
-  assert.equal(result.summary.cases, report.totals.cases);
+  assert.deepEqual(result.totals, report.totals, "runner totals are the reporter's observed six-state totals");
   assert.equal(browserExecutor.metrics().activeProcesses, 0);
 } finally {
   await browserExecutor.dispose();

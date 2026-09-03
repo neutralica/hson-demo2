@@ -9,12 +9,12 @@ const result = await with_hosted_dom_runtime(() => run_test_suites(
   { yieldEveryCases: 0, yieldBetweenSuites: false },
 ));
 
-if (!result.ok || result.summary.suites !== 1 || result.summary.cases !== suite.cases.length || result.summary.pass !== suite.cases.length) {
-  throw new Error(`LiveTree lifecycle foundations failed: ${JSON.stringify(result.summary)}`);
+if (!result.ok || result.totals.suites !== 1 || result.totals.cases !== suite.cases.length || result.totals.pass !== suite.cases.length) {
+  throw new Error(`LiveTree lifecycle foundations failed: ${JSON.stringify(result)}`);
 }
 
 console.log(JSON.stringify({
-  suites: result.summary.suites,
-  cases: result.summary.cases,
-  pass: result.summary.pass,
+  suites: result.totals.suites,
+  cases: result.totals.cases,
+  pass: result.totals.pass,
 }));

@@ -75,6 +75,7 @@
     "test:external-library-all-node": "node --import=tsx tests/runners/harness/run-external-library-launchers.node.mts --all",
     "test:external-launcher-protocol-node": "node --import=tsx tests/runners/harness/run-external-launcher-protocol.node.mts",
     "test:runner-truthfulness-node": "node --import=tsx tests/runners/harness/run-test-runner-truthfulness.node.mts",
+    "test:cli-test-result": "node --import=tsx tests/runners/harness/run-cli-test-result.node.mts",
     "test:splash-lifecycle-node": "node --import=tsx tests/runners/app/run-splash-lifecycle.node.mts",
     "test:direct-all-performance-node": "node --expose-gc --import=tsx tests/runners/harness/run-direct-all-performance.node.mts",
     "test:node-process-supervisor": "node --import=tsx tests/runners/harness/run-node-process-supervisor.node.mts",

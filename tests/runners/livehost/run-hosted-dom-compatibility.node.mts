@@ -34,12 +34,12 @@ try {
     }));
     results.push({
       suite: suite.suite,
-      cases: result.summary.cases,
-      pass: result.summary.pass,
-      fail: result.summary.fail,
-      ...(result.summary.failures[0] === undefined
+      cases: result.totals.cases,
+      pass: result.totals.pass,
+      fail: result.totals.fail,
+      ...(result.failures[0] === undefined
         ? {}
-        : { failure: `${result.summary.failures[0].name}: ${result.summary.failures[0].err}`.slice(0, 300) }),
+        : { failure: `${result.failures[0].name}: ${result.failures[0].err}`.slice(0, 300) }),
     });
   }
 } finally {

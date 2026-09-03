@@ -73,14 +73,14 @@ async function test_node_replay_runner(): Promise<void> {
   }
 
   expect_node_replay(result.ok === true, "RunResult.ok must be true");
-  expect_node_replay(result.summary.fail === 0, "summary.fail must be zero");
+  expect_node_replay(result.totals.fail === 0, "totals.fail must be zero");
   expect_node_replay(
-    result.summary.cases === suiteBegin.totalPlanned,
-    "summary.cases must equal the replay suite case count",
+    result.totals.cases === suiteBegin.totalPlanned,
+    "totals.cases must equal the replay suite case count",
   );
   expect_node_replay(
-    result.summary.cases === caseBegins.size,
-    "summary.cases must equal emitted case_begin count",
+    result.totals.cases === caseBegins.size,
+    "totals.cases must equal emitted case_begin count",
   );
 }
 

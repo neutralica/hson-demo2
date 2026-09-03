@@ -7,5 +7,5 @@ const result = await run_test_suites([external_process_cancellation_suite()], (e
   }
 }, { yieldEveryCases: 1 });
 
-if (!result.ok) throw new Error(`External process cancellation failed ${result.summary.fail}/${result.summary.cases} cases.`);
-console.log(JSON.stringify({ suites: result.summary.suites, checks: result.summary.cases, pass: result.summary.pass }));
+if (!result.ok) throw new Error(`External process cancellation failed ${result.totals.fail}/${result.totals.cases} cases.`);
+console.log(JSON.stringify({ suites: result.totals.suites, checks: result.totals.cases, pass: result.totals.pass }));

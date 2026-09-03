@@ -1,5 +1,6 @@
 import type { TestEvent } from "../../core/test-contracts";
-import { reduce_status, totals_for, type ArtifactReference, type CaseReport, type Diagnostic, type SubprocessEvidence, type SuiteReport, type TerminalStatus } from "./run-report-contract";
+import { reduce_status, type TerminalStatus } from "../../../../src/shared/testing/test-run-contract";
+import { totals_for, type ArtifactReference, type CaseReport, type Diagnostic, type SubprocessEvidence, type SuiteReport } from "./run-report-contract";
 import type { LocalRedactor } from "./run-report-redaction";
 type MutableCase = Omit<CaseReport, "status" | "endedAt" | "durationMs" | "diagnostics" | "artifacts"> & { status?: TerminalStatus; endedAt?: string; durationMs?: number; diagnostics: Diagnostic[]; artifacts: ArtifactReference[] };
 type MutableSuite = { id: string; title: string; category: string; startedAt: string; endedAt?: string; diagnostics: Diagnostic[]; artifacts: ArtifactReference[]; cases: Map<string, MutableCase>; subprocess?: SubprocessEvidence; status?: TerminalStatus };

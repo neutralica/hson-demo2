@@ -1,7 +1,8 @@
 import { copyFile, lstat, mkdir, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { createHash } from "node:crypto";
-import type { ArtifactReference, CaseReport, ReportTotals, RunReport, SuiteReport, TerminalStatus } from "./run-report-contract";
+import type { ReportTotals, TerminalStatus } from "../../../../src/shared/testing/test-run-contract";
+import type { ArtifactReference, CaseReport, RunReport, SuiteReport } from "./run-report-contract";
 import type { LocalRedactor } from "./run-report-redaction";
 import { validate_run_site } from "./run-report-validator";
 const allowed = new Set(["text/plain", "application/json", "image/png", "image/jpeg", "image/webp"]);

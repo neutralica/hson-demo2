@@ -29,7 +29,7 @@ const result = await with_hosted_dom_runtime(() => run_test_suites(
   () => undefined,
   { yieldEveryCases: 0, yieldBetweenSuites: false },
 ));
-if (!result.ok || result.summary.cases !== cases) {
-  throw new Error(`Generated JSON diagnostic failed ${result.summary.fail}/${result.summary.cases} cases.`);
+if (!result.ok || result.totals.cases !== cases) {
+  throw new Error(`Generated JSON diagnostic failed ${result.totals.fail}/${result.totals.cases} cases.`);
 }
-console.log(JSON.stringify({ seed, cases, pass: result.summary.pass }));
+console.log(JSON.stringify({ seed, cases, pass: result.totals.pass }));

@@ -12,7 +12,8 @@ export type {
   TestEvent,
   TestSuite,
 } from "./core/test-contracts";
-export type { TestDescriptor, TestSummary } from "../../src/shared/testing/test-contracts";
+export type { TestDescriptor } from "../../src/shared/testing/test-contracts";
+export type { ReportTotals, TerminalStatus } from "../../src/shared/testing/test-run-contract";
 export type { TestSelection } from "../../src/shared/testing/test-selection";
 export type { TestExecutorDiscovery } from "../../src/shared/testing/test-discovery-contract";
 export type { TestExecutorRegistry } from "./core/test-executor";

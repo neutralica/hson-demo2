@@ -107,14 +107,4 @@ export type TestFailure = Readonly<{
   meta?: CaseMeta;
 }>;
 
-export type TestSummary = Readonly<{
-  suites: number;
-  cases: number;
-  pass: number;
-  fail: number;
-  skip: number;
-  msTotal: number;
-  failures: readonly TestFailure[];
-}>;
-
 export type UiLevel = "quiet" | "normal";

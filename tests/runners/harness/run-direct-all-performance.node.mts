@@ -44,8 +44,8 @@ try {
     { externalScheduling: { kind: "fixed", concurrency: 2 } },
   );
   const elapsedMs = performance.now() - startedAt;
-  if (!result.ok) originalConsole.error(JSON.stringify({ failures: result.summary.failures }, null, 2));
-  assert.equal(result.ok, true, `${result.summary.failures.length} direct All failures`);
+  if (!result.ok) originalConsole.error(JSON.stringify({ failures: result.failures }, null, 2));
+  assert.equal(result.ok, true, `${result.failures.length} direct All failures`);
   globalThis.gc?.();
   await new Promise<void>((resolve) => setImmediate(resolve));
   globalThis.gc?.();

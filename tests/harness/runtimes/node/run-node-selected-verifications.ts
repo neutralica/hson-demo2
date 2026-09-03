@@ -1,5 +1,6 @@
 import type { RunOptions, RunResult, TestEvent } from "../../core/test-contracts";
 import type { TestFailure } from "../../../../src/shared/testing/test-contracts";
+import { empty_totals, TERMINAL_STATUSES } from "../../../../src/shared/testing/test-run-contract";
 import type { TestExecutorRegistry } from "../../core/test-executor";
 import type { TestCatalog } from "../../../../src/shared/testing/test-catalog-contract";
 import { is_test_case_id } from "../../../../src/shared/testing/test-identity";
@@ -288,15 +289,9 @@ export async function run_node_verification_phases<A, B>(
 function empty_result(): RunResult {
   return Object.freeze({
     ok: true,
-    summary: Object.freeze({
-      suites: 0,
-      cases: 0,
-      pass: 0,
-      fail: 0,
-      skip: 0,
-      msTotal: 0,
-      failures: Object.freeze([]),
-    }),
+    totals: empty_totals(),
+    failures: Object.freeze([]),
+    durationMs: 0,
   });
 }
 
@@ -406,6 +401,9 @@ export async function run_node_selected_verifications(
   let externalPass = 0;
   let externalFail = 0;
   let externalSkip = 0;
+  let externalUnsupported = 0;
+  let externalCancelled = 0;
+  let externalError = 0;
   let externalCases = 0;
   let externalSuiteErrors = 0;
   let externalCompleted = 0;
@@ -467,8 +465,11 @@ export async function run_node_selected_verifications(
               else if (event.t === "case_end") {
                 externalCases += 1;
                 if (event.status === "pass") externalPass += 1;
-                else if (event.status === "fail" || event.status === "error") externalFail += 1;
-                else if (event.status === "skip" || event.status === "unsupported") externalSkip += 1;
+                else if (event.status === "fail") externalFail += 1;
+                else if (event.status === "skip") externalSkip += 1;
+                else if (event.status === "unsupported") externalUnsupported += 1;
+                else if (event.status === "cancelled") externalCancelled += 1;
+                else externalError += 1;
                 if (event.status === "cancelled") onEvent(Object.freeze({ t: "case_cancelled", suite: target.id, caseId: event.caseId, name: event.name, ms: 0 }));
                 else onEvent(Object.freeze({ t: "case_end", suite: target.id, caseId: event.caseId, name: event.name, status: event.status, ms: 0 }));
               }
@@ -516,18 +517,26 @@ export async function run_node_selected_verifications(
   });
   if (configuration.recordMetrics === undefined) latestMetrics = completedMetrics;
   else configuration.recordMetrics(completedMetrics);
-  const fail = canonical.summary.fail + externalFail + browserResult.summary.fail;
+  const totals = { ...empty_totals() };
+  totals.suites = canonical.totals.suites + externalCompleted + browserResult.totals.suites;
+  totals.cases = canonical.totals.cases + externalCases + browserResult.totals.cases;
+  const externalTotals = Object.freeze({
+    pass: externalPass,
+    fail: externalFail,
+    skip: externalSkip,
+    unsupported: externalUnsupported,
+    cancelled: externalCancelled,
+    error: externalError,
+  });
+  for (const status of TERMINAL_STATUSES) {
+    totals[status] = canonical.totals[status] + externalTotals[status] + browserResult.totals[status];
+  }
+  const fail = totals.fail;
   return Object.freeze({
-    ok: options.signal?.aborted !== true && fail === 0 && externalSuiteErrors === 0,
+    ok: options.signal?.aborted !== true && fail === 0 && totals.error === 0 && externalSuiteErrors === 0,
     ...(options.signal?.aborted ? { cancelled: true as const } : {}),
-    summary: Object.freeze({
-      suites: canonical.summary.suites + externalCompleted + browserResult.summary.suites,
-      cases: canonical.summary.cases + externalCases + browserResult.summary.cases,
-      pass: canonical.summary.pass + externalPass + browserResult.summary.pass,
-      fail,
-      skip: canonical.summary.skip + externalSkip + browserResult.summary.skip,
-      msTotal: overlappedTotalMs,
-      failures: Object.freeze([...canonical.summary.failures, ...externalFailures, ...browserResult.summary.failures]),
-    }),
+    totals: Object.freeze(totals),
+    failures: Object.freeze([...canonical.failures, ...externalFailures, ...browserResult.failures]),
+    durationMs: overlappedTotalMs,
   });
 }

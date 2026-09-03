@@ -5,9 +5,10 @@ import type {
   CaseMeta,
   TestDescriptorMetadata,
   TestDescriptorMetadataOverride,
-  TestSummary,
+  TestFailure,
   TestSubject,
 } from "../../../src/shared/testing/test-contracts";
+import type { ReportTotals } from "../../../src/shared/testing/test-run-contract";
 
 export type Named<T> = Readonly<{ name: string; value: T; }>;
 
@@ -139,7 +140,9 @@ export type RunOptions = Readonly<{
 
 export type RunResult = Readonly<{
   ok: boolean;
-  summary: TestSummary;
+  totals: ReportTotals;
+  failures: readonly TestFailure[];
+  durationMs: number;
   /** Internal executor truth: semantic completion did not win the authority race. */
   cancelled?: true;
 }>;
