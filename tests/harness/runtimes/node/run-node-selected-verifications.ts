@@ -418,6 +418,8 @@ export async function run_node_selected_verifications(
           increaseAfter: canonicalTerminal,
         });
 
+  if (browserIds.length > 0) await configuration.browserExecutor!.prepare();
+
   const [canonical, external] = await run_node_verification_phases(
     async () => {
       const startedAt = performance.now();

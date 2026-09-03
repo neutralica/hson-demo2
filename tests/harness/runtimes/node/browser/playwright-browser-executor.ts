@@ -1,6 +1,7 @@
 import { createConnection, createServer } from "node:net";
-import { rm } from "node:fs/promises";
+import { cp, mkdir, mkdtemp, realpath, rm, stat } from "node:fs/promises";
 import { delimiter, dirname, resolve } from "node:path";
+import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 import type { TestCatalog } from "../../../../../src/shared/testing/test-catalog-contract";
 import type { TestExecutorDescriptor } from "../../../../../src/shared/testing/test-executor-contract";
@@ -37,6 +38,7 @@ const PLAYWRIGHT_CASE_TIMEOUT_MS = 30_000;
 // Playwright may spend five seconds in its graceful web-server handoff, after
 // which the hosted server retains its own five-second bounded shutdown.
 const PLAYWRIGHT_SERVER_SETTLEMENT_BUDGET_MS = 10_000;
+const HSON_LIVE_BROWSER_RESOURCE = "dist/api/transform/parsers/parse-json.js";
 
 type BrowserReporterEvent = Readonly<Record<string, unknown> & { t: string }>;
 
@@ -65,6 +67,7 @@ export type BrowserExecutorMetrics = Readonly<{
 }>;
 
 export type PlaywrightBrowserExecutor = Readonly<{
+  prepare(): Promise<Readonly<{ packageRoot: string; requiredResource: string }>>;
   run(
     catalog: TestCatalog,
     selectedIds: readonly string[],
@@ -210,7 +213,31 @@ export function create_playwright_browser_executor(
 ): PlaywrightBrowserExecutor {
   let metrics = empty_metrics();
   const retainedArtifactRoots = new Set<string>();
+  let preparedDependency: Promise<Readonly<{ packageRoot: string; requiredResource: string }>> | undefined;
+  const prepare = async (): Promise<Readonly<{ packageRoot: string; requiredResource: string }>> => {
+    const sourceRoot = await realpath(resolve(PLAYWRIGHT_REPOSITORY_ROOT, "node_modules/hson-live"));
+    const ownedRoot = await mkdtemp(resolve(tmpdir(), "hson-playwright-dependency-"));
+    retainedArtifactRoots.add(ownedRoot);
+    const packageRoot = resolve(ownedRoot, "hson-live");
+    try {
+      await mkdir(packageRoot);
+      await cp(resolve(sourceRoot, "package.json"), resolve(packageRoot, "package.json"));
+      await cp(resolve(sourceRoot, "dist"), resolve(packageRoot, "dist"), { recursive: true });
+      const requiredResource = resolve(packageRoot, HSON_LIVE_BROWSER_RESOURCE);
+      if (!(await stat(requiredResource)).isFile()) throw new Error("PLAYWRIGHT_HSON_LIVE_RESOURCE_MISSING");
+      metrics = Object.freeze({ ...metrics, retainedArtifactRoots: retainedArtifactRoots.size });
+      return Object.freeze({ packageRoot, requiredResource });
+    } catch (error) {
+      retainedArtifactRoots.delete(ownedRoot);
+      await rm(ownedRoot, { recursive: true, force: true });
+      throw error;
+    }
+  };
   return Object.freeze({
+    prepare() {
+      preparedDependency ??= prepare();
+      return preparedDependency;
+    },
     async run(catalog, selectedIds, onEvent = () => undefined, options = {}) {
       if (selectedIds.length === 0) {
         return Object.freeze({
@@ -406,6 +433,8 @@ export function create_playwright_browser_executor(
         }
       };
       const [hostedPort, appPort] = await Promise.all([reserve_port(), reserve_port()]);
+      preparedDependency ??= prepare();
+      const hsonLiveDependency = await preparedDependency;
       const outputToken = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
       const outputRoot = resolve(PLAYWRIGHT_REPOSITORY_ROOT, "test-results", "livehost-browser", outputToken);
       retainedArtifactRoots.add(outputRoot);
@@ -426,6 +455,7 @@ export function create_playwright_browser_executor(
           args: executionArguments,
           environment: Object.freeze({
             LIVEHOST_PLAYWRIGHT: "1",
+            HSON_LIVE_PREPARED_PACKAGE_ROOT: hsonLiveDependency.packageRoot,
             HOSTED_TEST_PORT: String(hostedPort),
             PLAYWRIGHT_APP_PORT: String(appPort),
             PLAYWRIGHT_OUTPUT_DIR: outputRoot,
@@ -546,6 +576,7 @@ export function create_playwright_browser_executor(
     async dispose() {
       await Promise.all([...retainedArtifactRoots].map((root) => rm(root, { recursive: true, force: true })));
       retainedArtifactRoots.clear();
+      preparedDependency = undefined;
       metrics = Object.freeze({ ...metrics, retainedArtifactRoots: 0 });
     },
   });
