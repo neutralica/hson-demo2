@@ -1,8 +1,10 @@
 import { strict as assert } from "node:assert";
-import { resolve_external_library_launchers } from "../../harness/runtimes/node/external-library-launchers";
 import {
-  node_selected_verification_metrics,
-  run_node_selected_verifications,
+  create_external_library_launcher_service,
+  resolve_external_library_launchers,
+} from "../../harness/runtimes/node/external-library-launchers";
+import {
+  create_node_selected_verification_service,
 } from "../../harness/runtimes/node/run-node-selected-verifications";
 import { make_local_node_locus_executor_registry } from "../../harness/runtimes/node/livehost-node-executor";
 import { make_test_executor_discovery } from "../../harness/core/test-discovery";
@@ -11,6 +13,8 @@ const DIRECT_RUN_OPTIONS = Object.freeze({ yieldAfterMs: 8, yieldBetweenSuites: 
 
 const registry = make_local_node_locus_executor_registry();
 const availability = await resolve_external_library_launchers();
+const launcherService = create_external_library_launcher_service();
+const verificationService = create_node_selected_verification_service(launcherService);
 const discovery = make_test_executor_discovery(registry, availability.targets);
 const selectedIds = Object.freeze([
   ...registry.catalog.tests.map((test) => test.id),
@@ -34,7 +38,7 @@ console.warn = () => undefined;
 console.error = () => undefined;
 const startedAt = performance.now();
 try {
-  const result = await run_node_selected_verifications(
+  const result = await verificationService.run(
     registry,
     discovery.catalog,
     availability,
@@ -63,9 +67,10 @@ try {
       retainedRss: retainedMemory.rss,
       retainedHeapUsed: retainedMemory.heapUsed,
     },
-    ...node_selected_verification_metrics(),
+    ...verificationService.metrics(),
   }));
 } finally {
+  launcherService.terminate();
   clearInterval(memorySampler);
   console.log = originalConsole.log;
   console.warn = originalConsole.warn;

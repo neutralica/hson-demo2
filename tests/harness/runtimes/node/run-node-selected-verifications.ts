@@ -5,8 +5,6 @@ import type { TestExecutorRegistry } from "../../core/test-executor";
 import type { TestCatalog } from "../../../../src/shared/testing/test-catalog-contract";
 import { is_test_case_id } from "../../../../src/shared/testing/test-identity";
 import {
-  external_library_launcher_termination_generation,
-  run_external_library_launcher,
   resolve_external_launcher_binding,
   type ExternalLibraryLauncherService,
   type ExternalLibraryLauncherAvailability,
@@ -77,14 +75,6 @@ const EMPTY_NODE_SELECTED_VERIFICATION_METRICS: NodeSelectedVerificationMetrics 
   maximumOrdinaryLauncherConcurrency: 0,
   maximumSpecialLauncherConcurrency: 0,
 });
-// Direct CLI verification exposes its most recent process result through the
-// compatibility accessor. Concurrent callers use an instance recorder.
-let latestMetrics = EMPTY_NODE_SELECTED_VERIFICATION_METRICS;
-
-export function node_selected_verification_metrics(): NodeSelectedVerificationMetrics {
-  return latestMetrics;
-}
-
 export function create_node_selected_verification_service(
   launcherService: Pick<ExternalLibraryLauncherService, "run" | "runCommand" | "terminationGeneration">,
   browserExecutor?: PlaywrightBrowserExecutor,
@@ -394,6 +384,9 @@ export async function run_node_selected_verifications(
   const externalTargets = externalDescriptors
     .filter((descriptor) => descriptor.provenance === "hson-live")
     .map((descriptor) => resolve_external_launcher_binding(availability, descriptor));
+  if (externalTargets.length > 0 && configuration.launcherService === undefined) {
+    throw new Error("External verification requires an owned launcher service.");
+  }
   for (const target of externalTargets) onEvent(external_state_event(target, "queued"));
 
   let canonicalPhaseMs = 0;
@@ -409,8 +402,7 @@ export async function run_node_selected_verifications(
   let externalCompleted = 0;
   let browserResult = empty_result();
   const externalFailures: TestFailure[] = [];
-  const terminationGeneration = configuration.launcherService?.terminationGeneration()
-    ?? external_library_launcher_termination_generation();
+  const terminationGeneration = configuration.launcherService?.terminationGeneration() ?? 0;
   let releaseCanonicalTerminal = (): void => undefined;
   const canonicalTerminal = new Promise<void>((resolve) => {
     releaseCanonicalTerminal = resolve;
@@ -444,7 +436,7 @@ export async function run_node_selected_verifications(
         externalTargets,
         async (target) => {
           try {
-            return await (configuration.launcherService?.run ?? run_external_library_launcher)(availability, target.id, {
+            return await configuration.launcherService!.run(availability, target.id, {
               terminationGeneration,
               ...(options.signal === undefined ? {} : { signal: options.signal }),
             });
@@ -515,8 +507,7 @@ export async function run_node_selected_verifications(
     maximumOrdinaryLauncherConcurrency: external.maximumOrdinaryConcurrent,
     maximumSpecialLauncherConcurrency: external.maximumSpecialConcurrent,
   });
-  if (configuration.recordMetrics === undefined) latestMetrics = completedMetrics;
-  else configuration.recordMetrics(completedMetrics);
+  configuration.recordMetrics?.(completedMetrics);
   const totals = { ...empty_totals() };
   totals.suites = canonical.totals.suites + externalCompleted + browserResult.totals.suites;
   totals.cases = canonical.totals.cases + externalCases + browserResult.totals.cases;

@@ -26,6 +26,10 @@ progressive static report. Local reporting does not require LiveHost. The
 browser Tests UI reads only a selected static report and must never discover,
 run, cancel, or recover tests.
 
+Programmatic totals use the reporter's exact pass, fail, skip, unsupported,
+cancelled, and error buckets. CLI summaries are presentation-only projections
+of those observed totals; do not introduce another lifecycle or summary model.
+
 Deployment is separate from test execution. Deployment must not run tests or
 update submodules. Cloudflare code is production compatibility behavior for
 `/session` and `/towl`, not a test executor.

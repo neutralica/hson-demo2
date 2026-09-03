@@ -42,6 +42,10 @@ and progressively materializes a static site beside it. Terminal reports are
 retained locally; incomplete owned directories are bounded and pruned by the
 report store. Report generation requires no LiveHost service.
 
+Runner results and reports share the same exact six-state totals. Command-line
+formatting may project those totals for people, but it is not a separate result
+contract or lifecycle authority.
+
 ## Public Tests
 
 The shipped Tests explorer is frozen and read-only. It fetches a selected

@@ -636,35 +636,3 @@ export function create_external_library_launcher_service(): ExternalLibraryLaunc
     },
   });
 }
-
-// Direct CLI verification intentionally shares one process-wide service. Node
-// hosted applications create their own service so shutdown cannot cancel peers.
-const defaultExternalLibraryLauncherService = create_external_library_launcher_service();
-
-export function run_external_library_launcher(
-  availability: ExternalLibraryLauncherAvailability,
-  targetId: string,
-  options: ExternalLibraryLauncherRunOptions = {},
-): Promise<ExternalLibraryLauncherResult> {
-  return defaultExternalLibraryLauncherService.run(availability, targetId, options);
-}
-
-export function terminate_external_library_launchers(): void {
-  defaultExternalLibraryLauncherService.terminate();
-}
-
-export function external_library_launcher_termination_generation(): number {
-  return defaultExternalLibraryLauncherService.terminationGeneration();
-}
-
-export function reset_external_library_launcher_metrics(): void {
-  defaultExternalLibraryLauncherService.resetMetrics();
-}
-
-export function external_library_launcher_metrics(): Readonly<{
-  activeChildren: number;
-  maximumObservedConcurrentChildren: number;
-  directLauncherStarts: number;
-}> {
-  return defaultExternalLibraryLauncherService.metrics();
-}
