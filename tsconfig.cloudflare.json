@@ -17,8 +17,7 @@
   },
   "include": [
     "src/vite-env.d.ts",
-    "src/server/cloudflare/**/*.ts",
-    "tests/harness/runtimes/dom/jsdom.types.d.ts"
+    "src/server/cloudflare/**/*.ts"
   ],
   "exclude": [
     "dist",

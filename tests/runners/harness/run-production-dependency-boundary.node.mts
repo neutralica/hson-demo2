@@ -10,7 +10,7 @@ const testsRoot = resolve(root, "tests");
 async function source_files(directory: string): Promise<readonly string[]> {
   const found = await Promise.all((await readdir(directory, { withFileTypes: true })).map(async (entry) => {
     const path = resolve(directory, entry.name);
-    return entry.isDirectory() ? source_files(path) : /\.(?:ts|mts)$/.test(entry.name) ? [path] : [];
+    return entry.isDirectory() ? source_files(path) : /\.(?:[cm]?[jt]sx?)$/.test(entry.name) ? [path] : [];
   }));
   return found.flat().sort();
 }
@@ -22,8 +22,15 @@ async function exists(path: string): Promise<boolean> {
 async function resolve_import(from: string, specifier: string): Promise<string | undefined> {
   if (!specifier.startsWith(".")) return undefined;
   const candidate = resolve(dirname(from), specifier.replace(/[?#].*$/, ""));
-  const sourceCandidate = candidate.replace(/\.js$/, "");
-  for (const path of [candidate, `${candidate}.ts`, `${candidate}.mts`, `${sourceCandidate}.ts`, `${sourceCandidate}.mts`, resolve(candidate, "index.ts")]) if (await exists(path)) return path;
+  const sourceCandidate = candidate.replace(/\.(?:[cm]?js)$/, "");
+  const extensions = [".ts", ".tsx", ".mts", ".cts", ".js", ".jsx", ".mjs", ".cjs"] as const;
+  const candidates = [
+    candidate,
+    ...extensions.map((extension) => `${candidate}${extension}`),
+    ...extensions.map((extension) => `${sourceCandidate}${extension}`),
+    ...extensions.map((extension) => resolve(candidate, `index${extension}`)),
+  ];
+  for (const path of candidates) if (await exists(path)) return path;
   if (candidate.startsWith(`${testsRoot}${sep}`)) throw new Error(`PRODUCTION_IMPORT_UNRESOLVED:${relative(root, from)}:${specifier}`);
   return undefined;
 }
@@ -54,6 +61,28 @@ for (const file of productionFiles) {
   }
 }
 assert.deepEqual([...observed].sort(), [], "production source must not import repository-root tests/");
+
+const cloudflareConfig = ts.parseConfigFileTextToJson(
+  "tsconfig.cloudflare.json",
+  await readFile(resolve(root, "tsconfig.cloudflare.json"), "utf8"),
+);
+assert.equal(cloudflareConfig.error, undefined, "Cloudflare TypeScript configuration must parse");
+const cloudflareIncludes = cloudflareConfig.config?.include;
+assert.ok(Array.isArray(cloudflareIncludes), "Cloudflare TypeScript configuration must declare its source boundary");
+assert.equal(
+  cloudflareIncludes.some((entry: unknown) => typeof entry === "string" && /(^|\/)tests(\/|$)/.test(entry)),
+  false,
+  "Cloudflare production checks must not include repository-root tests/",
+);
+
+const packageManifest = JSON.parse(await readFile(resolve(root, "package.json"), "utf8")) as {
+  scripts?: Readonly<Record<string, unknown>>;
+};
+for (const scriptName of ["build", "build:node-production", "check:cloudflare"] as const) {
+  const command = packageManifest.scripts?.[scriptName];
+  assert.equal(typeof command, "string", `${scriptName} must remain a declared production command`);
+  assert.equal(/(^|[\s'\"])(?:\.\/)?tests(?:\/|[\s'\"]|$)/.test(command), false, `${scriptName} must not resolve through tests/`);
+}
 
 const serverFiles = productionFiles.filter((file) => file.startsWith(`${resolve(productionRoot, "server")}${sep}`));
 const serverImportSpecifiers = (await Promise.all(serverFiles.map(async (file) =>
@@ -97,6 +126,8 @@ for (const forbidden of ["TestRunner", "child_process", "playwright", "new WebSo
 console.log(JSON.stringify({
   suite: "production-dependency-boundary",
   productionTestImports: [...observed].sort(),
+  productionSourceFiles: productionFiles.length,
+  cloudflareIncludes,
   productionServerModules: serverFiles.length,
   directReportModules: directReportFiles.length,
   frozenPanelModules: frozenPanelFiles.length,
