@@ -49,7 +49,8 @@ export async function load_worker_deployment_target(options = {}) {
   if (typeof wrangler.name !== "string" || wrangler.name.length === 0 || typeof wrangler.main !== "string" || wrangler.main.length === 0) {
     throw new Error("Wrangler configuration must identify the Worker name and entrypoint.");
   }
-  const origin = public_origin(environment[descriptor.publicWebSocketOriginEnvironmentVariable], descriptor.publicWebSocketOriginEnvironmentVariable);
+  const configuredOrigin = environment[descriptor.publicWebSocketOriginEnvironmentVariable] ?? descriptor.workerWsOrigin;
+  const origin = public_origin(configuredOrigin, descriptor.publicWebSocketOriginEnvironmentVariable);
   return Object.freeze({
     name: wrangler.name,
     entrypoint: wrangler.main,

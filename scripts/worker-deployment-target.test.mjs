@@ -14,15 +14,16 @@ async function fixture(overrides = {}) {
     wranglerConfig: "wrangler.jsonc",
     wranglerEnvironment: null,
     publicWebSocketOriginEnvironmentVariable: "HSON_TOWL_WORKER_WS_ORIGIN",
+    workerWsOrigin: "wss://worker.example",
     productionStaticOrigins: ["https://app.example"],
     ...overrides,
   }));
   return repositoryRoot;
 }
 
-test("target identity is derived from Wrangler while production origin is explicit", async () => {
+test("target identity is derived from Wrangler while production origin defaults from tracked metadata", async () => {
   const repositoryRoot = await fixture();
-  const target = await load_worker_deployment_target({ repositoryRoot, environment: { HSON_TOWL_WORKER_WS_ORIGIN: "wss://worker.example" } });
+  const target = await load_worker_deployment_target({ repositoryRoot, environment: {} });
   assert.deepEqual(target, {
     name: "fixture-worker",
     entrypoint: "src/worker.ts",
@@ -34,10 +35,16 @@ test("target identity is derived from Wrangler while production origin is explic
   });
 });
 
-test("missing, insecure, or routed production origins fail closed", async () => {
+test("an explicit environment origin overrides the tracked production origin", async () => {
   const repositoryRoot = await fixture();
-  for (const value of [undefined, "ws://worker.example", "wss://worker.example/towl", "wss://worker.example?target=other"]) {
-    await assert.rejects(load_worker_deployment_target({ repositoryRoot, environment: value === undefined ? {} : { HSON_TOWL_WORKER_WS_ORIGIN: value } }), /HSON_TOWL_WORKER_WS_ORIGIN/);
+  const target = await load_worker_deployment_target({ repositoryRoot, environment: { HSON_TOWL_WORKER_WS_ORIGIN: "wss://override.example" } });
+  assert.equal(target.publicWebSocketOrigin, "wss://override.example");
+});
+
+test("missing, insecure, credentialed, or routed production origins fail closed", async () => {
+  for (const value of [undefined, "ws://worker.example", "wss://user@worker.example", "wss://worker.example/towl", "wss://worker.example?target=other", "wss://worker.example#other"]) {
+    const repositoryRoot = await fixture({ workerWsOrigin: value });
+    await assert.rejects(load_worker_deployment_target({ repositoryRoot, environment: {} }), /HSON_TOWL_WORKER_WS_ORIGIN/);
   }
 });
 

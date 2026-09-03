@@ -3,6 +3,7 @@
   "wranglerConfig": "wrangler.jsonc",
   "wranglerEnvironment": null,
   "publicWebSocketOriginEnvironmentVariable": "HSON_TOWL_WORKER_WS_ORIGIN",
+  "workerWsOrigin": "wss://hson-demo2-hosted-tests.hansonpw.workers.dev",
   "productionStaticOrigins": [
     "https://hson.terminalgothic.com",
     "https://hson-deploy.pages.dev",
