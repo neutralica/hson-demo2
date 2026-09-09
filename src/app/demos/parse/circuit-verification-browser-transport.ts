@@ -1,11 +1,12 @@
 import {
   create_browser_locus_socket,
+  decode_locus_server_message,
   type BrowserLocusSocket,
   type BrowserWebSocketConstructor,
+  type LocusDisposer,
 } from "hson-live/locus";
 import { create_echo } from "hson-live";
 import type { Echo } from "hson-live/echo";
-import type { LiveMap } from "hson-live/types";
 import {
   CIRCUIT_VERIFICATION_ACTION,
   CIRCUIT_VERIFICATION_HOST_ID,
@@ -84,10 +85,26 @@ export function create_browser_circuit_verification_transport(
 ): ParsingVerificationTransport {
   let disposed = false;
   let transport: BrowserLocusSocket | undefined;
-  let client: Echo<LiveMap<undefined>, CircuitVerificationActions> | undefined;
-  let opening: Promise<Echo<LiveMap<undefined>, CircuitVerificationActions>> | undefined;
+  let client: Echo<undefined, CircuitVerificationActions> | undefined;
+  let opening: Promise<Echo<undefined, CircuitVerificationActions>> | undefined;
+  let stopProgressEvents: LocusDisposer | undefined;
+  const progressListeners = new Map<string, Map<number, (progress: CircuitVerificationProgress) => void>>();
 
-  async function open(): Promise<Echo<LiveMap<undefined>, CircuitVerificationActions>> {
+  function listen_for_progress(
+    request: CircuitVerificationRequest,
+    listener: (progress: CircuitVerificationProgress) => void,
+  ): LocusDisposer {
+    const revisions = progressListeners.get(request.panelId) ?? new Map();
+    revisions.set(request.inputRevision, listener);
+    progressListeners.set(request.panelId, revisions);
+    return () => {
+      if (revisions.get(request.inputRevision) !== listener) return;
+      revisions.delete(request.inputRevision);
+      if (revisions.size === 0) progressListeners.delete(request.panelId);
+    };
+  }
+
+  async function open(): Promise<Echo<undefined, CircuitVerificationActions>> {
     if (disposed) throw new BrowserCircuitVerificationTransportError(
       "CIRCUIT_VERIFICATION_TRANSPORT_DISPOSED",
       "Parsing verification transport is disposed.",
@@ -102,25 +119,43 @@ export function create_browser_circuit_verification_transport(
         options.url,
       );
       const nextTransport = create_browser_locus_socket(url, options.WebSocketConstructor);
+      let stopNextProgressEvents: LocusDisposer | undefined;
+      let nextClient: Echo<undefined, CircuitVerificationActions> | undefined;
       try {
         await nextTransport.ready;
         if (disposed) throw new BrowserCircuitVerificationTransportError(
           "CIRCUIT_VERIFICATION_TRANSPORT_DISPOSED",
           "Parsing verification transport was disposed while connecting.",
         );
-        const nextClient = create_echo<undefined, CircuitVerificationActions>({ socket: nextTransport.socket });
-        nextClient.connect();
+        stopNextProgressEvents = nextTransport.socket.onMessage((raw) => {
+          const decoded = decode_locus_server_message(raw);
+          if (!decoded.ok || decoded.value.type !== "event") return;
+          if (decoded.value.event !== CIRCUIT_VERIFICATION_PROGRESS_EVENT) return;
+          const progress = decode_circuit_verification_progress(decoded.value.payload);
+          if (!progress.ok) return;
+          progressListeners.get(progress.value.panelId)?.get(progress.value.inputRevision)?.(progress.value);
+        }) ?? undefined;
+        const createdClient = create_echo<undefined, CircuitVerificationActions>({ socket: nextTransport.socket });
+        nextClient = createdClient;
+        createdClient.connect();
+        await createdClient.session.create();
         transport = nextTransport;
-        client = nextClient;
+        client = createdClient;
+        stopProgressEvents = stopNextProgressEvents;
         nextTransport.socket.onClose(() => {
           if (transport !== nextTransport) return;
-          nextClient.dispose();
+          stopProgressEvents?.();
+          stopProgressEvents = undefined;
+          progressListeners.clear();
+          createdClient.dispose();
           client = undefined;
           transport = undefined;
           nextTransport.dispose();
         });
-        return nextClient;
+        return createdClient;
       } catch (error) {
+        stopNextProgressEvents?.();
+        nextClient?.dispose();
         nextTransport.dispose();
         if (error instanceof BrowserCircuitVerificationTransportError) throw error;
         throw new BrowserCircuitVerificationTransportError(
@@ -138,13 +173,7 @@ export function create_browser_circuit_verification_transport(
       onProgress: (progress: CircuitVerificationProgress) => void,
     ): Promise<CircuitVerificationResult> {
       const current = await open();
-      const stopEvents = current.onEvent((event) => {
-        if (event.event !== CIRCUIT_VERIFICATION_PROGRESS_EVENT) return;
-        const decoded = decode_circuit_verification_progress(event.payload);
-        if (!decoded.ok) return;
-        if (decoded.value.panelId !== request.panelId || decoded.value.inputRevision !== request.inputRevision) return;
-        onProgress(decoded.value);
-      });
+      const stopEvents = listen_for_progress(request, onProgress);
       try {
         const response = await current.action(CIRCUIT_VERIFICATION_ACTION, request);
         if (response.type !== "ack") {
@@ -172,6 +201,9 @@ export function create_browser_circuit_verification_transport(
     dispose() {
       if (disposed) return;
       disposed = true;
+      stopProgressEvents?.();
+      stopProgressEvents = undefined;
+      progressListeners.clear();
       client?.dispose();
       client = undefined;
       transport?.dispose();

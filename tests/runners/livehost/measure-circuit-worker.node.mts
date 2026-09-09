@@ -133,7 +133,7 @@ try {
   await transport.ready;
   const client = create_echo<undefined, CircuitVerificationActions>({ socket: transport.socket });
   client.connect();
-  await new Promise<void>((resolve) => setTimeout(resolve, 10));
+  await client.session.create();
   const began = performance.now();
   const response = await client.action("circuit.verify", {
     panelId: "network-measurement",
@@ -147,7 +147,6 @@ try {
   locusWorkerExecutionMs = result.durationMs;
   client.disconnect();
   client.session.dispose();
-  client.recovery.dispose();
 } finally {
   transport.dispose();
   await host.dispose();

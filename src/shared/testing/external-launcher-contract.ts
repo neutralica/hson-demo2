@@ -1,6 +1,12 @@
 import type { TestCapability, TestCollection, TestSuiteDescriptor, TestSubject } from "./test-contracts";
 
-export type HsonLiveExecutableRuntime = "node" | "node-synthetic-dom" | "node-websocket" | "node-real-websocket" | "node-real-websocket-process";
+export type HsonLiveExecutableRuntime =
+  | "node"
+  | "node-synthetic-dom"
+  | "node-websocket"
+  | "node-real-websocket"
+  | "node-real-websocket-process"
+  | "node-real-http2";
 
 /** Descriptor-only projection of an external library launcher. */
 export type ExternalLibraryLauncherTarget = Readonly<{

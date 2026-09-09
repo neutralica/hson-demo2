@@ -228,7 +228,14 @@ async function find_package_root(start: string): Promise<string | undefined> {
 }
 
 export type HsonLiveSourceMetadata = Readonly<{ id: string; title: string; category: string; runtime: HsonLiveExecutableRuntime; tags: readonly string[]; sourceFile: string }>;
-const RUNTIMES = new Set<HsonLiveExecutableRuntime>(["node", "node-synthetic-dom", "node-websocket", "node-real-websocket" as HsonLiveExecutableRuntime, "node-real-websocket-process" as HsonLiveExecutableRuntime]);
+const RUNTIMES = new Set<HsonLiveExecutableRuntime>([
+  "node",
+  "node-synthetic-dom",
+  "node-websocket",
+  "node-real-websocket",
+  "node-real-websocket-process",
+  "node-real-http2",
+]);
 async function source_files(root: string): Promise<string[]> { const entries = await readdir(root, { withFileTypes: true }); const nested = await Promise.all(entries.map(async entry => entry.isDirectory() ? source_files(join(root, entry.name)) : /\.(?:m?[jt]s)$/.test(entry.name) ? [join(root, entry.name)] : [])); return nested.flat(); }
 function frozen_argument(node: ts.Expression): ts.Expression | undefined {
   return ts.isCallExpression(node)

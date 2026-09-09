@@ -358,7 +358,7 @@ export function towl_connection_suite(): TestSuite {
             firstPairs[0]!.close();
             const unavailableDuringReconnect = first.controller.client === undefined;
             await uncertainPull.catch(() => undefined);
-            await settle();
+            await first.controller.reconnect();
             const positionAfterReconnect = first.controller.root.snap().position;
             await first.controller.client?.pull();
             await settle();
@@ -643,7 +643,7 @@ export function towl_connection_suite(): TestSuite {
             const firstDelay = scheduler.runNext();
             await settle();
             const secondDelay = scheduler.runNext();
-            await settle();
+            await fixture.controller.reconnect();
             return {
               delays: [firstDelay, secondDelay],
               status: fixture.controller.state.status,

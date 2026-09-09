@@ -379,8 +379,8 @@ export function create_towl_connection_controller(
 
   async function ensure_reconnected(): Promise<void> {
     if (disposed || terminalLeave) throw new TowlConnectionCancelled();
-    if (connectionState.status !== "reconnecting" && connectionState.status !== "failed") return;
     if (reconnecting !== undefined) return reconnecting;
+    if (connectionState.status !== "reconnecting" && connectionState.status !== "failed") return;
     const attemptGeneration = ++generation;
     reconnecting = (async () => {
       let lastError = new Error("TOWL transport disconnected.");

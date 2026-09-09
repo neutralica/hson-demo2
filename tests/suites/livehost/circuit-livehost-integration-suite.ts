@@ -2,10 +2,11 @@ import WebSocket from "ws";
 import { create_echo, type Echo } from "hson-live/echo";
 import {
   create_browser_locus_socket,
+  decode_locus_server_message,
   type BrowserWebSocketConstructor,
 } from "hson-live/locus";
 import { start_node_application_host } from "hson-live/livehost/node";
-import type { JsonValue, LiveMap, LocusSocketLike } from "hson-live/types";
+import type { JsonValue, LocusSocketLike } from "hson-live/types";
 import type { TestSuite } from "../../harness/core/test-contracts";
 import {
   CIRCUIT_VERIFICATION_MAX_SOURCE_LENGTH,
@@ -134,7 +135,7 @@ function mock_service(options: Readonly<{
 
 type Pair = Readonly<{
   host: ReturnType<typeof create_circuit_verification_livehost>;
-  client: Echo<LiveMap<undefined>, CircuitVerificationActions>;
+  client: Echo<undefined, CircuitVerificationActions>;
   clientSocket: PairSocket;
   hostSocket: PairSocket;
   disconnectHost(): void;
@@ -149,7 +150,7 @@ async function pair(service: CircuitVerificationSubmitter): Promise<Pair> {
   });
   const disconnectHost = host.connect(hostSocket);
   client.connect();
-  await settle();
+  await client.session.create();
   return Object.freeze({
     host,
     client,
@@ -162,6 +163,14 @@ async function pair(service: CircuitVerificationSubmitter): Promise<Pair> {
       host.dispose();
     },
   });
+}
+
+function on_event(socket: PairSocket, listener: (event: string, payload: JsonValue) => void): () => void {
+  return socket.onMessage((raw) => {
+    const decoded = decode_locus_server_message(raw);
+    if (!decoded.ok || decoded.value.type !== "event") return;
+    listener(decoded.value.event, decoded.value.payload);
+  }) ?? (() => undefined);
 }
 
 async function invalid_payload(payload: unknown): Promise<Readonly<{ type: string; code?: string }>> {
@@ -225,8 +234,8 @@ export function circuit_locus_integration_suite(): TestSuite {
         ] });
         const first = await pair(service); const second = await pair(service);
         const firstEvents: string[] = []; const secondEvents: string[] = [];
-        first.client.onEvent((event) => firstEvents.push(event.event));
-        second.client.onEvent((event) => secondEvents.push(event.event));
+        on_event(first.clientSocket, (event) => firstEvents.push(event));
+        on_event(second.clientSocket, (event) => secondEvents.push(event));
         try {
           await first.client.action("circuit.verify", request());
           expect(firstEvents.length === 3 && firstEvents.every((event) => event === CIRCUIT_VERIFICATION_PROGRESS_EVENT) && secondEvents.length === 0, "only invoking connection may receive progress");
@@ -235,7 +244,7 @@ export function circuit_locus_integration_suite(): TestSuite {
       Object.freeze({ suite: SUITE, caseId: "progress-payloads-have-the-bounded-public-shape", name: "progress payloads have the bounded public shape", run: async () => {
         const service = mock_service({ progress: [{ stage: "cw-lap-complete", completed: 1, total: 7, direction: "cw", lap: 1 }] });
         const connected = await pair(service); const payloads: unknown[] = [];
-        connected.client.onEvent((event) => payloads.push(event.payload));
+        on_event(connected.clientSocket, (_event, payload) => payloads.push(payload));
         try {
           await connected.client.action("circuit.verify", request());
           expect(payloads.length === 1 && decode_circuit_verification_progress(payloads[0]).ok, "forwarded progress must satisfy its exact decoder");
@@ -245,7 +254,7 @@ export function circuit_locus_integration_suite(): TestSuite {
         const source = '{"credential":"never-forward-this-source"}';
         const service = mock_service({ progress: [{ stage: "started", completed: 0, total: 7 }] });
         const connected = await pair(service); const events: unknown[] = [];
-        connected.client.onEvent((event) => events.push(event));
+        on_event(connected.clientSocket, (event, payload) => events.push({ event, payload }));
         try {
           const response = await connected.client.action("circuit.verify", { ...request(), source });
           expect(!JSON.stringify(events).includes(source) && !JSON.stringify(response).includes(source), "source must not be echoed as protocol evidence");
@@ -368,19 +377,18 @@ export function circuit_locus_integration_suite(): TestSuite {
           `${host.url}/circuit-verification?locus=circuit-verifier`,
           WebSocket as unknown as BrowserWebSocketConstructor,
         );
-        let client: Echo<LiveMap<undefined>, CircuitVerificationActions> | undefined;
+        let client: Echo<undefined, CircuitVerificationActions> | undefined;
         try {
           await transport.ready;
           client = create_echo<undefined, CircuitVerificationActions>({ socket: transport.socket });
           client.connect();
-          await new Promise<void>((resolve) => setTimeout(resolve, 10));
+          await client.session.create();
           const response = await client.action("circuit.verify", request("localhost", 1));
           const result = response.type === "ack" ? response.result as unknown as CircuitVerificationResult : undefined;
           expect(result?.status === "verified" && result.operationCounts.parses === 25, "localhost route must return the universal worker certificate");
         } finally {
           client?.disconnect();
           client?.session.dispose();
-          client?.recovery.dispose();
           transport.dispose();
           await host.dispose();
         }

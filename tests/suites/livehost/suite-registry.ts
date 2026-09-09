@@ -11,7 +11,6 @@ import { locus_protocol_suite } from "./protocol-suite";
 import { locus_socket_suite } from "./socket-suite";
 import { locus_session_lifecycle_suite } from "./session-lifecycle-suite";
 import { locus_store_suite } from "./store-suite";
-import { locus_sync_suite } from "./sync-suite";
 
 export function all_locus_suites(): readonly TestSuite[] {
   const metadata: TestDescriptorMetadata = Object.freeze({
@@ -24,7 +23,6 @@ export function all_locus_suites(): readonly TestSuite[] {
     locus_socket_suite(),
     locus_session_lifecycle_suite(),
     locus_host_disposal_suite(),
-    locus_sync_suite(),
     locus_client_suite(),
     locus_pair_suite(),
     locus_store_suite(),

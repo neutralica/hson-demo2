@@ -1,857 +1,191 @@
-// client-suite.ts
-
+import { create_echo, type Echo } from "hson-live/echo";
 import { LocusDisconnectedError } from "hson-live/locus";
-import { create_echo } from "hson-live/echo";
+import type { LocusActionPayloads } from "hson-live/types";
 import type { TestCase, TestSuite } from "../../harness/core/test-contracts";
-import { preview_value, equal_row } from "../livemap/test-helpers";
+import { equal_row, preview_value } from "../livemap/test-helpers";
 
-type MemorySocketMessageListener = (message: string) => void;
-type MemorySocketCloseListener = () => void;
-
+type Listener = (message: string) => void;
 type MemorySocket = Readonly<{
-  send: (message: string) => void;
-  close: () => void;
-  onMessage: (listener: MemorySocketMessageListener) => () => void;
-  onClose: (listener: MemorySocketCloseListener) => () => void;
-  receive: (message: unknown) => Promise<void>;
-  sent: () => unknown[];
-  sent_raw: () => string[];
-  listener_count: () => number;
-}>;
-
-type LocusClientReadCaseSpec = Readonly<{
-  suite: string;
-  caseId: string; name: string;
-  input: unknown;
-  act: () => unknown | Promise<unknown>;
-  expected: unknown;
+  send(message: string): void;
+  close(): void;
+  onMessage(listener: Listener): () => void;
+  onClose(listener: () => void): () => void;
+  receive(message: unknown): void;
+  sent(): Array<Record<string, unknown>>;
+  listener_count(): number;
 }>;
 
 function make_memory_socket(): MemorySocket {
-  const sentMessages: string[] = [];
-  const messageListeners = new Set<MemorySocketMessageListener>();
-  const closeListeners = new Set<MemorySocketCloseListener>();
-
-  function send(message: string): void {
-    sentMessages.push(message);
-  }
-
-  function close(): void {
-    for (const listener of Array.from(closeListeners)) listener();
-  }
-
-  function onMessage(listener: MemorySocketMessageListener): () => void {
-    messageListeners.add(listener);
-    return () => {
-      messageListeners.delete(listener);
-    };
-  }
-
-  function onClose(listener: MemorySocketCloseListener): () => void {
-    closeListeners.add(listener);
-    return () => {
-      closeListeners.delete(listener);
-    };
-  }
-
-  async function receive(message: unknown): Promise<void> {
-    const encoded = JSON.stringify(message);
-    for (const listener of Array.from(messageListeners)) listener(encoded);
-    await Promise.resolve();
-  }
-
-  function sent(): unknown[] {
-    return sentMessages.map((message) => JSON.parse(message) as unknown);
-  }
-
-  function sent_raw(): string[] {
-    return [...sentMessages];
-  }
-
-  function listener_count(): number {
-    return messageListeners.size + closeListeners.size;
-  }
-
+  const sent: string[] = [];
+  const messages = new Set<Listener>();
+  const closes = new Set<() => void>();
   return Object.freeze({
-    send,
-    close,
-    onMessage,
-    onClose,
-    receive,
-    sent,
-    sent_raw,
-    listener_count,
+    send(message: string) { sent.push(message); },
+    close() { for (const listener of [...closes]) listener(); },
+    onMessage(listener: Listener) { messages.add(listener); return () => messages.delete(listener); },
+    onClose(listener: () => void) { closes.add(listener); return () => closes.delete(listener); },
+    receive(message: unknown) {
+      const raw = JSON.stringify(message);
+      for (const listener of [...messages]) listener(raw);
+    },
+    sent: () => sent.map((message) => JSON.parse(message) as Record<string, unknown>),
+    listener_count: () => messages.size + closes.size,
   });
 }
 
-function locus_client_read_case(spec: LocusClientReadCaseSpec): TestCase {
+async function establish<TActions extends LocusActionPayloads>(
+  client: Echo<undefined, TActions>,
+  socket: MemorySocket,
+): Promise<void> {
+  client.connect();
+  const pending = client.session.create();
+  const request = socket.sent().at(-1);
+  socket.receive({
+    type: "session-created", id: request?.id, sessionId: "session-a",
+    credential: "credential-a", epoch: 1, logicalMapId: "main", incarnationId: "inc-a",
+  });
+  await pending;
+}
+
+function read_case(spec: Readonly<{
+  suite: string;
+  caseId: string;
+  name: string;
+  act: () => unknown | Promise<unknown>;
+  expected: unknown;
+}>): TestCase {
   return {
     suite: spec.suite,
-    caseId: spec.caseId, name: spec.name,
-    meta: {
-      input: preview_value(spec.input),
-    },
-    run: async () => {
-      const value = await spec.act();
-
-      return {
-        assertRows: [
-          equal_row(`${spec.name}: value`, value, spec.expected),
-        ],
-      };
-    },
+    caseId: spec.caseId,
+    name: spec.name,
+    meta: { input: preview_value({}) },
+    run: async () => ({ assertRows: [equal_row(spec.name, await spec.act(), spec.expected)] }),
   };
 }
 
 export function locus_client_suite(): TestSuite {
   const SUITE = "livehost/client";
-
   return {
     suite: SUITE,
     cases: [
-      locus_client_read_case({
+      read_case({
         suite: SUITE,
-        caseId: "connect-sends-hello-message", name: "connect sends hello message",
-        input: {},
-        act: () => {
-          const socket = make_memory_socket();
-          const client = create_echo({
-            socket,
-            clientId: "client-a",
-          });
-
-          client.connect();
-          const [message] = socket.sent() as Array<Record<string, unknown>>;
-
-          return {
-            type: message?.type,
-            clientId: message?.clientId,
-            hasLastSeq: Object.hasOwn(message ?? {}, "lastSeq"),
-            listenerCount: socket.listener_count(),
-          };
-        },
-        expected: {
-          type: "hello",
-          clientId: "client-a",
-          hasLastSeq: false,
-          listenerCount: 2,
-        },
-      }),
-      locus_client_read_case({
-        suite: SUITE,
-        caseId: "hello-replaces-client-map-snapshot", name: "hello replaces client map snapshot",
-        input: {},
-        act: async () => {
-          const socket = make_memory_socket();
-          const client = create_echo<{ user: { name: string } }>({ socket });
-
-          client.connect();
-          await socket.receive({
-            type: "hello",
-            sessionId: "session-a",
-            seq: 3,
-            snapshot: { user: { name: "Ada" } },
-          });
-
-          return {
-            seq: client.seq,
-            root: client.map.snap(),
-            name: client.map.at(["user", "name"]).snap(),
-          };
-        },
-        expected: {
-          seq: 3,
-          root: { user: { name: "Ada" } },
-          name: "Ada",
-        },
-      }),
-      locus_client_read_case({
-        suite: SUITE,
-        caseId: "sync-updates-client-map-path", name: "sync updates client map path",
-        input: {},
-        act: async () => {
-          const socket = make_memory_socket();
-          const client = create_echo<{ user: { name: string } }>({ socket });
-
-          client.connect();
-          await socket.receive({
-            type: "hello",
-            sessionId: "session-a",
-            seq: 0,
-            snapshot: { user: { name: "Ada" } },
-          });
-          await socket.receive({
-            type: "sync",
-            seq: 1,
-            path: ["user", "name"],
-            value: "Grace",
-          });
-
-          return {
-            seq: client.seq,
-            root: client.map.snap(),
-            name: client.map.at(["user", "name"]).snap(),
-          };
-        },
-        expected: {
-          seq: 1,
-          root: { user: { name: "Grace" } },
-          name: "Grace",
-        },
-      }),
-      locus_client_read_case({
-        suite: SUITE,
-        caseId: "sync-at-empty-path-replaces-client-map", name: "sync at empty path replaces client map",
-        input: {},
-        act: async () => {
-          const socket = make_memory_socket();
-          const client = create_echo<{ user: { name: string } }>({ socket });
-
-          client.connect();
-          await socket.receive({
-            type: "hello",
-            sessionId: "session-a",
-            seq: 0,
-            snapshot: { user: { name: "Ada" } },
-          });
-          await socket.receive({
-            type: "sync",
-            seq: 1,
-            path: [],
-            value: { user: { name: "Grace" } },
-          });
-
-          return {
-            seq: client.seq,
-            root: client.map.snap(),
-            name: client.map.at(["user", "name"]).snap(),
-          };
-        },
-        expected: {
-          seq: 1,
-          root: { user: { name: "Grace" } },
-          name: "Grace",
-        },
-      }),
-      locus_client_read_case({
-        suite: SUITE,
-        caseId: "subscribe-sends-path-message", name: "subscribe sends path message",
-        input: {},
+        caseId: "connect-only-installs-transport",
+        name: "connect installs transport listeners without creating a session",
         act: () => {
           const socket = make_memory_socket();
           const client = create_echo({ socket });
-
-          client.subscribe(["ui", "selected"]);
-          const [message] = socket.sent() as Array<Record<string, unknown>>;
-
-          return {
-            type: message?.type,
-            path: message?.path,
-          };
-        },
-        expected: {
-          type: "subscribe",
-          path: ["ui", "selected"],
-        },
-      }),
-      locus_client_read_case({
-        suite: SUITE,
-        caseId: "unsubscribe-sends-path-message", name: "unsubscribe sends path message",
-        input: {},
-        act: () => {
-          const socket = make_memory_socket();
-          const client = create_echo({ socket });
-
-          client.unsubscribe(["ui", "selected"]);
-          const [message] = socket.sent() as Array<Record<string, unknown>>;
-
-          return {
-            type: message?.type,
-            path: message?.path,
-          };
-        },
-        expected: {
-          type: "unsubscribe",
-          path: ["ui", "selected"],
-        },
-      }),
-      locus_client_read_case({
-        suite: SUITE,
-        caseId: "action-sends-message-and-resolves-ack", name: "action sends message and resolves ack",
-        input: {},
-        act: async () => {
-          type Actions = Readonly<{
-            rename_user: { name: string };
-          }>;
-          const socket = make_memory_socket();
-          const client = create_echo<undefined, Actions>({
-            socket,
-          });
-
           client.connect();
-          const resultPromise = client.action("rename_user", { name: "Grace" });
-          const [, message] = socket.sent() as Array<Record<string, unknown>>;
-          await socket.receive({
-            type: "ack",
-            id: resultPromise.request.requestId,
-            ok: true,
-            seq: 1,
-          });
-          const result = await resultPromise;
-
-          return {
-            sentType: message?.type,
-            requestMatches: message?.id === resultPromise.request.requestId,
-            sentName: message?.name,
-            sentPayload: message?.payload,
-            resultType: result.type,
-            resultSeq: result.seq,
-            clientSeq: client.seq,
-          };
+          const result = { sent: socket.sent().length, listeners: socket.listener_count(), status: client.session.status };
+          client.dispose();
+          return result;
         },
-        expected: {
-          sentType: "action",
-          requestMatches: true,
-          sentName: "rename_user",
-          sentPayload: { name: "Grace" },
-          resultType: "ack",
-          resultSeq: 1,
-          clientSeq: 1,
-        },
+        expected: { sent: 0, listeners: 2, status: "idle" },
       }),
-      locus_client_read_case({
+      read_case({
         suite: SUITE,
-        caseId: "action-resolves-matching-error", name: "action resolves matching error",
-        input: {},
-        act: async () => {
-          type Actions = Readonly<{
-            fail: undefined;
-          }>;
-          const socket = make_memory_socket();
-          const client = create_echo<undefined, Actions>({
-            socket,
-          });
-
-          client.connect();
-          const resultPromise = client.action("fail");
-          await socket.receive({
-            type: "error",
-            id: resultPromise.request.requestId,
-            ok: false,
-            seq: 2,
-            error: { message: "Nope.", code: "NOPE" },
-          });
-          const result = await resultPromise;
-
-          return {
-            resultType: result.type,
-            resultSeq: result.seq,
-            message: result.type === "error" ? result.error.message : undefined,
-            code: result.type === "error" ? result.error.code : undefined,
-            clientSeq: client.seq,
-          };
-        },
-        expected: {
-          resultType: "error",
-          resultSeq: 2,
-          message: "Nope.",
-          code: "NOPE",
-          clientSeq: 2,
-        },
-      }),
-      locus_client_read_case({
-        suite: SUITE,
-        caseId: "action-ignores-unrelated-ack-until-matching-result-arrives", name: "action ignores unrelated ack until matching result arrives",
-        input: {},
-        act: async () => {
-          type Actions = Readonly<{
-            save: { id: string };
-          }>;
-          const socket = make_memory_socket();
-          const client = create_echo<undefined, Actions>({
-            socket,
-          });
-          let resolved = false;
-
-          client.connect();
-          const action = client.action("save", { id: "row-a" });
-          const resultPromise = action.then((result) => {
-            resolved = true;
-            return result;
-          });
-          await socket.receive({
-            type: "ack",
-            id: "other-action",
-            ok: true,
-            seq: 1,
-          });
-          const afterUnrelated = resolved;
-          await socket.receive({
-            type: "ack",
-            id: action.request.requestId,
-            ok: true,
-            seq: 2,
-          });
-          const result = await resultPromise;
-
-          return {
-            afterUnrelated,
-            resultType: result.type,
-            resultSeq: result.seq,
-            clientSeq: client.seq,
-          };
-        },
-        expected: {
-          afterUnrelated: false,
-          resultType: "ack",
-          resultSeq: 2,
-          clientSeq: 2,
-        },
-      }),
-      locus_client_read_case({
-        suite: SUITE,
-        caseId: "connect-is-idempotent-while-already-connected", name: "connect is idempotent while already connected",
-        input: {},
-        act: () => {
-          const socket = make_memory_socket();
-          const client = create_echo({
-            socket,
-            clientId: "client-a",
-          });
-
-          client.connect();
-          client.connect();
-
-          return {
-            sentCount: socket.sent().length,
-            listenerCount: socket.listener_count(),
-            first: socket.sent()[0],
-            second: socket.sent()[1],
-          };
-        },
-        expected: {
-          sentCount: 1,
-          listenerCount: 2,
-          first: { type: "hello", clientId: "client-a" },
-          second: undefined,
-        },
-      }),
-      locus_client_read_case({
-        suite: SUITE,
-        caseId: "reconnect-sends-fresh-hello-without-historical-cursor", name: "reconnect sends fresh hello without historical cursor",
-        input: {},
-        act: async () => {
-          const socket = make_memory_socket();
-          const client = create_echo({
-            socket,
-            clientId: "client-a",
-          });
-
-          client.connect();
-          await socket.receive({
-            type: "hello",
-            sessionId: "session-a",
-            seq: 5,
-            snapshot: { ready: true },
-          });
-          client.disconnect();
-          client.connect();
-
-          const [, secondHello] = socket.sent() as Array<Record<string, unknown>>;
-          return {
-            seq: client.seq,
-            sentCount: socket.sent().length,
-            secondType: secondHello?.type,
-            secondClientId: secondHello?.clientId,
-            secondHasLastSeq: Object.hasOwn(secondHello ?? {}, "lastSeq"),
-            listenerCount: socket.listener_count(),
-          };
-        },
-        expected: {
-          seq: 5,
-          sentCount: 2,
-          secondType: "hello",
-          secondClientId: "client-a",
-          secondHasLastSeq: false,
-          listenerCount: 2,
-        },
-      }),
-      locus_client_read_case({
-        suite: SUITE,
-        caseId: "server-close-detaches-listeners", name: "server close detaches listeners",
-        input: {},
+        caseId: "session-create-establishes-authority",
+        name: "session create establishes authority identity",
         act: async () => {
           const socket = make_memory_socket();
           const client = create_echo({ socket });
-
-          client.connect();
-          const before = socket.listener_count();
-          socket.close();
-          const after = socket.listener_count();
-          await socket.receive({
-            type: "hello",
-            sessionId: "session-a",
-            seq: 9,
-            snapshot: { ignored: true },
-          });
-
-          return {
-            before,
-            after,
-            seq: client.seq,
-            root: client.map.snap(),
+          await establish(client, socket);
+          const result = {
+            outbound: socket.sent()[0]?.type,
+            status: client.session.status,
+            credential: client.session.credential,
+            logicalMapId: client.session.logicalMapId,
+            incarnationId: client.session.incarnationId,
           };
+          client.dispose();
+          return result;
         },
         expected: {
-          before: 2,
-          after: 0,
-          seq: 0,
-          root: {},
+          outbound: "session-create", status: "attached", credential: "credential-a",
+          logicalMapId: "main", incarnationId: "inc-a",
         },
       }),
-      locus_client_read_case({
+      read_case({
         suite: SUITE,
-        caseId: "invalid-server-message-is-ignored", name: "invalid server message is ignored",
-        input: {},
+        caseId: "action-requires-session",
+        name: "action rejects before semantic session establishment",
         act: async () => {
           const socket = make_memory_socket();
-          const client = create_echo({ socket });
-
+          const client = create_echo<undefined, Readonly<{ save: { id: string } }>>({ socket });
           client.connect();
-          await socket.receive(["not", "a", "message"]);
-          await socket.receive("not an object");
-
-          return {
-            seq: client.seq,
-            root: client.map.snap(),
-            sentCount: socket.sent().length,
-            listenerCount: socket.listener_count(),
+          let disconnected = false;
+          try { await client.action("save", { id: "a" }); }
+          catch (error) { disconnected = error instanceof LocusDisconnectedError; }
+          client.dispose();
+          return { disconnected, sent: socket.sent().length };
+        },
+        expected: { disconnected: true, sent: 0 },
+      }),
+      read_case({
+        suite: SUITE,
+        caseId: "action-resolves-correlated-ack",
+        name: "action resolves its correlated acknowledgement",
+        act: async () => {
+          const socket = make_memory_socket();
+          const client = create_echo<undefined, Readonly<{ save: { id: string } }>>({ socket });
+          await establish(client, socket);
+          const pending = client.action("save", { id: "item-a" });
+          const request = socket.sent().at(-1);
+          socket.receive({
+            type: "ack", id: request?.id, requestId: request?.requestId,
+            ok: true, seq: 2, result: { saved: "item-a" },
+          });
+          const response = await pending;
+          const result = {
+            outbound: request?.type,
+            name: request?.name,
+            payload: request?.payload,
+            requestMatches: request?.requestId === pending.request.requestId,
+            result: response.type === "ack" ? response.result : undefined,
           };
+          client.dispose();
+          return result;
         },
         expected: {
-          seq: 0,
-          root: {},
-          sentCount: 1,
-          listenerCount: 2,
+          outbound: "action", name: "save", payload: { id: "item-a" },
+          requestMatches: true, result: { saved: "item-a" },
         },
       }),
-      locus_client_read_case({
+      read_case({
         suite: SUITE,
-        caseId: "action-without-payload-omits-payload-field", name: "action without payload omits payload field",
-        input: {},
-        act: async () => {
-          type Actions = Readonly<{
-            ping: undefined;
-          }>;
-          const socket = make_memory_socket();
-          const client = create_echo<undefined, Actions>({
-            socket,
-          });
-
-          client.connect();
-          const resultPromise = client.action("ping");
-          const [, message] = socket.sent() as Array<Record<string, unknown>>;
-          await socket.receive({
-            type: "ack",
-            id: resultPromise.request.requestId,
-            ok: true,
-            seq: 1,
-          });
-          const result = await resultPromise;
-
-          return {
-            sentType: message?.type,
-            sentName: message?.name,
-            hasPayload: Object.prototype.hasOwnProperty.call(message ?? {}, "payload"),
-            resultType: result.type,
-            clientSeq: client.seq,
-          };
-        },
-        expected: {
-          sentType: "action",
-          sentName: "ping",
-          hasPayload: false,
-          resultType: "ack",
-          clientSeq: 1,
-        },
-      }),
-      locus_client_read_case({
-        suite: SUITE,
-        caseId: "disconnect-detaches-socket-listeners", name: "disconnect detaches socket listeners",
-        input: {},
+        caseId: "action-status-resolves-current-state",
+        name: "action status resolves the current request state",
         act: async () => {
           const socket = make_memory_socket();
-          const client = create_echo({ socket });
-
-          client.connect();
-          const before = socket.listener_count();
-          client.disconnect();
-          const after = socket.listener_count();
-          await socket.receive({
-            type: "hello",
-            sessionId: "session-a",
-            seq: 7,
-            snapshot: { ignored: true },
-          });
-
-          return {
-            before,
-            after,
-            seq: client.seq,
-            root: client.map.snap(),
-          };
-        },
-        expected: {
-          before: 2,
-          after: 0,
-          seq: 0,
-          root: {},
-        },
-      }),
-      locus_client_read_case({
-        suite: SUITE,
-        caseId: "action-resolves-ack-result-payload", name: "action resolves ack result payload",
-        input: {},
-        act: async () => {
-          type Actions = Readonly<{ read: undefined }>;
-          const socket = make_memory_socket();
-          const client = create_echo<undefined, Actions>({ socket });
-          client.connect();
-          const resultPromise = client.action("read");
-          await socket.receive({
-            type: "ack",
-            id: resultPromise.request.requestId,
-            ok: true,
-            seq: 1,
-            result: { status: "done", count: 2 },
-          });
-          const result = await resultPromise;
-          return result.type === "ack" ? result.result : undefined;
-        },
-        expected: { status: "done", count: 2 },
-      }),
-      locus_client_read_case({
-        suite: SUITE,
-        caseId: "disconnect-rejects-pending-action-with-stable-error", name: "disconnect rejects pending action with stable error",
-        input: {},
-        act: async () => {
-          type Actions = Readonly<{ wait: undefined }>;
-          const socket = make_memory_socket();
-          const client = create_echo<undefined, Actions>({ socket });
-          client.connect();
-          const outcome = client.action("wait").then(
-            () => ({ resolved: true as const }),
-            (error: unknown) => ({
-              resolved: false as const,
-              instance: error instanceof LocusDisconnectedError,
-              name: error instanceof Error ? error.name : undefined,
-              code: typeof error === "object" && error !== null && "code" in error ? error.code : undefined,
-            }),
-          );
-
-          client.disconnect();
-          client.disconnect();
-
-          return { outcome: await outcome, listenerCount: socket.listener_count() };
-        },
-        expected: {
-          outcome: { resolved: false, instance: true, name: "LocusDisconnectedError", code: "LOCUS_DISCONNECTED" },
-          listenerCount: 0,
-        },
-      }),
-      locus_client_read_case({
-        suite: SUITE,
-        caseId: "socket-close-rejects-every-pending-action-once", name: "socket close rejects every pending action once",
-        input: {},
-        act: async () => {
-          type Actions = Readonly<{ wait: { index: number } }>;
-          const socket = make_memory_socket();
-          const client = create_echo<undefined, Actions>({
-            socket,
-          });
-          const settlements = [0, 0, 0];
-          client.connect();
-          const outcomes = [0, 1, 2].map((index) => client.action("wait", { index }).then(
-            () => "resolved",
-            (error: unknown) => {
-              settlements[index] = (settlements[index] ?? 0) + 1;
-              return error instanceof Error ? error.name : "unknown";
-            },
-          ));
-
-          socket.close();
-          client.disconnect();
-
-          return {
-            outcomes: await Promise.all(outcomes),
-            settlements,
-            listenerCount: socket.listener_count(),
-          };
-        },
-        expected: {
-          outcomes: ["LocusDisconnectedError", "LocusDisconnectedError", "LocusDisconnectedError"],
-          settlements: [1, 1, 1],
-          listenerCount: 0,
-        },
-      }),
-      locus_client_read_case({
-        suite: SUITE,
-        caseId: "disconnect-leaves-completed-action-settled-and-ignores-late-results", name: "disconnect leaves completed action settled and ignores late results",
-        input: {},
-        act: async () => {
-          type Actions = Readonly<{ wait: undefined }>;
-          const socket = make_memory_socket();
-          let pendingSettlements = 0;
-          const client = create_echo<undefined, Actions>({ socket });
-          client.connect();
-          const completed = client.action("wait");
-          const pendingAction = client.action("wait");
-          const pending = pendingAction.then(
-            () => "resolved",
-            () => {
-              pendingSettlements += 1;
-              return "rejected";
-            },
-          );
-          await socket.receive({ type: "ack", id: completed.request.requestId, ok: true, seq: 1 });
-          client.disconnect();
-          const completedResult = await completed;
-          const pendingResult = await pending;
-          await socket.receive({ type: "ack", id: pendingAction.request.requestId, ok: true, seq: 2 });
-          await socket.receive({ type: "error", id: pendingAction.request.requestId, ok: false, seq: 3, error: { message: "late" } });
-
-          return {
-            completedType: completedResult.type,
-            pendingResult,
-            pendingSettlements,
-            seq: client.seq,
-          };
-        },
-        expected: {
-          completedType: "ack",
-          pendingResult: "rejected",
-          pendingSettlements: 1,
-          seq: 1,
-        },
-      }),
-      locus_client_read_case({
-        suite: SUITE,
-        caseId: "reconnect-starts-with-no-stale-pending-actions", name: "reconnect starts with no stale pending actions",
-        input: {},
-        act: async () => {
-          type Actions = Readonly<{ wait: undefined }>;
-          const socket = make_memory_socket();
-          const client = create_echo<undefined, Actions>({ socket });
-          client.connect();
-          const oldAction = client.action("wait");
-          const oldOutcome = oldAction.then(
-            () => "resolved",
-            () => "rejected",
-          );
-          client.disconnect();
-          client.connect();
-          const newAction = client.action("wait");
-          await socket.receive({ type: "ack", id: oldAction.request.requestId, ok: true, seq: 1 });
-          await socket.receive({ type: "error", id: oldAction.request.requestId, ok: false, seq: 2, error: { message: "late" } });
-          await socket.receive({ type: "ack", id: newAction.request.requestId, ok: true, seq: 3 });
-          const newResult = await newAction;
-
-          return {
-            oldOutcome: await oldOutcome,
-            newType: newResult.type,
-            newSeq: newResult.seq,
-            clientSeq: client.seq,
-          };
-        },
-        expected: {
-          oldOutcome: "rejected",
-          newType: "ack",
-          newSeq: 3,
-          clientSeq: 3,
-        },
-      }),
-      locus_client_read_case({
-        suite: SUITE,
-        caseId: "disconnect-then-socket-close-is-idempotent", name: "disconnect then socket close is idempotent",
-        input: {},
-        act: async () => {
-          type Actions = Readonly<{ wait: undefined }>;
-          const socket = make_memory_socket();
-          let settlements = 0;
-          const client = create_echo<undefined, Actions>({ socket });
-          client.connect();
-          const outcome = client.action("wait").catch((error: unknown) => {
-            settlements += 1;
-            return error instanceof Error ? error.name : "unknown";
-          });
-          client.disconnect();
-          socket.close();
-
-          return { outcome: await outcome, settlements, listenerCount: socket.listener_count() };
-        },
-        expected: { outcome: "LocusDisconnectedError", settlements: 1, listenerCount: 0 },
-      }),
-      locus_client_read_case({
-        suite: SUITE,
-        caseId: "event-listeners-receive-once-and-dispose-idempotently", name: "event listeners receive once and dispose idempotently",
-        input: {},
-        act: async () => {
-          const socket = make_memory_socket();
-          const client = create_echo({ socket });
-          const first: string[] = [];
-          const second: string[] = [];
-          const stopFirst = client.onEvent((message) => first.push(message.event));
-          client.onEvent((message) => second.push(message.event));
-          client.connect();
-          await socket.receive({ type: "event", event: "one", payload: { n: 1 } });
-          stopFirst();
-          stopFirst();
-          await socket.receive({ type: "event", event: "two", payload: { n: 2 } });
-          return { first, second };
-        },
-        expected: { first: ["one"], second: ["one", "two"] },
-      }),
-      locus_client_read_case({
-        suite: SUITE,
-        caseId: "events-do-not-settle-pending-actions", name: "events do not settle pending actions",
-        input: {},
-        act: async () => {
-          type Actions = Readonly<{ wait: undefined }>;
-          const socket = make_memory_socket();
-          const client = create_echo<undefined, Actions>({ socket });
-          client.connect();
-          let settled = false;
-          const action = client.action("wait");
-          const pending = action.then((result) => {
-            settled = true;
-            return result;
-          });
-          await socket.receive({ type: "event", event: "notice", payload: null });
-          const settledAfterEvent = settled;
-          await socket.receive({ type: "ack", id: action.request.requestId, ok: true, seq: 1 });
+          const client = create_echo({ socket, clientId: "client-a" });
+          await establish(client, socket);
+          const pending = client.actionStatus("request-a");
+          const request = socket.sent().at(-1);
+          socket.receive({ type: "action-status", id: request?.id, requestId: "request-a", state: "pending" });
           const result = await pending;
-          return { settledAfterEvent, resultType: result.type };
+          client.dispose();
+          return { outbound: request?.type, state: result.state, requestId: result.requestId };
         },
-        expected: { settledAfterEvent: false, resultType: "ack" },
+        expected: { outbound: "action-status", state: "pending", requestId: "request-a" },
       }),
-      locus_client_read_case({
+      read_case({
         suite: SUITE,
-        caseId: "event-listeners-persist-across-reconnect-without-detached-delivery", name: "event listeners persist across reconnect without detached delivery",
-        input: {},
+        caseId: "disconnect-rejects-pending-action",
+        name: "disconnect rejects a pending endpoint action",
         act: async () => {
           const socket = make_memory_socket();
-          const client = create_echo({ socket });
-          const received: string[] = [];
-          client.onEvent((message) => received.push(message.event));
-          client.connect();
+          const client = create_echo<undefined, Readonly<{ wait: undefined }>>({ socket });
+          await establish(client, socket);
+          const pending = client.action("wait");
           client.disconnect();
-          await socket.receive({ type: "event", event: "detached", payload: null });
-          client.connect();
-          await socket.receive({ type: "event", event: "reconnected", payload: null });
-          return { received, socketListenerCount: socket.listener_count() };
+          let disconnected = false;
+          try { await pending; } catch (error) { disconnected = error instanceof LocusDisconnectedError; }
+          const result = { disconnected, status: client.session.status, listeners: socket.listener_count() };
+          client.dispose();
+          return result;
         },
-        expected: { received: ["reconnected"], socketListenerCount: 2 },
+        expected: { disconnected: true, status: "detached", listeners: 0 },
       }),
-    ] as const,
+    ],
   };
 }

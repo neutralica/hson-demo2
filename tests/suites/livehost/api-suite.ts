@@ -1,490 +1,184 @@
-// api-suite.ts
-
 import { hson } from "hson-live";
 import { create_application_locus_store } from "../../../src/server/livehost/application-locus-store";
-import type { TestSuite } from "../../harness/core/test-contracts";
-import { read_case } from "../livemap/handle-helpers";
+import type { TestCase, TestSuite } from "../../harness/core/test-contracts";
+import { equal_row, preview_value } from "../livemap/test-helpers";
 
-type ApiSocketMessageListener = (message: string) => void;
-type ApiSocketCloseListener = () => void;
-
+type Listener = (message: string) => void;
 type ApiSocket = Readonly<{
-  send: (message: string) => void;
-  close: () => void;
-  onMessage: (listener: ApiSocketMessageListener) => () => void;
-  onClose: (listener: ApiSocketCloseListener) => () => void;
-  receive: (message: unknown) => void;
-  sent: () => unknown[];
+  send(message: string): void;
+  close(): void;
+  onMessage(listener: Listener): () => void;
+  onClose(listener: () => void): () => void;
+  receive(message: unknown): void;
+  sent(): Array<Record<string, unknown>>;
 }>;
 
 function make_api_socket(): ApiSocket {
-  const sentMessages: string[] = [];
-  const messageListeners = new Set<ApiSocketMessageListener>();
-  const closeListeners = new Set<ApiSocketCloseListener>();
-
-  function send(message: string): void {
-    sentMessages.push(message);
-  }
-
-  function close(): void {
-    for (const listener of Array.from(closeListeners)) listener();
-  }
-
-  function onMessage(listener: ApiSocketMessageListener): () => void {
-    messageListeners.add(listener);
-    return () => {
-      messageListeners.delete(listener);
-    };
-  }
-
-  function onClose(listener: ApiSocketCloseListener): () => void {
-    closeListeners.add(listener);
-    return () => {
-      closeListeners.delete(listener);
-    };
-  }
-
-  function receive(message: unknown): void {
-    const text = typeof message === "string" ? message : JSON.stringify(message);
-    for (const listener of Array.from(messageListeners)) listener(text);
-  }
-
-  function sent(): unknown[] {
-    return sentMessages.map((message) => JSON.parse(message) as unknown);
-  }
-
+  const sent: string[] = [];
+  const messages = new Set<Listener>();
+  const closes = new Set<() => void>();
   return Object.freeze({
-    send,
-    close,
-    onMessage,
-    onClose,
-    receive,
-    sent,
+    send(message: string) { sent.push(message); },
+    close() { for (const listener of [...closes]) listener(); },
+    onMessage(listener: Listener) { messages.add(listener); return () => messages.delete(listener); },
+    onClose(listener: () => void) { closes.add(listener); return () => closes.delete(listener); },
+    receive(message: unknown) {
+      const raw = JSON.stringify(message);
+      for (const listener of [...messages]) listener(raw);
+    },
+    sent: () => sent.map((message) => JSON.parse(message) as Record<string, unknown>),
   });
+}
+
+function read_case(spec: Readonly<{
+  suite: string;
+  caseId: string;
+  name: string;
+  input?: unknown;
+  act: () => unknown | Promise<unknown>;
+  expected: unknown;
+}>): TestCase {
+  return {
+    suite: spec.suite,
+    caseId: spec.caseId,
+    name: spec.name,
+    meta: { input: preview_value(spec.input ?? {}) },
+    run: async () => ({ assertRows: [equal_row(spec.name, await spec.act(), spec.expected)] }),
+  };
+}
+
+async function establish_session(client: ReturnType<typeof hson.echo.create>, socket: ApiSocket): Promise<void> {
+  client.connect();
+  const pending = client.session.create();
+  const request = socket.sent().at(-1);
+  socket.receive({
+    type: "session-created",
+    id: request?.id,
+    sessionId: "session-a",
+    credential: "credential-a",
+    epoch: 1,
+    logicalMapId: "main",
+    incarnationId: "inc-a",
+  });
+  await pending;
 }
 
 export function locus_api_suite(): TestSuite {
   const SUITE = "livehost/api";
-
   return {
     suite: SUITE,
     cases: [
       read_case({
         suite: SUITE,
-        caseId: "hson-livehost-create-exposes-host", name: "hson locus create exposes one authority",
+        caseId: "hson-locus-create-exposes-authority",
+        name: "hson locus create exposes one authority",
         input: {},
         act: () => {
           const host = hson.locus.create({ state: { count: 1 } });
-
-          return {
-            seq: host.seq,
-            count: host.map.at(["count"]).snap(),
+          const result = { seq: host.seq, count: host.map.at(["count"]).snap() };
+          host.dispose();
+          return result;
+        },
+        expected: { seq: 0, count: 1 },
+      }),
+      read_case({
+        suite: SUITE,
+        caseId: "hson-echo-create-exposes-endpoint",
+        name: "hson echo create exposes endpoint-only capabilities",
+        input: {},
+        act: () => {
+          const client = hson.echo.create({ socket: make_api_socket() });
+          const result = {
+            connect: typeof client.connect,
+            session: typeof client.session.create,
+            action: typeof client.action,
+            hasMap: "map" in client,
+            hasRecovery: "recovery" in client,
+            hasSeq: "seq" in client,
+            hasOnEvent: "onEvent" in client,
           };
+          client.dispose();
+          return result;
         },
         expected: {
-          seq: 0,
-          count: 1,
+          connect: "function", session: "function", action: "function",
+          hasMap: false, hasRecovery: false, hasSeq: false, hasOnEvent: false,
         },
       }),
       read_case({
         suite: SUITE,
-        caseId: "hson-livehost-client-exposes-mirror", name: "hson locus client exposes mirror",
+        caseId: "hson-echo-session-is-explicit",
+        name: "hson echo establishes a semantic session explicitly",
         input: {},
-        act: () => {
-          const socket = make_api_socket();
-          const client = hson.echo.create<{ ready: boolean }>({ socket });
-
-          client.connect();
-          socket.receive({
-            type: "hello",
-            sessionId: "session-a",
-            seq: 0,
-            snapshot: { ready: true },
-          });
-
-          return {
-            sentType: (socket.sent()[0] as Record<string, unknown> | undefined)?.type,
-            seq: client.seq,
-            ready: client.map.at(["ready"]).snap(),
-          };
-        },
-        expected: {
-          sentType: "hello",
-          seq: 0,
-          ready: true,
-        },
-      }),
-      read_case({
-        suite: SUITE,
-        caseId: "hson-livehost-client-receives-sync", name: "hson locus client receives sync",
-        input: {},
-        act: () => {
-          const socket = make_api_socket();
-          const client = hson.echo.create<{ count: number }>({ socket });
-
-          client.connect();
-          socket.receive({
-            type: "hello",
-            sessionId: "session-a",
-            seq: 0,
-            snapshot: { count: 1 },
-          });
-          socket.receive({
-            type: "sync",
-            seq: 1,
-            path: ["count"],
-            value: 2,
-          });
-
-          return {
-            seq: client.seq,
-            count: client.map.at(["count"]).snap(),
-          };
-        },
-        expected: {
-          seq: 1,
-          count: 2,
-        },
-      }),
-      read_case({
-        suite: SUITE,
-        caseId: "hson-livehost-client-sends-subscribe-and-unsubscribe", name: "hson locus client sends subscribe and unsubscribe",
-        input: {},
-        act: () => {
+        act: async () => {
           const socket = make_api_socket();
           const client = hson.echo.create({ socket });
-
-          client.connect();
-          client.subscribe(["count"]);
-          client.unsubscribe(["count"]);
-
-          const messages = socket.sent() as Array<Record<string, unknown>>;
-
-          return {
-            types: messages.map((message) => message.type),
-            subscribePath: messages[1]?.path,
-            unsubscribePath: messages[2]?.path,
+          await establish_session(client, socket);
+          const result = {
+            sentType: socket.sent()[0]?.type,
+            status: client.session.status,
+            logicalMapId: client.session.logicalMapId,
           };
+          client.dispose();
+          return result;
         },
-        expected: {
-          types: ["hello", "subscribe", "unsubscribe"],
-          subscribePath: ["count"],
-          unsubscribePath: ["count"],
-        },
+        expected: { sentType: "session-create", status: "attached", logicalMapId: "main" },
       }),
       read_case({
         suite: SUITE,
-        caseId: "hson-livehost-client-sends-action-payload", name: "hson locus client sends action payload",
+        caseId: "hson-echo-replica-is-explicit",
+        name: "hson echo preserves an explicitly supplied replica map",
         input: {},
         act: () => {
-          const socket = make_api_socket();
-          const client = hson.echo.create<undefined, { setCount: number }>({
-            socket,
+          const map = hson.liveMap.fromJson({ count: 1 });
+          const client = hson.echo.create({
+            socket: make_api_socket(),
+            map,
+            recovery: { logicalMapId: "main" },
           });
-
-          client.connect();
-          const pending = client.action("setCount", 4);
-
-          const messages = socket.sent() as Array<Record<string, unknown>>;
-
-          return {
-            types: messages.map((message) => message.type),
-            requestMatches: messages[1]?.id === pending.request.requestId,
-            name: messages[1]?.name,
-            payload: messages[1]?.payload,
-          };
+          const result = { sameMap: client.map === map, count: client.map.at(["count"]).snap(), hasRecovery: "recovery" in client };
+          client.dispose();
+          return result;
         },
-        expected: {
-          types: ["hello", "action"],
-          requestMatches: true,
-          name: "setCount",
-          payload: 4,
-        },
+        expected: { sameMap: true, count: 1, hasRecovery: true },
       }),
       read_case({
         suite: SUITE,
-        caseId: "hson-livehost-registry-creates-host", name: "application Locus store creates a Locus",
+        caseId: "application-store-creates-and-rejects-duplicate",
+        name: "application Locus store owns unique authorities",
         input: {},
         act: () => {
           const registry = create_application_locus_store();
-          const result = registry.create("counter", { state: { count: 2 } });
-
-          return {
-            ok: result.ok,
-            has: registry.has("counter"),
+          const first = registry.create("counter", { state: { count: 2 } });
+          const duplicate = registry.create("counter", { state: { count: 3 } });
+          const result = {
+            first: first.ok,
+            duplicate: duplicate.ok,
             count: registry.get("counter")?.map.at(["count"]).snap(),
           };
+          for (const entry of registry.list()) entry.host.dispose();
+          return result;
         },
-        expected: {
-          ok: true,
-          has: true,
-          count: 2,
-        },
+        expected: { first: true, duplicate: false, count: 2 },
       }),
       read_case({
         suite: SUITE,
-        caseId: "hson-livehost-registry-rejects-duplicate-id", name: "application Locus store rejects a duplicate key",
-        input: {},
-        act: () => {
-          const registry = create_application_locus_store();
-          const first = registry.create("counter", { state: { count: 1 } });
-          const second = registry.create("counter", { state: { count: 2 } });
-
-          return {
-            firstOk: first.ok,
-            secondOk: second.ok,
-            has: registry.has("counter"),
-            count: registry.get("counter")?.map.at(["count"]).snap(),
-          };
-        },
-        expected: {
-          firstOk: true,
-          secondOk: false,
-          has: true,
-          count: 1,
-        },
-      }),
-      read_case({
-        suite: SUITE,
-        caseId: "hson-livehost-registry-rejects-unknown-connect", name: "application Locus store rejects an unknown connection key",
+        caseId: "application-store-connects-current-session-protocol",
+        name: "application Locus store accepts current session creation",
         input: {},
         act: () => {
           const registry = create_application_locus_store();
           const socket = make_api_socket();
-          const connected = registry.connect("missing", socket);
-
-          return {
-            connected: connected.ok,
-            sentCount: socket.sent().length,
-          };
-        },
-        expected: {
-          connected: false,
-          sentCount: 0,
-        },
-      }),
-      read_case({
-        suite: SUITE,
-        caseId: "hson-livehost-registry-connects-socket", name: "application Locus store connects a socket",
-        input: {},
-        act: () => {
-          const registry = create_application_locus_store();
-          const socket = make_api_socket();
-          const created = registry.create("counter", { state: { count: 2 } });
+          registry.create("counter", { state: { count: 2 }, logicalMapId: "counter" });
           const connected = registry.connect("counter", socket);
-
-          socket.receive({ type: "hello", clientId: "client-a" });
-
-          const [hello] = socket.sent() as Array<Record<string, unknown>>;
-
-          return {
-            created: created.ok,
-            connected: connected.ok,
-            helloType: hello?.type,
-            snapshot: hello?.snapshot,
-          };
+          socket.receive({ type: "session-create", id: "create-a" });
+          const response = socket.sent()[0];
+          const result = { connected: connected.ok, type: response?.type, logicalMapId: response?.logicalMapId };
+          for (const entry of registry.list()) entry.host.dispose();
+          return result;
         },
-        expected: {
-          created: true,
-          connected: true,
-          helloType: "hello",
-          snapshot: { count: 2 },
-        },
+        expected: { connected: true, type: "session-created", logicalMapId: "counter" },
       }),
-      read_case({
-        suite: SUITE,
-        caseId: "hson-livehost-protocol-decodes-current-hello", name: "Locus protocol decodes current hello",
-        input: {},
-        act: () => {
-          const decoded = hson.locus.protocol.decode(JSON.stringify({
-            type: "hello",
-            clientId: "client-a",
-          }));
-
-          return {
-            ok: decoded.ok,
-            type: decoded.ok ? decoded.value.type : undefined,
-            hasHostId: decoded.ok && decoded.value.type === "hello" ? "hostId" in decoded.value : undefined,
-          };
-        },
-        expected: {
-          ok: true,
-          type: "hello",
-          hasHostId: false,
-        },
-      }),
-      read_case({
-        suite: SUITE,
-        caseId: "hson-livehost-protocol-decodes-action", name: "Locus protocol decodes action",
-        input: {},
-        act: () => {
-          const decoded = hson.locus.protocol.decode(JSON.stringify({
-            type: "action",
-            id: "action-a",
-            name: "setCount",
-            payload: 5,
-          }));
-
-          return {
-            ok: decoded.ok,
-            type: decoded.ok ? decoded.value.type : undefined,
-            id: decoded.ok && decoded.value.type === "action" ? decoded.value.id : undefined,
-            name: decoded.ok && decoded.value.type === "action" ? decoded.value.name : undefined,
-            payload: decoded.ok && decoded.value.type === "action" ? decoded.value.payload : undefined,
-          };
-        },
-        expected: {
-          ok: true,
-          type: "action",
-          id: "action-a",
-          name: "setCount",
-          payload: 5,
-        },
-      }),
-      read_case({
-        suite: SUITE,
-        caseId: "hson-livehost-protocol-encodes-sync", name: "Locus protocol encodes sync",
-        input: {},
-        act: () => {
-          const encoded = hson.locus.protocol.encode({
-            type: "sync",
-            seq: 3,
-            path: ["count"],
-            value: 4,
-          });
-          const parsed = JSON.parse(encoded) as Record<string, unknown>;
-
-          return {
-            type: parsed.type,
-            seq: parsed.seq,
-            path: parsed.path,
-            value: parsed.value,
-          };
-        },
-        expected: {
-          type: "sync",
-          seq: 3,
-          path: ["count"],
-          value: 4,
-        },
-      }),
-      read_case({
-        suite: SUITE,
-        caseId: "hson-livehost-protocol-encodes-error", name: "Locus protocol encodes error",
-        input: {},
-        act: () => {
-          const encoded = hson.locus.protocol.encode({
-            type: "error",
-            id: "action-a",
-            ok: false,
-            seq: 4,
-            error: {
-              message: "Nope.",
-              code: "NOPE",
-              path: ["count"],
-            },
-          });
-          const parsed = JSON.parse(encoded) as Record<string, unknown>;
-          const error = parsed.error as Record<string, unknown> | undefined;
-
-          return {
-            type: parsed.type,
-            id: parsed.id,
-            ok: parsed.ok,
-            seq: parsed.seq,
-            message: error?.message,
-            code: error?.code,
-            path: error?.path,
-          };
-        },
-        expected: {
-          type: "error",
-          id: "action-a",
-          ok: false,
-          seq: 4,
-          message: "Nope.",
-          code: "NOPE",
-          path: ["count"],
-        },
-      }),
-      read_case({
-        suite: SUITE,
-        caseId: "hson-livehost-protocol-rejects-invalid-json", name: "Locus protocol rejects invalid JSON",
-        input: {},
-        act: () => {
-          const decoded = hson.locus.protocol.decode("{");
-
-          return {
-            ok: decoded.ok,
-          };
-        },
-        expected: {
-          ok: false,
-        },
-      }),
-      read_case({
-        suite: SUITE,
-        caseId: "hson-livehost-debug-omits-historical-resume-log", name: "Locus debug omits historical resume log",
-        input: {},
-        act: () => {
-          return {
-            hasResumeLog: Object.hasOwn(hson.locus.debug, "resumeLog"),
-          };
-        },
-        expected: {
-          hasResumeLog: false,
-        },
-      }),
-      read_case({
-        suite: SUITE,
-        caseId: "hson-livehost-debug-exposes-sync-manager", name: "Locus debug exposes sync manager",
-        input: {},
-        act: () => {
-          const host = hson.locus.create({ state: { count: 5 } });
-          const messages: unknown[] = [];
-          const sync = hson.locus.debug.syncManager(host.map);
-          const added = sync.add_session("session-a", (message) => {
-            messages.push(message);
-          });
-
-          sync.subscribe("session-a", ["count"], 0);
-
-          const [message] = messages as Array<Record<string, unknown>>;
-
-          return {
-            added: added.ok,
-            messageType: message?.type,
-            path: message?.path,
-            value: message?.value,
-          };
-        },
-        expected: {
-          added: true,
-          messageType: "sync",
-          path: ["count"],
-          value: 5,
-        },
-      }),
-      read_case({
-        suite: SUITE,
-        caseId: "hson-livehost-debug-sync-manager-rejects-duplicate-session", name: "Locus debug sync manager rejects duplicate session",
-        input: {},
-        act: () => {
-          const host = hson.locus.create({ state: { count: 5 } });
-          const sync = hson.locus.debug.syncManager(host.map);
-          const first = sync.add_session("session-a", () => undefined);
-          const second = sync.add_session("session-a", () => undefined);
-
-          return {
-            firstOk: first.ok,
-            secondOk: second.ok,
-          };
-        },
-        expected: {
-          firstOk: true,
-          secondOk: false,
-        },
-      }),
-    ] as const,
+    ],
   };
 }

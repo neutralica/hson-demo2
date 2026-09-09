@@ -217,26 +217,24 @@ export function locus_store_suite(): TestSuite {
         act: () => {
           const store = create_application_locus_store();
           const socket = make_store_socket();
-          store.create("counter", { state: { count: 2 } });
+          store.create("counter", { state: { count: 2 }, logicalMapId: "counter" });
           const result = store.connect("counter", socket);
 
-          socket.receive({ type: "hello", clientId: "client-a" });
+          socket.receive({ type: "session-create", id: "create-a" });
 
-          const [hello] = socket.sent() as Array<Record<string, unknown>>;
+          const [created] = socket.sent() as Array<Record<string, unknown>>;
 
           return {
             ok: result.ok,
-            helloType: hello?.type,
-            helloSeq: hello?.seq,
-            snapshot: hello?.snapshot,
+            responseType: created?.type,
+            logicalMapId: created?.logicalMapId,
             listenerCount: socket.listener_count(),
           };
         },
         expected: {
           ok: true,
-          helloType: "hello",
-          helloSeq: 0,
-          snapshot: { count: 2 },
+          responseType: "session-created",
+          logicalMapId: "counter",
           listenerCount: 2,
         },
       }),
@@ -258,7 +256,7 @@ export function locus_store_suite(): TestSuite {
           });
           const connected = store.connect("counter", socket);
 
-          socket.receive({ type: "hello", clientId: "client-a" });
+          socket.receive({ type: "session-create", id: "create-action" });
           socket.receive({ type: "action", id: "action-a", name: "increment" });
 
           const messages = socket.sent() as Array<Record<string, unknown>>;
@@ -273,7 +271,7 @@ export function locus_store_suite(): TestSuite {
         expected: {
           created: true,
           connected: true,
-          messageTypes: ["hello"],
+          messageTypes: ["session-created"],
           count: 3,
         },
       }),

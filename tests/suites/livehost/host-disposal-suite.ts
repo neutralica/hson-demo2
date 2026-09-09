@@ -69,7 +69,7 @@ export function locus_host_disposal_suite(): TestSuite {
         });
         const socket = make_socket();
         host.connect(socket);
-        await socket.receive({ type: "hello" });
+        await socket.receive({ type: "session-create", id: "create-dispose" });
         const listenersBefore = socket.listener_count();
         host.dispose();
         host.dispose();
@@ -190,7 +190,7 @@ export function locus_host_disposal_suite(): TestSuite {
         const host = create_locus({ state: { count: 0 }, sessionId: () => "recovery-dispose" });
         const socket = make_socket();
         host.connect(socket);
-        await socket.receive({ type: "hello" });
+        await socket.receive({ type: "session-create", id: "create-recovery" });
         await socket.receive({
           type: "recover",
           id: "recover-a",

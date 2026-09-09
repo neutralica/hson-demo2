@@ -1,1021 +1,212 @@
-// pair-suite.ts
-
-import { create_locus } from "hson-live/locus";
+import { hson } from "hson-live";
 import { create_echo } from "hson-live/echo";
+import { create_locus, decode_locus_server_message } from "hson-live/locus";
+import type { LocusSocketLike } from "hson-live/types";
 import type { TestCase, TestSuite } from "../../harness/core/test-contracts";
 import { equal_row, preview_value } from "../livemap/test-helpers";
 
-type PairSocketMessageListener = (message: string) => void;
-type PairSocketCloseListener = () => void;
+type Socket = LocusSocketLike & Readonly<{ sent(): Array<Record<string, unknown>> }>;
 
-type PairSocket = Readonly<{
-  send: (message: string) => void;
-  close: () => void;
-  onMessage: (listener: PairSocketMessageListener) => () => void;
-  onClose: (listener: PairSocketCloseListener) => () => void;
-  sent: () => unknown[];
-  sent_raw: () => string[];
-  listener_count: () => number;
-}>;
-
-type LocusPairReadCaseSpec = Readonly<{
-  suite: string;
-  caseId: string; name: string;
-  input: unknown;
-  act: () => unknown | Promise<unknown>;
-  expected: unknown;
-}>;
-
-function make_socket_pair(): readonly [PairSocket, PairSocket] {
+function make_socket_pair(): readonly [Socket, Socket] {
+  const firstMessages = new Set<(message: string) => void>();
+  const secondMessages = new Set<(message: string) => void>();
+  const firstCloses = new Set<() => void>();
+  const secondCloses = new Set<() => void>();
   const firstSent: string[] = [];
   const secondSent: string[] = [];
-  const firstMessageListeners = new Set<PairSocketMessageListener>();
-  const secondMessageListeners = new Set<PairSocketMessageListener>();
-  const firstCloseListeners = new Set<PairSocketCloseListener>();
-  const secondCloseListeners = new Set<PairSocketCloseListener>();
-
-  function make_socket(
+  const make = (
     ownSent: string[],
-    peerMessageListeners: Set<PairSocketMessageListener>,
-    ownMessageListeners: Set<PairSocketMessageListener>,
-    peerCloseListeners: Set<PairSocketCloseListener>,
-    ownCloseListeners: Set<PairSocketCloseListener>,
-  ): PairSocket {
-    function send(message: string): void {
+    peerMessages: Set<(message: string) => void>,
+    ownMessages: Set<(message: string) => void>,
+    peerCloses: Set<() => void>,
+    ownCloses: Set<() => void>,
+  ): Socket => Object.freeze({
+    send(message: string) {
       ownSent.push(message);
-      queueMicrotask(() => {
-        for (const listener of Array.from(peerMessageListeners)) listener(message);
-      });
-    }
-
-    function close(): void {
-      queueMicrotask(() => {
-        for (const listener of Array.from(peerCloseListeners)) listener();
-      });
-    }
-
-    function onMessage(listener: PairSocketMessageListener): () => void {
-      ownMessageListeners.add(listener);
-      return () => {
-        ownMessageListeners.delete(listener);
-      };
-    }
-
-    function onClose(listener: PairSocketCloseListener): () => void {
-      ownCloseListeners.add(listener);
-      return () => {
-        ownCloseListeners.delete(listener);
-      };
-    }
-
-    function sent(): unknown[] {
-      return ownSent.map((message) => JSON.parse(message) as unknown);
-    }
-
-    function sent_raw(): string[] {
-      return [...ownSent];
-    }
-
-    function listener_count(): number {
-      return ownMessageListeners.size + ownCloseListeners.size;
-    }
-
-    return Object.freeze({
-      send,
-      close,
-      onMessage,
-      onClose,
-      sent,
-      sent_raw,
-      listener_count,
-    });
-  }
-
+      for (const listener of [...peerMessages]) listener(message);
+    },
+    close() { for (const listener of [...peerCloses]) listener(); },
+    onMessage(listener: (message: string) => void) {
+      ownMessages.add(listener);
+      return () => ownMessages.delete(listener);
+    },
+    onClose(listener: () => void) {
+      ownCloses.add(listener);
+      return () => ownCloses.delete(listener);
+    },
+    sent: () => ownSent.map((message) => JSON.parse(message) as Record<string, unknown>),
+  });
   return [
-    make_socket(
-      firstSent,
-      secondMessageListeners,
-      firstMessageListeners,
-      secondCloseListeners,
-      firstCloseListeners,
-    ),
-    make_socket(
-      secondSent,
-      firstMessageListeners,
-      secondMessageListeners,
-      firstCloseListeners,
-      secondCloseListeners,
-    ),
-  ] as const;
+    make(firstSent, secondMessages, firstMessages, secondCloses, firstCloses),
+    make(secondSent, firstMessages, secondMessages, firstCloses, secondCloses),
+  ];
 }
 
-async function settle_pair(): Promise<void> {
-  await Promise.resolve();
-  await Promise.resolve();
-  await Promise.resolve();
-  await Promise.resolve();
-  await Promise.resolve();
-  await Promise.resolve();
-}
-
-function locus_pair_read_case(spec: LocusPairReadCaseSpec): TestCase {
+function read_case(spec: Readonly<{
+  suite: string;
+  caseId: string;
+  name: string;
+  act: () => unknown | Promise<unknown>;
+  expected: unknown;
+}>): TestCase {
   return {
     suite: spec.suite,
-    caseId: spec.caseId, name: spec.name,
-    meta: {
-      input: preview_value(spec.input),
-    },
-    run: async () => {
-      const value = await spec.act();
-
-      return {
-        assertRows: [
-          equal_row(`${spec.name}: value`, value, spec.expected),
-        ],
-      };
-    },
+    caseId: spec.caseId,
+    name: spec.name,
+    meta: { input: preview_value({}) },
+    run: async () => ({ assertRows: [equal_row(spec.name, await spec.act(), spec.expected)] }),
   };
 }
 
 export function locus_pair_suite(): TestSuite {
   const SUITE = "livehost/pair";
-
   return {
     suite: SUITE,
     cases: [
-      locus_pair_read_case({
+      read_case({
         suite: SUITE,
-        caseId: "client-socket-close-detaches-host-listener", name: "client socket close detaches Locus listener",
-        input: {},
+        caseId: "endpoint-establishes-session-with-authority",
+        name: "endpoint establishes a semantic session with its authority",
         act: async () => {
           const [clientSocket, hostSocket] = make_socket_pair();
-          const host = create_locus({ state: { ready: true } });
-          const client = create_echo<{ ready: boolean }>({
-            socket: clientSocket,
-            clientId: "client-a",
-          });
-
+          const host = create_locus({ state: {}, logicalMapId: "pair" });
           host.connect(hostSocket);
+          const client = create_echo({ socket: clientSocket });
           client.connect();
-          await settle_pair();
-          clientSocket.close();
-          await settle_pair();
-          clientSocket.send(JSON.stringify({ type: "hello", clientId: "client-a" }));
-          await settle_pair();
-
-          const clientMessages = clientSocket.sent() as Array<Record<string, unknown>>;
-          const hostMessages = hostSocket.sent() as Array<Record<string, unknown>>;
-
-          return {
-            clientSentCount: clientMessages.length,
-            hostSentCount: hostMessages.length,
-            firstClientType: clientMessages[0]?.type,
-            secondClientType: clientMessages[1]?.type,
-            firstHostType: hostMessages[0]?.type,
-            secondHostType: hostMessages[1]?.type,
-            clientSeq: client.seq,
-            clientRoot: client.map.snap(),
+          const session = await client.session.create();
+          const result = {
+            outbound: clientSocket.sent()[0]?.type,
+            inbound: hostSocket.sent()[0]?.type,
+            logicalMapId: session.logicalMapId,
+            status: client.session.status,
           };
+          client.dispose();
+          host.dispose();
+          return result;
         },
-        expected: {
-          clientSentCount: 2,
-          hostSentCount: 1,
-          firstClientType: "hello",
-          secondClientType: "hello",
-          firstHostType: "hello",
-          secondHostType: undefined,
-          clientSeq: 0,
-          clientRoot: { ready: true },
-        },
+        expected: { outbound: "session-create", inbound: "session-created", logicalMapId: "pair", status: "attached" },
       }),
-      locus_pair_read_case({
+      read_case({
         suite: SUITE,
-        caseId: "client-hello-receives-host-snapshot", name: "client hello receives Locus snapshot",
-        input: {},
+        caseId: "endpoint-action-mutates-authority",
+        name: "endpoint action mutates only the authoritative map",
         act: async () => {
+          type Actions = Readonly<{ increment: undefined }>;
           const [clientSocket, hostSocket] = make_socket_pair();
-          const host = create_locus({ state: { user: { name: "Ada" } } });
-          const client = create_echo<{ user: { name: string } }>({
-            socket: clientSocket,
-            clientId: "client-a",
-          });
-
-          host.connect(hostSocket);
-          client.connect();
-          await settle_pair();
-
-          const [clientHello] = clientSocket.sent() as Array<Record<string, unknown>>;
-          const [hostHello] = hostSocket.sent() as Array<Record<string, unknown>>;
-
-          return {
-            clientSentType: clientHello?.type,
-            clientSentHasLastSeq: Object.hasOwn(clientHello ?? {}, "lastSeq"),
-            hostSentType: hostHello?.type,
-            hostSentSeq: hostHello?.seq,
-            clientSeq: client.seq,
-            clientRoot: client.map.snap(),
-          };
-        },
-        expected: {
-          clientSentType: "hello",
-          clientSentHasLastSeq: false,
-          hostSentType: "hello",
-          hostSentSeq: 0,
-          clientSeq: 0,
-          clientRoot: { user: { name: "Ada" } },
-        },
-      }),
-      locus_pair_read_case({
-        suite: SUITE,
-        caseId: "client-subscribe-receives-immediate-host-sync", name: "client subscribe receives immediate Locus sync",
-        input: {},
-        act: async () => {
-          const [clientSocket, hostSocket] = make_socket_pair();
-          const host = create_locus({ state: { ui: { selected: "home" } } });
-          const client = create_echo<{ ui: { selected: string } }>({ socket: clientSocket });
-
-          host.connect(hostSocket);
-          client.connect();
-          await settle_pair();
-          client.subscribe(["ui", "selected"]);
-          await settle_pair();
-
-          const [, sync] = hostSocket.sent() as Array<Record<string, unknown>>;
-
-          return {
-            syncType: sync?.type,
-            syncSeq: sync?.seq,
-            syncPath: sync?.path,
-            syncValue: sync?.value,
-            clientSeq: client.seq,
-            selected: client.map.at(["ui", "selected"]).snap(),
-          };
-        },
-        expected: {
-          syncType: "sync",
-          syncSeq: 0,
-          syncPath: ["ui", "selected"],
-          syncValue: "home",
-          clientSeq: 0,
-          selected: "home",
-        },
-      }),
-      locus_pair_read_case({
-        suite: SUITE,
-        caseId: "client-action-resolves-ack-and-receives-sync-update", name: "client action resolves ack and receives sync update",
-        input: {},
-        act: async () => {
-          type Actions = Readonly<{
-            rename_user: { name: string };
-          }>;
-          const [clientSocket, hostSocket] = make_socket_pair();
-          const host = create_locus({
-            state: { user: { name: "Ada" } },
-            actions: {
-              rename_user: (ctx, payload) => {
-                if (!payload || typeof payload !== "object" || Array.isArray(payload)) return;
-                const name = (payload as { name?: unknown }).name;
-                if (typeof name === "string") void ctx.mutate((draft) => draft.set(["user", "name"], name));
-              },
-            },
-          });
-          const client = create_echo<{ user: { name: string } }>({
-            socket: clientSocket,
-          });
-
-          host.connect(hostSocket);
-          client.connect();
-          await settle_pair();
-          client.subscribe(["user", "name"]);
-          await settle_pair();
-          const resultPromise = client.action("rename_user", { name: "Grace" });
-          await settle_pair();
-          const result = await resultPromise;
-          await settle_pair();
-
-          const [, initialSync, ack, updateSync] = hostSocket.sent() as Array<Record<string, unknown>>;
-
-          return {
-            ackType: ack?.type,
-            ackSeq: ack?.seq,
-            resultType: result.type,
-            resultSeq: result.seq,
-            updateType: updateSync?.type,
-            updateSeq: updateSync?.seq,
-            updateValue: updateSync?.value,
-            clientSeq: client.seq,
-            clientName: client.map.at(["user", "name"]).snap(),
-            hostName: host.map.at(["user", "name"]).snap(),
-            initialSyncValue: initialSync?.value,
-          };
-        },
-        expected: {
-          ackType: "ack",
-          ackSeq: 1,
-          resultType: "ack",
-          resultSeq: 1,
-          updateType: "sync",
-          updateSeq: 1,
-          updateValue: "Grace",
-          clientSeq: 1,
-          clientName: "Grace",
-          hostName: "Grace",
-          initialSyncValue: "Ada",
-        },
-      }),
-      locus_pair_read_case({
-        suite: SUITE,
-        caseId: "client-action-resolves-host-error", name: "client action resolves Locus error",
-        input: {},
-        act: async () => {
-          type Actions = Readonly<{
-            missing: undefined;
-          }>;
-          const [clientSocket, hostSocket] = make_socket_pair();
-          const host = create_locus({ state: {} });
-          const client = create_echo<undefined, Actions>({
-            socket: clientSocket,
-          });
-
-          host.connect(hostSocket);
-          client.connect();
-          await settle_pair();
-          const resultPromise = client.action("missing");
-          await settle_pair();
-          const result = await resultPromise;
-
-          return {
-            resultType: result.type,
-            resultSeq: result.seq,
-            message: result.type === "error" ? result.error.message : undefined,
-            code: result.type === "error" ? result.error.code : undefined,
-            clientSeq: client.seq,
-          };
-        },
-        expected: {
-          resultType: "error",
-          resultSeq: 0,
-          message: "Unknown Locus action: missing",
-          code: "LOCUS_UNKNOWN_ACTION",
-          clientSeq: 0,
-        },
-      }),
-      locus_pair_read_case({
-        suite: SUITE,
-        caseId: "client-unsubscribe-stops-later-sync-update", name: "client unsubscribe stops later sync update",
-        input: {},
-        act: async () => {
-          type Actions = Readonly<{
-            increment: undefined;
-          }>;
-          const [clientSocket, hostSocket] = make_socket_pair();
-          const host = create_locus({
+          const host = create_locus<{ count: number }, Actions>({
             state: { count: 0 },
+            logicalMapId: "counter",
             actions: {
-              increment: (ctx) => {
-                const current = ctx.map.at(["count"]).snap();
-                void ctx.mutate((draft) => draft.set(["count"], typeof current === "number" ? current + 1 : 1));
+              increment: async (context) => {
+                await context.mutate((draft) => draft.set(["count"], 1));
               },
             },
           });
-          const client = create_echo<{ count: number }>({
-            socket: clientSocket,
-          });
-
           host.connect(hostSocket);
+          const client = create_echo<undefined, Actions>({ socket: clientSocket });
           client.connect();
-          await settle_pair();
-          client.subscribe(["count"]);
-          await settle_pair();
-          client.unsubscribe(["count"]);
-          await settle_pair();
-          const resultPromise = client.action("increment");
-          await settle_pair();
-          const result = await resultPromise;
-
-          const hostMessages = hostSocket.sent() as Array<Record<string, unknown>>;
-
-          return {
-            hostSentCount: hostMessages.length,
-            resultType: result.type,
-            resultSeq: result.seq,
-            clientCount: client.map.at(["count"]).snap(),
-            hostCount: host.map.at(["count"]).snap(),
-            lastHostMessageType: hostMessages[hostMessages.length - 1]?.type,
+          await client.session.create();
+          const response = await client.action("increment");
+          const result = {
+            response: response.type,
+            completionRev: response.type === "ack" ? response.seq : undefined,
+            authorityRev: host.map.rev,
+            count: host.map.at(["count"]).snap(),
+            hasClientMap: "map" in client,
           };
+          client.dispose();
+          host.dispose();
+          return result;
         },
-        expected: {
-          hostSentCount: 3,
-          resultType: "ack",
-          resultSeq: 1,
-          clientCount: 0,
-          hostCount: 1,
-          lastHostMessageType: "ack",
-        },
+        expected: { response: "ack", completionRev: 1, authorityRev: 1, count: 1, hasClientMap: false },
       }),
-      locus_pair_read_case({
+      read_case({
         suite: SUITE,
-        caseId: "fresh-client-receives-current-snapshot-without-historical-sync", name: "fresh client receives current snapshot without historical sync",
-        input: {},
+        caseId: "application-event-is-connection-scoped",
+        name: "application event is observed at the invoking socket boundary",
         act: async () => {
-          type Actions = Readonly<{
-            increment: undefined;
-          }>;
-          const [firstClientSocket, firstHostSocket] = make_socket_pair();
-          const [secondClientSocket, secondHostSocket] = make_socket_pair();
-          const host = create_locus({
-            state: { count: 0 },
-            actions: {
-              increment: (ctx) => {
-                const current = ctx.map.at(["count"]).snap();
-                void ctx.mutate((draft) => draft.set(["count"], typeof current === "number" ? current + 1 : 1));
-              },
-            },
-          });
-          const firstClient = create_echo<{ count: number }>({
-            socket: firstClientSocket,
-          });
-
-          host.connect(firstHostSocket);
-          firstClient.connect();
-          await settle_pair();
-          firstClient.subscribe(["count"]);
-          await settle_pair();
-          const resultPromise = firstClient.action("increment");
-          await settle_pair();
-          await resultPromise;
-          await settle_pair();
-
-          const secondClient = create_echo<{ count: number }>({
-            socket: secondClientSocket,
-            clientId: "client-b",
-          });
-          host.connect(secondHostSocket);
-          secondClient.connect();
-          await settle_pair();
-
-          const [secondHello] = secondClientSocket.sent() as Array<Record<string, unknown>>;
-          const [hostHello, replay] = secondHostSocket.sent() as Array<Record<string, unknown>>;
-
-          return {
-            secondHasLastSeq: Object.hasOwn(secondHello ?? {}, "lastSeq"),
-            hostHelloType: hostHello?.type,
-            hostHelloSeq: hostHello?.seq,
-            replayType: replay?.type,
-            replaySeq: replay?.seq,
-            replayPath: replay?.path,
-            replayValue: replay?.value,
-            secondSeq: secondClient.seq,
-            secondCount: secondClient.map.at(["count"]).snap(),
-          };
-        },
-        expected: {
-          secondHasLastSeq: false,
-          hostHelloType: "hello",
-          hostHelloSeq: 1,
-          replayType: undefined,
-          replaySeq: undefined,
-          replayPath: undefined,
-          replayValue: undefined,
-          secondSeq: 1,
-          secondCount: 1,
-        },
-      }),
-      locus_pair_read_case({
-        suite: SUITE,
-        caseId: "client-reconnect-receives-current-hello-without-resume-cursor", name: "client reconnect receives current hello without resume cursor",
-        input: {},
-        act: async () => {
-          type Actions = Readonly<{
-            increment: undefined;
-          }>;
-          const [firstClientSocket, firstHostSocket] = make_socket_pair();
-          const [secondClientSocket, secondHostSocket] = make_socket_pair();
-          const host = create_locus({
-            state: { count: 0 },
-            actions: {
-              increment: (ctx) => {
-                const current = ctx.map.at(["count"]).snap();
-                void ctx.mutate((draft) => draft.set(["count"], typeof current === "number" ? current + 1 : 1));
-              },
-            },
-          });
-          const firstClient = create_echo<{ count: number }>({
-            socket: firstClientSocket,
-          });
-
-          host.connect(firstHostSocket);
-          firstClient.connect();
-          await settle_pair();
-          firstClient.subscribe(["count"]);
-          await settle_pair();
-          const resultPromise = firstClient.action("increment");
-          await settle_pair();
-          await resultPromise;
-          await settle_pair();
-
-          const secondClient = create_echo<{ count: number }>({ socket: secondClientSocket });
-          host.connect(secondHostSocket);
-          secondClient.connect();
-          await settle_pair();
-          secondClient.disconnect();
-          secondClientSocket.close();
-          await settle_pair();
-          host.connect(secondHostSocket);
-          secondClient.connect();
-          await settle_pair();
-
-          const secondClientMessages = secondClientSocket.sent() as Array<Record<string, unknown>>;
-          const secondHostMessages = secondHostSocket.sent() as Array<Record<string, unknown>>;
-          const replayMessages = secondHostMessages.filter((message) => message.type === "sync");
-          const lastHello = secondHostMessages[secondHostMessages.length - 1];
-
-          return {
-            clientHelloCount: secondClientMessages.length,
-            firstHasLastSeq: Object.hasOwn(secondClientMessages[0] ?? {}, "lastSeq"),
-            secondHasLastSeq: Object.hasOwn(secondClientMessages[1] ?? {}, "lastSeq"),
-            hostSentCount: secondHostMessages.length,
-            replayCount: replayMessages.length,
-            lastHostType: lastHello?.type,
-            lastHostSeq: lastHello?.seq,
-            clientSeq: secondClient.seq,
-            clientCount: secondClient.map.at(["count"]).snap(),
-          };
-        },
-        expected: {
-          clientHelloCount: 2,
-          firstHasLastSeq: false,
-          secondHasLastSeq: false,
-          hostSentCount: 2,
-          replayCount: 0,
-          lastHostType: "hello",
-          lastHostSeq: 1,
-          clientSeq: 1,
-          clientCount: 1,
-        },
-      }),
-      locus_pair_read_case({
-        suite: SUITE,
-        caseId: "current-hello-snapshot-is-not-followed-by-historical-sync", name: "current hello snapshot is not followed by historical sync",
-        input: {},
-        act: async () => {
-          type Actions = Readonly<{
-            increment: undefined;
-          }>;
-          const [writerClientSocket, writerHostSocket] = make_socket_pair();
-          const [readerClientSocket, readerHostSocket] = make_socket_pair();
-          const host = create_locus({
-            state: { count: 0 },
-            actions: {
-              increment: (ctx) => {
-                const current = ctx.map.at(["count"]).snap();
-                void ctx.mutate((draft) => draft.set(["count"], typeof current === "number" ? current + 1 : 1));
-              },
-            },
-          });
-          const writer = create_echo<{ count: number }>({
-            socket: writerClientSocket,
-          });
-
-          host.connect(writerHostSocket);
-          writer.connect();
-          await settle_pair();
-          writer.subscribe(["count"]);
-          await settle_pair();
-          const resultPromise = writer.action("increment");
-          await settle_pair();
-          await resultPromise;
-          await settle_pair();
-
-          const reader = create_echo<{ count: number }>({ socket: readerClientSocket });
-          host.connect(readerHostSocket);
-          reader.connect();
-          await settle_pair();
-
-          const hostMessages = readerHostSocket.sent() as Array<Record<string, unknown>>;
-          const replayMessages = hostMessages.filter((message) => message.type === "sync");
-
-          return {
-            hostSentCount: hostMessages.length,
-            replayCount: replayMessages.length,
-            helloType: hostMessages[0]?.type,
-            helloSeq: hostMessages[0]?.seq,
-            readerSeq: reader.seq,
-            readerRoot: reader.map.snap(),
-            readerCount: reader.map.at(["count"]).snap(),
-          };
-        },
-        expected: {
-          hostSentCount: 1,
-          replayCount: 0,
-          helloType: "hello",
-          helloSeq: 1,
-          readerSeq: 1,
-          readerRoot: { count: 1 },
-          readerCount: 1,
-        },
-      }),
-      locus_pair_read_case({
-        suite: SUITE,
-        caseId: "host-connection-emits-one-generic-event-to-one-client", name: "Locus connection emits one generic event to one client",
-        input: {},
-        act: async () => {
-          const [firstClientSocket, firstHostSocket] = make_socket_pair();
-          const [secondClientSocket, secondHostSocket] = make_socket_pair();
-          const host = create_locus({ state: { ready: true } });
-          const first = create_echo<{ ready: boolean }>({ socket: firstClientSocket });
-          const second = create_echo<{ ready: boolean }>({ socket: secondClientSocket });
-          const firstEvents: unknown[] = [];
-          const secondEvents: unknown[] = [];
-          first.onEvent((message) => firstEvents.push(message));
-          second.onEvent((message) => secondEvents.push(message));
-          const firstConnection = host.connect(firstHostSocket);
-          host.connect(secondHostSocket);
-          first.connect();
-          second.connect();
-          await settle_pair();
-          firstConnection.emit_event("notice", { nested: [1, { ok: true }] });
-          await settle_pair();
-          return { firstEvents, secondEvents };
-        },
-        expected: {
-          firstEvents: [{ type: "event", event: "notice", payload: { nested: [1, { ok: true }] } }],
-          secondEvents: [],
-        },
-      }),
-      locus_pair_read_case({
-        suite: SUITE,
-        caseId: "action-context-emits-ordered-events-only-to-invoking-client-before-ack", name: "action context emits ordered events only to invoking client before ack",
-        input: {},
-        act: async () => {
-          type Actions = Readonly<{ emit: undefined }>;
-          const [firstClientSocket, firstHostSocket] = make_socket_pair();
-          const [secondClientSocket, secondHostSocket] = make_socket_pair();
-          const host = create_locus<undefined, Actions>({
-            actions: {
-              emit: (ctx) => {
-                ctx.emit_event("first", { n: 1 });
-                ctx.emit_event("second", { n: 2 });
-                return { done: true };
-              },
-            },
-          });
-          const first = create_echo<undefined, Actions>({ socket: firstClientSocket });
-          const second = create_echo<undefined, Actions>({ socket: secondClientSocket });
-          const firstEvents: string[] = [];
-          const secondEvents: string[] = [];
-          first.onEvent((message) => firstEvents.push(message.event));
-          second.onEvent((message) => secondEvents.push(message.event));
-          host.connect(firstHostSocket);
-          host.connect(secondHostSocket);
-          first.connect();
-          second.connect();
-          await settle_pair();
-          const resultPromise = first.action("emit");
-          await settle_pair();
-          const result = await resultPromise;
-          const hostTypes = (firstHostSocket.sent() as Array<Record<string, unknown>>).map((message) => message.type);
-          return {
-            firstEvents,
-            secondEvents,
-            resultType: result.type,
-            result: result.type === "ack" ? result.result : undefined,
-            hostTypes,
-          };
-        },
-        expected: {
-          firstEvents: ["first", "second"],
-          secondEvents: [],
-          resultType: "ack",
-          result: { done: true },
-          hostTypes: ["hello", "event", "event", "ack"],
-        },
-      }),
-      locus_pair_read_case({
-        suite: SUITE,
-        caseId: "action-context-emitter-returns-false-after-originating-connection-closes", name: "action context emitter returns false after originating connection closes",
-        input: {},
-        act: async () => {
-          type Actions = Readonly<{ delayed: undefined }>;
-          let release: (() => void) | undefined;
-          const gate = new Promise<void>((resolve) => {
-            release = resolve;
-          });
-          let emitted: boolean | undefined;
-          let origin: unknown;
+          type Actions = Readonly<{ mark: { marker: string } }>;
           const [clientSocket, hostSocket] = make_socket_pair();
           const host = create_locus<undefined, Actions>({
-            sessionId: () => "async-detach-session",
-            actions: {
-              delayed: async (ctx) => {
-                origin = ctx.origin;
-                await gate;
-                emitted = ctx.emit_event("late", null);
-                return { emitted };
-              },
-            },
+            state: undefined,
+            logicalMapId: "events",
+            actions: { mark: (context, payload) => context.emit_event("marked", payload) },
+          });
+          host.connect(hostSocket);
+          const events: unknown[] = [];
+          clientSocket.onMessage((raw) => {
+            const decoded = decode_locus_server_message(raw);
+            if (decoded.ok && decoded.value.type === "event") events.push(decoded.value.payload);
           });
           const client = create_echo<undefined, Actions>({ socket: clientSocket });
-          host.connect(hostSocket);
           client.connect();
-          await settle_pair();
-          const actionOutcome = client.action("delayed").then(
-            () => "resolved",
-            () => "rejected",
-          );
-          await settle_pair();
-          client.disconnect();
-          clientSocket.close();
-          await settle_pair();
-          release?.();
-          await settle_pair();
-          const hostEvents = (hostSocket.sent() as Array<Record<string, unknown>>).filter((message) => message.type === "event");
-          return { actionOutcome: await actionOutcome, origin, emitted, hostEventCount: hostEvents.length };
+          await client.session.create();
+          await client.action("mark", { marker: "a" });
+          const result = { events, hasOnEvent: "onEvent" in client };
+          client.dispose();
+          host.dispose();
+          return result;
         },
-        expected: {
-          actionOutcome: "rejected",
-          origin: { kind: "session", sessionId: "async-detach-session", epoch: 1, resumable: false },
-          emitted: false,
-          hostEventCount: 0,
-        },
+        expected: { events: [{ marker: "a" }], hasOnEvent: false },
       }),
-      locus_pair_read_case({
+      read_case({
         suite: SUITE,
-        caseId: "concurrent-generic-actions-keep-event-markers-connection-scoped", name: "concurrent generic actions keep event markers connection scoped",
-        input: {},
+        caseId: "replica-recovers-explicit-map",
+        name: "replica-bearing Echo recovers its explicitly supplied LiveMap",
         act: async () => {
-          type Actions = Readonly<{ marked: { marker: string } }>;
-          let started = 0;
-          let release: (() => void) | undefined;
-          const gate = new Promise<void>((resolve) => {
-            release = resolve;
+          const [clientSocket, hostSocket] = make_socket_pair();
+          const host = create_locus({ state: { count: 4 }, logicalMapId: "replica" });
+          host.connect(hostSocket);
+          const map = hson.liveMap.fromJson({ count: 0 });
+          const client = create_echo({
+            socket: clientSocket,
+            map,
+            recovery: { logicalMapId: "replica" },
           });
-          let bothStarted: (() => void) | undefined;
-          const entered = new Promise<void>((resolve) => {
-            bothStarted = resolve;
-          });
+          client.connect();
+          await client.session.create();
+          const recovery = await client.recovery.recover();
+          const result = {
+            sameMap: client.map === map,
+            strategy: recovery.strategy,
+            count: map.at(["count"]).snap(),
+            mapRev: map.rev,
+            recoveryRev: client.recovery.lastAppliedRev,
+          };
+          client.dispose();
+          host.dispose();
+          return result;
+        },
+        expected: { sameMap: true, strategy: "snapshot", count: 4, mapRev: 0, recoveryRev: 0 },
+      }),
+      read_case({
+        suite: SUITE,
+        caseId: "two-endpoints-have-independent-sessions",
+        name: "two endpoints establish independent sessions",
+        act: async () => {
           const [firstClientSocket, firstHostSocket] = make_socket_pair();
           const [secondClientSocket, secondHostSocket] = make_socket_pair();
-          const host = create_locus<undefined, Actions>({
-            actions: {
-              marked: async (ctx, payload) => {
-                started += 1;
-                if (started === 2) bothStarted?.();
-                await gate;
-                ctx.emit_event("marker", payload);
-                return payload;
-              },
-            },
-          });
-          const first = create_echo<undefined, Actions>({ socket: firstClientSocket });
-          const second = create_echo<undefined, Actions>({ socket: secondClientSocket });
-          const firstMarkers: unknown[] = [];
-          const secondMarkers: unknown[] = [];
-          first.onEvent((message) => firstMarkers.push(message.payload));
-          second.onEvent((message) => secondMarkers.push(message.payload));
+          const host = create_locus({ state: {}, logicalMapId: "shared" });
           host.connect(firstHostSocket);
           host.connect(secondHostSocket);
+          const first = create_echo({ socket: firstClientSocket });
+          const second = create_echo({ socket: secondClientSocket });
           first.connect();
           second.connect();
-          await settle_pair();
-          const firstResult = first.action("marked", { marker: "a" });
-          const secondResult = second.action("marked", { marker: "b" });
-          await entered;
-          release?.();
-          const [firstAck, secondAck] = await Promise.all([firstResult, secondResult]);
-          await settle_pair();
-          return {
-            started,
-            firstMarkers,
-            secondMarkers,
-            firstResult: firstAck.type === "ack" ? firstAck.result : undefined,
-            secondResult: secondAck.type === "ack" ? secondAck.result : undefined,
+          const firstSession = await first.session.create();
+          const secondSession = await second.session.create();
+          const result = {
+            distinct: firstSession.sessionId !== secondSession.sessionId,
+            firstMap: firstSession.logicalMapId,
+            secondMap: secondSession.logicalMapId,
           };
+          first.dispose();
+          second.dispose();
+          host.dispose();
+          return result;
         },
-        expected: {
-          started: 2,
-          firstMarkers: [{ marker: "a" }],
-          secondMarkers: [{ marker: "b" }],
-          firstResult: { marker: "a" },
-          secondResult: { marker: "b" },
-        },
+        expected: { distinct: true, firstMap: "shared", secondMap: "shared" },
       }),
-      locus_pair_read_case({
-  suite: SUITE,
-  caseId: "client-supplied-id-cannot-manufacture-session-authority", name: "client supplied id cannot manufacture session authority",
-  input: {},
-
-  act: async () => {
-    type Actions = Readonly<{
-      inspect: undefined;
-    }>;
-
-    const [clientSocket, hostSocket] = make_socket_pair();
-
-    const host = create_locus<undefined, Actions>({
-      sessionId: () => "server-session-a",
-
-      actions: {
-        inspect: (ctx) => {
-          return ctx.origin;
-        },
-      },
-    });
-
-    const client = create_echo<undefined, Actions>({
-      socket: clientSocket,
-      clientId: "impersonated-session",
-    });
-
-    host.connect(hostSocket);
-    client.connect();
-
-    await settle_pair();
-
-    const result = await client.action("inspect");
-
-    await settle_pair();
-
-    return {
-      resultType: result.type,
-      origin: result.type === "ack"
-        ? result.result
-        : undefined,
-    };
-  },
-
-  expected: {
-    resultType: "ack",
-    origin: {
-      kind: "session",
-      sessionId: "server-session-a",
-      epoch: 1,
-      resumable: false,
-    },
-  },
-      }),
-      locus_pair_read_case({
-  suite: SUITE,
-  caseId: "clients-sharing-a-claimed-id-retain-distinct-session-authority", name: "clients sharing a claimed id retain distinct session authority",
-  input: {},
-
-  act: async () => {
-    type Actions = Readonly<{
-      inspect: undefined;
-    }>;
-
-    let nextSession = 0;
-
-    const [firstClientSocket, firstHostSocket] = make_socket_pair();
-    const [secondClientSocket, secondHostSocket] = make_socket_pair();
-
-    const host = create_locus<undefined, Actions>({
-      sessionId: () => {
-        nextSession += 1;
-        return `server-session-${nextSession}`;
-      },
-
-      actions: {
-        inspect: (ctx) => {
-          return ctx.origin;
-        },
-      },
-    });
-
-    const first = create_echo<undefined, Actions>({
-      socket: firstClientSocket,
-      clientId: "shared-claimed-id",
-    });
-
-    const second = create_echo<undefined, Actions>({
-      socket: secondClientSocket,
-      clientId: "shared-claimed-id",
-    });
-
-    host.connect(firstHostSocket);
-    host.connect(secondHostSocket);
-
-    first.connect();
-    second.connect();
-
-    await settle_pair();
-
-    const [firstResult, secondResult] = await Promise.all([
-      first.action("inspect"),
-      second.action("inspect"),
-    ]);
-
-    await settle_pair();
-
-    return {
-      firstOrigin: firstResult.type === "ack"
-        ? firstResult.result
-        : undefined,
-
-      secondOrigin: secondResult.type === "ack"
-        ? secondResult.result
-        : undefined,
-    };
-  },
-
-  expected: {
-    firstOrigin: {
-      kind: "session",
-      sessionId: "server-session-1",
-      epoch: 1,
-      resumable: false,
-    },
-
-    secondOrigin: {
-      kind: "session",
-      sessionId: "server-session-2",
-      epoch: 1,
-      resumable: false,
-    },
-  },
-      }),
-      locus_pair_read_case({
-  suite: SUITE,
-  caseId: "client-invalid-payload-is-rejected-before-handler-and-mutation", name: "client invalid payload is rejected before handler and mutation",
-  input: {},
-
-  act: async () => {
-    type Actions = Readonly<{
-      update: { value: string };
-    }>;
-
-    let calls = 0;
-
-    const [clientSocket, hostSocket] = make_socket_pair();
-
-    const host = create_locus<{ value: string }, Actions>({
-      state: {
-        value: "unchanged",
-      },
-
-      schema: {
-        actions: {
-          update: {
-            payload: (value): value is { value: string } => {
-              return typeof value === "object"
-                && value !== null
-                && !Array.isArray(value)
-                && typeof (value as { value?: unknown }).value === "string";
-            },
-          },
-        },
-      },
-
-      actions: {
-        update: (ctx, payload) => {
-          calls += 1;
-          void ctx.mutate((draft) => draft.set(["value"], payload.value));
-        },
-      },
-    });
-
-    const client = create_echo<
-      { value: string }
-    >({
-      socket: clientSocket,
-    });
-
-    host.connect(hostSocket);
-    client.connect();
-
-    await settle_pair();
-
-    const result = await client.action(
-      "update",
-      {
-        label: "changed",
-      } as unknown as { value: string },
-    );
-
-    await settle_pair();
-
-    return {
-      calls,
-      resultType: result.type,
-      code: result.type === "error"
-        ? result.error.code
-        : undefined,
-      resultSeq: result.seq,
-      hostSeq: host.seq,
-      value: host.map.at(["value"]).snap(),
-    };
-  },
-
-  expected: {
-    calls: 0,
-    resultType: "error",
-    code: "LOCUS_SCHEMA_INVALID_PAYLOAD",
-    resultSeq: 0,
-    hostSeq: 0,
-    value: "unchanged",
-  },
-      }),
-
-    ] as const,
+    ],
   };
 }

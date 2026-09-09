@@ -108,17 +108,6 @@ export function locus_session_lifecycle_suite(): TestSuite {
   return {
     suite: SUITE,
     cases: [
-      lifecycle_case("lazy-session-emits-attached-detached-expired-in-order", "lazy session emits attached detached expired in order", async () => {
-        const host = create_locus({ state: {}, sessionId: () => "lazy-a" });
-        const events: string[] = [];
-        host.sessions.on_change((event) => events.push(label(event)));
-        const socket = make_socket();
-        host.connect(socket);
-        await socket.receive({ type: "hello" });
-        socket.emit_close();
-        return { events, state: host.sessions.debug().sessions[0]?.state };
-      }, { events: ["attached:created:1", "detached", "expired"], state: "expired" }),
-
       lifecycle_case("explicit-resumable-creation-emits-attached-created", "explicit resumable creation emits attached created", async () => {
         const host = create_locus({ state: {}, sessionId: () => "resume-a" });
         const events: string[] = [];
@@ -236,7 +225,6 @@ export function locus_session_lifecycle_suite(): TestSuite {
         const socket = make_socket();
         host.connect(socket);
         await socket.receive({ type: "session-create", id: "create-e" });
-        await socket.receive({ type: "subscribe", path: ["value"] });
         socket.emit_close();
         clock.advance(10);
         return {
@@ -325,12 +313,14 @@ export function locus_session_lifecycle_suite(): TestSuite {
         });
         const socket = make_socket();
         host.connect(socket);
-        await socket.receive({ type: "hello" });
+        await socket.receive({ type: "session-create", id: "create-listener" });
         stop();
         stop();
         socket.emit_close();
-        return { delivered, agreements, finalState: host.sessions.debug().sessions[0]?.state };
-      }, { delivered: ["attached:created:1"], agreements: [true], finalState: "expired" }),
+        const result = { delivered, agreements, finalState: host.sessions.debug().sessions[0]?.state };
+        host.dispose();
+        return result;
+      }, { delivered: ["attached:created:1"], agreements: [true], finalState: "disconnected" }),
 
       lifecycle_case("fenced-socket-cannot-act-while-replacement-acts-with-incremented-epoch", "fenced socket cannot act while replacement acts with incremented epoch", async () => {
         let calls = 0;
