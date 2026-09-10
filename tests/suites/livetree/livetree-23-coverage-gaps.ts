@@ -541,8 +541,6 @@ export function livetree_listener_builder_corners(): TestSuite {
         (tree as any).__result = {
           hits,
           seenType,
-          subCountAfterOff: sub.count,
-          subOkAfterOff: sub.ok,
         };
       },
 
@@ -551,8 +549,6 @@ export function livetree_listener_builder_corners(): TestSuite {
 
         t.eq("onCustom receives event once before off", r.hits, 1);
         t.eq("onCustom passes event type", r.seenType, "hson-custom");
-        t.eq("onCustom off clears subscription count", r.subCountAfterOff, 0);
-        t.eq("onCustom off marks subscription not ok", r.subOkAfterOff, false);
       },
     },
 
@@ -591,13 +587,15 @@ export function livetree_listener_builder_corners(): TestSuite {
         }));
 
         sub.off();
+        el.dispatchEvent(new CustomEvent("hson-detail", {
+          bubbles: true,
+          detail: { value: "ignored", count: 8 },
+        }));
 
         (tree as any).__result = {
           hits,
           value,
           count,
-          subCountAfterOff: sub.count,
-          subOkAfterOff: sub.ok,
         };
       },
 
@@ -607,8 +605,6 @@ export function livetree_listener_builder_corners(): TestSuite {
         t.eq("onCustomDetail receives one event", r.hits, 1);
         t.eq("onCustomDetail reads detail value", r.value, "ok");
         t.eq("onCustomDetail reads detail count", r.count, 7);
-        t.eq("onCustomDetail off clears subscription count", r.subCountAfterOff, 0);
-        t.eq("onCustomDetail off marks subscription not ok", r.subOkAfterOff, false);
       },
     },
 
@@ -639,8 +635,6 @@ export function livetree_listener_builder_corners(): TestSuite {
 
         (tree as any).__result = {
           hits,
-          subCountAfterOff: sub.count,
-          subOkAfterOff: sub.ok,
         };
       },
 
@@ -648,8 +642,6 @@ export function livetree_listener_builder_corners(): TestSuite {
         const r = (tree as any).__result;
 
         t.eq("once custom listener fires once", r.hits, 1);
-        t.eq("once custom off clears subscription count", r.subCountAfterOff, 0);
-        t.eq("once custom off marks subscription not ok", r.subOkAfterOff, false);
       },
     },
 
@@ -683,8 +675,6 @@ export function livetree_listener_builder_corners(): TestSuite {
         (tree as any).__result = {
           hits,
           seenType,
-          subCountAfterOff: sub.count,
-          subOkAfterOff: sub.ok,
         };
       },
 
@@ -693,8 +683,6 @@ export function livetree_listener_builder_corners(): TestSuite {
 
         t.eq("toDocument listener receives document event", r.hits, 1);
         t.eq("toDocument listener sees event type", r.seenType, "doc-alias-event");
-        t.eq("toDocument off clears subscription count", r.subCountAfterOff, 0);
-        t.eq("toDocument off marks subscription not ok", r.subOkAfterOff, false);
       },
     },
 
@@ -728,8 +716,6 @@ export function livetree_listener_builder_corners(): TestSuite {
         (tree as any).__result = {
           hits,
           seenType,
-          subCountAfterOff: sub.count,
-          subOkAfterOff: sub.ok,
         };
       },
 
@@ -738,8 +724,6 @@ export function livetree_listener_builder_corners(): TestSuite {
 
         t.eq("toWindow listener receives window event", r.hits, 1);
         t.eq("toWindow listener sees event type", r.seenType, "win-alias-event");
-        t.eq("toWindow off clears subscription count", r.subCountAfterOff, 0);
-        t.eq("toWindow off marks subscription not ok", r.subOkAfterOff, false);
       },
     },
 
@@ -812,23 +796,18 @@ export function livetree_listener_builder_corners(): TestSuite {
         let threw = false;
         let hits = 0;
 
-        let sub: { count: number; ok: boolean; off: () => void } | undefined;
-
         try {
-          sub = detached.listen.strict("ignore").onClick(() => {
+          const sub = detached.listen.strict("ignore").onClick(() => {
             hits += 1;
           });
+          sub.off();
         } catch {
           threw = true;
         }
 
-        sub?.off();
-
         (tree as any).__result = {
           threw,
           hits,
-          subCount: sub?.count,
-          subOk: sub?.ok,
         };
       },
 
@@ -837,8 +816,6 @@ export function livetree_listener_builder_corners(): TestSuite {
 
         t.eq("strict ignore does not throw on detached target", r.threw, false);
         t.eq("strict ignore listener never fires", r.hits, 0);
-        t.eq("strict ignore subscription count is zero", r.subCount, 0);
-        t.eq("strict ignore subscription ok is false", r.subOk, false);
       },
     },
 

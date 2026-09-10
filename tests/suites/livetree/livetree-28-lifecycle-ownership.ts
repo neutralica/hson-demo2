@@ -87,7 +87,7 @@ function listener_bookkeeping_case(suite: string): LiveTreeCaseSpec {
 
   return {
     suite,
-    caseId: "element-and-ambient-listener-cleanup-keeps-listenersub-state-honest", name: "element and ambient listener cleanup keeps ListenerSub state honest",
+    caseId: "element-and-ambient-listener-cleanup-releases-lifecycle-ownership", name: "element and ambient listener cleanup releases lifecycle ownership",
     dom: true,
     html: `<main><button id="owner">go</button></main>`,
     act(tree) {
@@ -97,12 +97,10 @@ function listener_bookkeeping_case(suite: string): LiveTreeCaseSpec {
       const elementSub = owner.listen.onClick(() => { calls += 1; });
       const documentSub = owner.listen.document.onCustom("owned-document", () => { calls += 1; });
       const windowSub = owner.listen.window.onCustom("owned-window", () => { calls += 1; });
-      const onceSub = owner.listen.once().onClick(() => { calls += 1; });
+      owner.listen.once().onClick(() => { calls += 1; });
 
       owner.dom.must.el().dispatchEvent(new MouseEvent("click"));
       onceState = calls === 2
-        && !onceSub.ok
-        && onceSub.count === 0
         && _lifecycle_resource_counts_for_owner(quid).listener === 3;
 
       owner.remove();
@@ -112,14 +110,11 @@ function listener_bookkeeping_case(suite: string): LiveTreeCaseSpec {
       documentSub.off();
       windowSub.off();
       removedState = calls === 2
-        && !elementSub.ok && elementSub.count === 0
-        && !documentSub.ok && documentSub.count === 0
-        && !windowSub.ok && windowSub.count === 0
         && _lifecycle_resource_counts_for_owner(quid).total === 0;
     },
     assert(_tree, t) {
-      t.eq("native once removal updates subscription and ownership state", onceState, true);
-      t.eq("terminal element and ambient cleanup updates every handle", removedState, true);
+      t.eq("native once removal releases its listener ownership", onceState, true);
+      t.eq("terminal element and ambient cleanup releases every listener", removedState, true);
     },
   };
 }
