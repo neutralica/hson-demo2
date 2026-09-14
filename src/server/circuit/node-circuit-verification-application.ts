@@ -1,6 +1,6 @@
 import type { LiveHostApplication, LiveHostApplicationContext, LiveHostConnection } from "hson-live/livehost";
 import type { NodeApplicationSecurity } from "hson-live/livehost/node";
-import type { LocusSocketLike } from "hson-live/types";
+import type { LocusSocketLike } from "hson-live/locus";
 import { CIRCUIT_VERIFICATION_HOST_ID } from "../../shared/circuit-verification-contract";
 import { create_circuit_verification_livehost } from "./circuit-verification-livehost";
 import {

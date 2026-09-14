@@ -1,6 +1,6 @@
 import { hson } from "hson-live";
 import { assert_canonical_oracle_graph_equal } from "hson-live/diagnostics/transform-test-oracle";
-import type { HsonNode } from "hson-live/types";
+import type { HsonNode } from "hson-live/hson";
 import type { CircuitVerificationResult } from "../../../shared/circuit-verification-contract";
 import type {
   ParsingBrowserCertificateResult,

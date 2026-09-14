@@ -2,7 +2,7 @@
 
 import { hson } from "hson-live";
 import type { LiveTree } from "hson-live/livetree";
-import type { CssMap } from "hson-live/types";
+import type { CssMap } from "hson-live/livetree";
 
 type Oklab = {
   l: number;

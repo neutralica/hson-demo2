@@ -2,6 +2,7 @@ import { performance } from "node:perf_hooks";
 import { hson } from "hson-live";
 import {
   begin_livetree_materialization_profile,
+  hsonInspect,
   type LiveTreeMaterializationProfile,
 } from "hson-live/diagnostics";
 import { install_hosted_dom_runtime } from "../../harness/runtimes/dom/hosted-dom-runtime";
@@ -46,7 +47,7 @@ function measureObject(size: number): Measurement {
   const host = makeHost();
   const profiler = begin_livetree_materialization_profile();
   const started = performance.now();
-  const inspector = hson.inspect.create({ source, host, initialDepth: 1 });
+  const inspector = hsonInspect.create({ source, host, initialDepth: 1 });
   const materializeMs = performance.now() - started;
   const profile = profiler.stop();
   const branches = inspector.diagnostics().totalBranchCount;
@@ -70,7 +71,7 @@ function measureKeyedArray(size: number): Measurement {
   const host = makeHost();
   const profiler = begin_livetree_materialization_profile();
   const started = performance.now();
-  const inspector = hson.inspect.create({
+  const inspector = hsonInspect.create({
     source,
     host,
     initialDepth: 2,
@@ -97,7 +98,7 @@ function measurePositionalArray(size: number): Measurement {
   const host = makeHost();
   const profiler = begin_livetree_materialization_profile();
   const started = performance.now();
-  const inspector = hson.inspect.create({ source, host, initialDepth: 2 });
+  const inspector = hsonInspect.create({ source, host, initialDepth: 2 });
   const materializeMs = performance.now() - started;
   const profile = profiler.stop();
   const branches = inspector.diagnostics().totalBranchCount;

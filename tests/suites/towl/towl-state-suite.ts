@@ -1,5 +1,5 @@
 import { hson } from "hson-live";
-import type { JsonValue } from "hson-live/types";
+import type { JsonValue } from "hson-live/hson";
 import type { TestSuite } from "../../harness/core/test-contracts";
 import {
   create_towl_state,

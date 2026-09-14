@@ -1,4 +1,4 @@
-import type { LocusResult, LocusSocketLike } from "hson-live/types";
+import type { LocusResult, LocusSocketLike } from "hson-live/locus";
 import {
   make_cloudflare_websocket_locus_socket,
   type CloudflareAcceptedWebSocket,

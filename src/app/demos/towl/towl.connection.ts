@@ -4,11 +4,7 @@ import {
   LocusDisconnectedError,
 } from "hson-live";
 import type { EchoRecoveryCursor } from "hson-live/echo";
-import type {
-  LocusDisposer,
-  LocusSessionCredential,
-  LocusSocketLike,
-} from "hson-live/types";
+import type { LocusDisposer, LocusSessionCredential, LocusSocketLike } from "hson-live/locus";
 import {
   create_towl_client,
   create_towl_client_mirror,

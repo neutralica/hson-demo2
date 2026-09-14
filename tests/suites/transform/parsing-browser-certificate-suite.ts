@@ -1,7 +1,7 @@
 import { hson } from "hson-live";
 import { verify_universal_circuit } from "hson-live/diagnostics/universal-circuit";
 import { assert_canonical_oracle_graph_equal } from "hson-live/diagnostics/transform-test-oracle";
-import type { HsonNode } from "hson-live/types";
+import type { HsonNode } from "hson-live/hson";
 import type { TestSuite } from "../../harness/core/test-contracts";
 import type { CircuitVerificationEntry, CircuitVerificationResult } from "../../../src/shared/circuit-verification-contract";
 import {

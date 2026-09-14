@@ -1,6 +1,6 @@
 // demo.css.ts
 
-import type { CssMap } from "hson-live/types";
+import type { CssMap } from "hson-live/livetree";
 import { _colors } from "../../core/consts/colors.consts";
 import { FONT_FAM_MONO } from "../../core/consts/css.consts";
 import { OKLCH_VIBRANT, OKLCH_NEUTRALS, OKLCH_FOREST } from "../../core/consts/oklch.consts";

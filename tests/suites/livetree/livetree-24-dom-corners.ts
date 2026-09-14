@@ -1,4 +1,4 @@
-import type { SvgLiveTree } from "hson-live/types";
+import type { SvgLiveTree } from "hson-live/livetree";
 import type { TestSuite } from "../../harness/core/test-contracts";
 import type { LiveTreeCaseSpec } from "../livemap/livemap-tests.types";
 import { make_livetree_suite } from "./make-livetree-suite";

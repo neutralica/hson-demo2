@@ -1,7 +1,7 @@
 // contract-tests.ts
 
 import { hson } from "hson-live";
-import type { JsonValue } from "hson-live/types";
+import type { JsonValue } from "hson-live/hson";
 import type { TestSuite } from "../../harness/core/test-contracts";
 import { preview_value, equal_row } from "./test-helpers";
 

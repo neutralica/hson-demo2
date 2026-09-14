@@ -1,6 +1,7 @@
 import type { LivePath } from "hson-live/livemap";
 import type { LiveTree } from "hson-live/livetree";
-import type { JsonValue, HsonNode, LiveMapEditResult } from "hson-live/types";
+import type { JsonValue, HsonNode } from "hson-live/hson";
+import type { LiveMapEditResult } from "hson-live/livemap";
 import type { Asserter } from "../../harness/core/test-contracts";
 import type { HostedTestGeometryFixture } from "../../harness/runtimes/dom/hosted-test-geometry";
 

@@ -1,4 +1,4 @@
-import type { CssMap } from "hson-live/types";
+import type { CssMap } from "hson-live/livetree";
 import { GRID_GAPstr } from "../../core/consts/ui-consts";
 import { _colors } from "../../core/consts/colors.consts";
 import { SYS_MONOfont, _fontSize } from "../../core/consts/ui-consts";

@@ -8,12 +8,7 @@ import type {
   EchoRecoveryResult,
   EchoSessionResult,
 } from "hson-live/echo";
-import type {
-  JsonValue,
-  LocusClientActionResult,
-  LocusDisposer,
-  LocusSessionCredential,
-} from "hson-live/types";
+import type { LocusClientActionResult, LocusDisposer, LocusSessionCredential } from "hson-live/locus";
 import { TOWL_SCHEMA } from "./towl.schema";
 import { create_towl_state } from "./towl.transitions";
 import type {
@@ -88,14 +83,84 @@ function action_error_message(
   return "The TOWL action was rejected.";
 }
 
-function unwrap_action_result<TResult extends JsonValue>(
-  response: LocusClientActionResult,
-): TResult {
+function action_result_value(response: LocusClientActionResult): unknown {
   if (response.type === "error") {
     throw new Error(action_error_message(response));
   }
+  if (response.result === undefined) {
+    throw new Error("The TOWL action completed without a result.");
+  }
+  return response.result.materialize();
+}
 
-  return response.result as TResult;
+function result_record(value: unknown): Readonly<Record<string, unknown>> | undefined {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
+    ? value as Readonly<Record<string, unknown>>
+    : undefined;
+}
+
+function has_exact_keys(record: Readonly<Record<string, unknown>>, keys: readonly string[]): boolean {
+  return Object.keys(record).length === keys.length && keys.every((key) => Object.hasOwn(record, key));
+}
+
+function result_seat(value: unknown): TowlSeat | undefined {
+  return value === "player1" || value === "player2" ? value : undefined;
+}
+
+function is_safe_integer(value: unknown): value is number {
+  return typeof value === "number" && Number.isSafeInteger(value);
+}
+
+function decode_join_result(value: unknown): TowlJoinResult {
+  const record = result_record(value);
+  const seat = record === undefined ? undefined : result_seat(record.seat);
+  if (record === undefined || !has_exact_keys(record, ["seat"]) || seat === undefined) {
+    throw new Error("TOWL join returned an invalid result.");
+  }
+  return { seat };
+}
+
+function decode_leave_result(value: unknown): TowlLeaveResult {
+  const record = result_record(value);
+  const seat = record === undefined ? undefined : result_seat(record.seat);
+  if (record === undefined || !has_exact_keys(record, ["seat"]) || seat === undefined) {
+    throw new Error("TOWL leave returned an invalid result.");
+  }
+  return { seat };
+}
+
+function decode_ready_result(value: unknown): TowlReadyResult {
+  const record = result_record(value);
+  const seat = record === undefined ? undefined : result_seat(record.seat);
+  if (record === undefined || !has_exact_keys(record, ["seat", "ready"]) || seat === undefined || typeof record.ready !== "boolean") {
+    throw new Error("TOWL set_ready returned an invalid result.");
+  }
+  return { seat, ready: record.ready };
+}
+
+function decode_pull_result(value: unknown): TowlPullResult {
+  const record = result_record(value);
+  const seat = record === undefined ? undefined : result_seat(record.seat);
+  const position = record?.position;
+  if (
+    record === undefined || !has_exact_keys(record, ["seat", "position", "winner"])
+    || seat === undefined || !is_safe_integer(position)
+  ) {
+    throw new Error("TOWL pull returned an invalid result.");
+  }
+  if (record.winner === null) return { seat, position, winner: null };
+  const winner = result_seat(record.winner);
+  if (winner === undefined) throw new Error("TOWL pull returned an invalid result.");
+  return { seat, position, winner };
+}
+
+function decode_reset_result(value: unknown): TowlResetResult {
+  const record = result_record(value);
+  const round = record?.round;
+  if (record === undefined || !has_exact_keys(record, ["round"]) || !is_safe_integer(round) || round < 1) {
+    throw new Error("TOWL reset_round returned an invalid result.");
+  }
+  return { round };
 }
 
 function seat_for_state(
@@ -172,11 +237,9 @@ export function create_towl_client(
     return livehost.session.goodbye();
   }
 
-  async function submit<TResult extends JsonValue>(
-    pending: EchoActionPromise<TowlActions>,
-  ): Promise<TResult> {
+  async function submit(pending: EchoActionPromise<TowlActions>): Promise<unknown> {
     try {
-      return unwrap_action_result<TResult>(await pending);
+      return action_result_value(await pending);
     } catch (error) {
       if (error instanceof LocusDisconnectedError) onUncertainAction?.(pending.request);
       throw error;
@@ -184,27 +247,27 @@ export function create_towl_client(
   }
 
   async function join(): Promise<TowlJoinResult> {
-    return submit<TowlJoinResult>(livehost.action("join"));
+    return decode_join_result(await submit(livehost.action("join")));
   }
 
   async function leave(): Promise<TowlLeaveResult> {
-    return submit<TowlLeaveResult>(livehost.action("leave"));
+    return decode_leave_result(await submit(livehost.action("leave")));
   }
 
   async function setReady(
     ready: boolean,
   ): Promise<TowlReadyResult> {
-    return submit<TowlReadyResult>(livehost.action("set_ready", {
+    return decode_ready_result(await submit(livehost.action("set_ready", {
       ready,
-    }));
+    })));
   }
 
   async function pull(): Promise<TowlPullResult> {
-    return submit<TowlPullResult>(livehost.action("pull"));
+    return decode_pull_result(await submit(livehost.action("pull")));
   }
 
   async function reset(): Promise<TowlResetResult> {
-    return submit<TowlResetResult>(livehost.action("reset_round"));
+    return decode_reset_result(await submit(livehost.action("reset_round")));
   }
 
   return Object.freeze({

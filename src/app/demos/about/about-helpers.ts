@@ -3,7 +3,7 @@
 import type { LiveTree } from "hson-live/livetree";
 import type { AboutDocKey, AboutDocs, AboutDocSpec } from "./about.types";
 import { INLINE_CODEcss, CODE_PARENcss, CODE_PAREN_INNERcss, CODE_COMMENTScss, CODE_EQUALSscss, CODE_PUNCTcss, CODE_QUOTEcss, CODE_COLONcss, CODE_TYPEcss, CODE_BRACEcss, ANGLEcss, PIPEcss, SLASHcss, SPECIAL_WORDScss } from "./about.css";
-import type { CssMap } from "hson-live/types";
+import type { CssMap } from "hson-live/livetree";
 import { MD_TERM_RE } from "./about.consts";
 import type { ListItem } from "./about.types";
 import { _colors } from "../../core/consts/colors.consts";

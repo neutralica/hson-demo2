@@ -1,5 +1,5 @@
 import { hson } from "hson-live";
-import type { HsonNode } from "hson-live/types";
+import type { HsonNode } from "hson-live/hson";
 import { _colors } from "../../core/consts/colors.consts";
 import type { Fmt } from "../../core/types/core.types";
 import type { PanelShell, Panels } from "../../ui/panels/panels.types";

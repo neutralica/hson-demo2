@@ -1,4 +1,5 @@
-import type { JsonValue, LiveMapOp, LivePath } from "hson-live/types";
+import type { JsonValue } from "hson-live/hson";
+import type { LiveMapOp, LivePath } from "hson-live/livemap";
 
 export type LiveMapCaseExpected = "ok" | "fail";
 

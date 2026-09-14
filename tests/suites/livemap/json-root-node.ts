@@ -1,5 +1,5 @@
 import { hson } from "hson-live";
-import type { HsonNode, JsonValue } from "hson-live/types";
+import type { HsonNode, JsonValue } from "hson-live/hson";
 
 export function json_root_node(
   input: JsonValue,

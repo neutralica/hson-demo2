@@ -2,7 +2,9 @@
 
 import { hson, } from "hson-live";
 import {  LiveTree } from "hson-live/livetree";
-import type { JsonValue, LiveMap, SvgLiveTree } from "hson-live/types";
+import type { JsonValue } from "hson-live/hson";
+import type { LiveMap } from "hson-live/livemap";
+import type { SvgLiveTree } from "hson-live/livetree";
 import { OKLCH_NEUTRALS } from "../../core/consts/oklch.consts";
 import { set_alpha } from "../../core/helpers/color-helpers";
 import type { AmoebaButtonLayout, AmoebiMenuApi, AmoebiMenuOptions, AmoebiRenderButton, AmoebiRenderState, AmoebiSelectionSource, AmoebiTileParts, HexCoord, Point } from "./amoebi.types";

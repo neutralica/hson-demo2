@@ -1,7 +1,7 @@
 // wait.ts
 
 import type { LiveTree } from "hson-live/livetree";
-import type { AnimSpec } from "hson-live/types";
+import type { AnimSpec } from "hson-live/livetree";
 
 export type WaitOpts = {
   signal?: AbortSignal;

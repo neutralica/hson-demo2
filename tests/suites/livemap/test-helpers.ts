@@ -1,7 +1,7 @@
 import { make_livemap_core, } from "hson-live/livemap";
 import { json_root_node } from "./json-root-node";
-import type { HsonNode, JsonValue, LiveMapCommit, LiveMapEditResult, LivePath } from "hson-live/types";
-import { set_live_path, snap_live_path } from "../../../../hson-live/dist/api/livemap/livemap.editor";
+import type { HsonNode, JsonValue } from "hson-live/hson";
+import type { LiveMapCommit, LivePath } from "hson-live/livemap";
 import type { TestCase } from "../../harness/core/test-contracts";
 import type {
   LiveMapSetCaseSpec,
@@ -28,7 +28,7 @@ type SetLikeRunner = (
   path: LivePath,
   value: JsonValue,
 ) => Readonly<{
-  result: LiveMapEditResult;
+  result: Readonly<{ changed: boolean; prev: JsonValue | undefined; next: JsonValue | undefined }>;
   rootSnapshot: JsonValue | undefined;
 }>;
 
@@ -42,7 +42,7 @@ type CoreSetRunner = (
 }>;
 
 export function make_snap_case(spec: SnapCaseSpec): TestCase {
-  return make_snap_like_case(spec, (root, path) => snap_live_path(root, path ?? []));
+  return make_snap_like_case(spec, (root, path) => make_livemap_core(root).snap(path ?? []));
 }
 
 export function make_core_snap_case(spec: CoreSnapCaseSpec): TestCase {
@@ -54,8 +54,11 @@ export function make_core_snap_case(spec: CoreSnapCaseSpec): TestCase {
 
 export function make_set_case(spec: SetCaseSpec): TestCase {
   return make_set_like_case(spec, (root, path, value) => {
-    const result = set_live_path(root, path, value);
-    const rootSnapshot = snap_live_path(root, []);
+    const map = make_livemap_core(root);
+    const prev = map.snap(path);
+    const commit = map.set(path, value);
+    const result = { changed: commit.changed, prev, next: map.snap(path) };
+    const rootSnapshot = map.snap();
     return { result, rootSnapshot };
   });
 }

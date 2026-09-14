@@ -1,7 +1,11 @@
 import {
   decode_locus_message,
   decode_locus_server_message,
+  encode_locus_client_message,
+  encode_locus_message,
 } from "hson-live/locus";
+import { HsonData } from "hson-live/hson";
+import type { LocusClientMessage, LocusServerMessage } from "hson-live/locus";
 import type { TestSuite } from "../../harness/core/test-contracts";
 import { read_case } from "../livemap/handle-helpers";
 
@@ -15,14 +19,14 @@ export function locus_protocol_suite(): TestSuite {
         caseId: "current-client-messages-round-trip",
         name: "current session, action, recovery, and goodbye messages round-trip",
         input: {},
-        act: () => [
+        act: () => ([
           { type: "session-create", id: "session-request" },
           { type: "session-attach", id: "attach-request", credential: "credential" },
-          { type: "action", id: "action-a", name: "save", payload: { id: 1 } },
+          { type: "action", id: "action-a", name: "save", payload: HsonData.from({ id: 1 }) },
           { type: "recover", id: "recover-a", logicalMapId: "main", incarnationId: "inc", lastAppliedRev: 3 },
           { type: "session-goodbye", id: "goodbye-request" },
-        ].map((message) => {
-          const decoded = decode_locus_message(JSON.stringify(message));
+        ] satisfies readonly LocusClientMessage[]).map((message) => {
+          const decoded = decode_locus_message(encode_locus_client_message(message));
           return decoded.ok ? decoded.value.type : decoded.error.message;
         }),
         expected: ["session-create", "session-attach", "action", "recover", "session-goodbye"],
@@ -44,7 +48,7 @@ export function locus_protocol_suite(): TestSuite {
         caseId: "current-server-messages-decode",
         name: "current session, acknowledgement, commit, and event messages decode",
         input: {},
-        act: () => [
+        act: () => ([
           {
             type: "session-created", id: "create-a", sessionId: "session-a",
             credential: "credential-a", epoch: 1, logicalMapId: "main", incarnationId: "inc-a",
@@ -53,7 +57,7 @@ export function locus_protocol_suite(): TestSuite {
             type: "session-attached", id: "attach-a", sessionId: "session-a",
             epoch: 2, logicalMapId: "main", incarnationId: "inc-a",
           },
-          { type: "ack", id: "action-a", ok: true, seq: 4, result: { saved: true } },
+          { type: "ack", id: "action-a", ok: true, seq: 4, result: HsonData.from({ saved: true }) },
           { type: "event", event: "application.progress", payload: { completed: 1 } },
           {
             type: "commit", id: "recover-a",
@@ -66,8 +70,8 @@ export function locus_protocol_suite(): TestSuite {
               }],
             },
           },
-        ].map((message) => {
-          const decoded = decode_locus_server_message(JSON.stringify(message));
+        ] satisfies readonly LocusServerMessage[]).map((message) => {
+          const decoded = decode_locus_server_message(encode_locus_message(message));
           return decoded.ok ? decoded.value.type : decoded.error.message;
         }),
         expected: ["session-created", "session-attached", "ack", "event", "commit"],

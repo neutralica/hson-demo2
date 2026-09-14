@@ -1,6 +1,7 @@
 import { performance } from "node:perf_hooks";
+import { hson } from "hson-live";
 import {
-  hson,
+  hsonInspect,
   LiveInspectorError,
   LIVE_INSPECTOR_DISPOSED_ERROR_CODE,
   LIVE_INSPECTOR_DUPLICATE_ARRAY_KEY_ERROR_CODE,
@@ -11,7 +12,7 @@ import {
   LIVE_INSPECTOR_OBSERVER_ERROR_CODE,
   LIVE_INSPECTOR_SOURCE_REPLACEMENT_ERROR_CODE,
   LIVE_INSPECTOR_UNREPRESENTABLE_CONVERSION_ERROR_CODE,
-} from "hson-live";
+} from "hson-live/diagnostics";
 import { install_hosted_dom_runtime } from "../../harness/runtimes/dom/hosted-dom-runtime";
 
 let checks = 0;
@@ -28,7 +29,7 @@ function expectCode(run: () => unknown, code: string, message: string): void {
 function makeHost() {
   return hson.liveTree.queryBody().graft().create.div();
 }
-function mapping(inspector: ReturnType<typeof hson.inspect.create>, path: readonly (string | number)[]) {
+function mapping(inspector: ReturnType<typeof hsonInspect.create>, path: readonly (string | number)[]) {
   return inspector.debugMappings().find((entry) => JSON.stringify(entry.path) === JSON.stringify(path));
 }
 
@@ -45,7 +46,7 @@ try {
       mixed: [1, "two", false, null, { deep: "value" }],
     });
     const host = makeHost();
-    const inspector = hson.inspect.create({ source, host, initialDepth: 0, longStringLimit: 12 });
+    const inspector = hsonInspect.create({ source, host, initialDepth: 0, longStringLimit: 12 });
     expect(inspector.status === "ready", "object inspector is immediately ready");
     expect(inspector.source === source, "public handle reports the active LiveMap source");
     expect(inspector.diagnostics().totalBranchCount === 1, "initialDepth zero materializes only the root");
@@ -110,7 +111,7 @@ try {
       { id: "b", label: "Beta" },
       { id: "c", label: "Gamma" },
     ] });
-    const inspector = hson.inspect.create({
+    const inspector = hsonInspect.create({
       source,
       host: makeHost(),
       initialDepth: 2,
@@ -154,7 +155,7 @@ try {
   runtime.reset_document();
   {
     const positionalSource = hson.liveMap.fromJson({ items: ["a", "b"] });
-    const positional = hson.inspect.create({ source: positionalSource, host: makeHost(), initialDepth: 2 });
+    const positional = hsonInspect.create({ source: positionalSource, host: makeHost(), initialDepth: 2 });
     expect(mapping(positional, ["items", 0])?.arrayIdentity === undefined, "array items are distinct from their parent identity mode");
     const first = mapping(positional, ["items", 0])?.viewQuid;
     positionalSource.at(["items"]).array.insert(0, "new");
@@ -162,7 +163,7 @@ try {
     expect(positional.diagnostics().positionalArrayBranches === 1, "positional fallback is visible in diagnostics");
     positional.dispose();
 
-    expectCode(() => hson.inspect.create({
+    expectCode(() => hsonInspect.create({
       source: hson.liveMap.fromJson([{ id: "a" }, { label: "missing" }]),
       host: makeHost(),
       arrayKey: (item) => typeof item === "object" && item !== null && !Array.isArray(item) ? item.id as string | undefined : undefined,
@@ -172,17 +173,17 @@ try {
   runtime.reset_document();
   {
     const map = hson.liveMap.fromJson({ user: { name: "Ada" } });
-    const pathInspector = hson.inspect.create({ source: map.at(["user"]), host: makeHost(), initialDepth: 1 });
+    const pathInspector = hsonInspect.create({ source: map.at(["user"]), host: makeHost(), initialDepth: 1 });
     expect(pathInspector.sourcePath.join("/") === "user", "path-handle source retains canonical root path");
     expect(mapping(pathInspector, ["user", "name"])?.kind === "string", "path-handle projection uses absolute canonical paths");
     pathInspector.dispose();
 
-    const owned = hson.inspect.fromJson({ value: [true, null, 2], host: makeHost(), initialDepth: 1 });
+    const owned = hsonInspect.fromJson({ value: [true, null, 2], host: makeHost(), initialDepth: 1 });
     expect(owned.sourcePath.length === 0 && owned.diagnostics().sourceKind === "array", "owned JSON convenience constructs a LiveMap-backed array inspector");
     owned.dispose();
 
     const serialized = hson.fromTrustedHtml("<article data-id='x'><strong>Hello</strong></article>").toHson().serialize();
-    const hsonInspector = hson.inspect.fromHson({ value: serialized, host: makeHost(), initialDepth: 0, hsonMode: "canonical" });
+    const hsonInspector = hsonInspect.fromHson({ value: serialized, host: makeHost(), initialDepth: 0, hsonMode: "canonical" });
     expect(typeof hsonInspector.serialize("canonical-node") === "string", "canonical Hson node serialization is available for Hson-owned sources");
     expect(hsonInspector.serialize("html").includes("article"), "HTML serialization is limited to representable Hson-derived sources");
     hsonInspector.dispose();
@@ -191,7 +192,7 @@ try {
   runtime.reset_document();
   {
     const source = hson.liveMap.fromJson({ name: "Ada" });
-    const inspector = hson.inspect.create({ source, host: makeHost(), initialDepth: 1, showSchema: true });
+    const inspector = hsonInspect.create({ source, host: makeHost(), initialDepth: 1, showSchema: true });
     const selected = inspector.select(["name"]);
     let observerCalls = 0;
     inspector.subscribe(() => { observerCalls += 1; throw new Error("observer fixture"); });
@@ -199,7 +200,7 @@ try {
     expect(observerCalls === 1 && inspector.status === "ready", "observer failure cannot corrupt inspector state");
     expect(inspector.diagnostics().observerFailures === 1 && inspector.diagnostics().lastNonFatalError?.code === LIVE_INSPECTOR_OBSERVER_ERROR_CODE, "observer failure is classified and diagnosed");
 
-    const second = hson.inspect.create({ source, host: makeHost(), initialDepth: 1 });
+    const second = hsonInspect.create({ source, host: makeHost(), initialDepth: 1 });
     const firstName = mapping(inspector, ["name"])?.viewQuid;
     const secondName = mapping(second, ["name"])?.viewQuid;
     source.set(["name"], "Mina");
@@ -212,7 +213,7 @@ try {
   runtime.reset_document();
   {
     const source = hson.liveMap.fromJson({ value: "neutral fallback" });
-    const inspector = hson.inspect.create({
+    const inspector = hsonInspect.create({
       source,
       host: makeHost(),
       initialDepth: 1,
@@ -225,7 +226,7 @@ try {
 
   for (const [value, kind] of [["root", "string"], [3, "number"], [false, "boolean"], [null, "null"]] as const) {
     runtime.reset_document();
-    const inspector = hson.inspect.fromJson({ value, host: makeHost(), initialDepth: 0 });
+    const inspector = hsonInspect.fromJson({ value, host: makeHost(), initialDepth: 0 });
     expect(inspector.sourcePath.length === 0 && inspector.diagnostics().sourceKind === kind && inspector.diagnostics().totalBranchCount === 1, `root ${kind} renders at the canonical root as one semantic branch`);
     inspector.dispose();
   }
@@ -236,7 +237,7 @@ try {
     let disposals = 0;
     let mutationSurface = false;
     const source = hson.liveMap.fromJson({ value: 2, other: "plain" });
-    const inspector = hson.inspect.create({
+    const inspector = hsonInspect.create({
       source,
       host: makeHost(),
       initialDepth: 1,
@@ -269,7 +270,7 @@ try {
     const large = Array.from({ length: 1_000 }, (_, index) => ({ id: `item-${index}`, value: index }));
     const source = hson.liveMap.fromJson({ items: large });
     const start = performance.now();
-    const inspector = hson.inspect.create({ source, host: makeHost(), initialDepth: 0, arrayKey: (item) => (item as any).id });
+    const inspector = hsonInspect.create({ source, host: makeHost(), initialDepth: 0, arrayKey: (item) => (item as any).id });
     measurements.lazyInitial1000Ms = performance.now() - start;
     expect(inspector.diagnostics().totalBranchCount === 1, "large collapsed source does not eagerly walk view branches");
     const expandStart = performance.now();
@@ -321,7 +322,7 @@ try {
     const source = hson.liveMap.fromJson(object);
     measurements.construct1000PropertyLiveMapMs = performance.now() - sourceStart;
     const start = performance.now();
-    const inspector = hson.inspect.create({ source, host: makeHost(), initialDepth: 1 });
+    const inspector = hsonInspect.create({ source, host: makeHost(), initialDepth: 1 });
     measurements.initial1000PropertyObjectMs = performance.now() - start;
     expect(inspector.diagnostics().totalBranchCount === 1_001, "1,000-property object initial render materializes each property once");
     expect(inspector.diagnostics().recordsCreated === 1_001, "1,000-property object reports keyed projection creation counts");

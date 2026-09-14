@@ -33,7 +33,7 @@ import {
 import { SLIDES } from "./deck-slides";
 import { normalize_code_block_text, is_deck_list_line, body_grid_columns, body_markdown, clamp_index, clear_timers, deck_code_format_color, deck_code_watermark, deck_markdown_heading_css, is_formatted_data_lang, schedule_deck_frame, schedule_deck_timeout, slide_bodies, write_in_text } from "./deck-helpers";
 import type { DeckSlideConfig, DeckState, DeckSlideBody, DeckSlideSection, DeckApi } from "./deck.types";
-import type { CssMap } from "hson-live/types";
+import type { CssMap } from "hson-live/livetree";
 import { render_line_with_comment } from "../about/about-helpers";
 import { mk_div_cls, mk_div_cls_txt, mk_div_id, mk_div_id_txt, mk_span_cls, mk_span_cls_txt } from "../../utils/makers";
 import { HSON_LIVE_GRAFFITIstr } from "../../core/consts/ui-consts";

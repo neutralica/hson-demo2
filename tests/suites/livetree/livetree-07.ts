@@ -1,4 +1,3 @@
-import { _listeners_debug_hard_reset } from "../../../../hson-live/dist/api/livetree/managers/listener-builder";
 import { flush_dom } from "../inspector/inspector.helpers";
 import type { TestSuite } from "../../harness/core/test-contracts";
 import type { LiveTreeCaseSpec } from "../livemap/livemap-tests.types";
@@ -22,7 +21,6 @@ export function livetree_more_listeners(): TestSuite {
       `,
 
             async act(tree) {
-                _listeners_debug_hard_reset();
 
                 const owner = tree.find.must.byId("owner");
 
@@ -45,7 +43,6 @@ export function livetree_more_listeners(): TestSuite {
 
                 const afterRemove = count;
 
-                _listeners_debug_hard_reset();
 
                 (tree as any).__result = {
                     beforeRemove,
@@ -73,7 +70,6 @@ export function livetree_more_listeners(): TestSuite {
         </main>
       `,
             async act(tree) {
-                _listeners_debug_hard_reset();
 
                 const owner = tree.find.must.byId("owner");
 
@@ -96,7 +92,6 @@ export function livetree_more_listeners(): TestSuite {
 
                 const afterRemove = count;
 
-                _listeners_debug_hard_reset();
 
                 (tree as any).__result = {
                     beforeRemove,

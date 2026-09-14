@@ -1,4 +1,4 @@
-import type { CssMap } from "hson-live/types";
+import type { CssMap } from "hson-live/livetree";
 
 export const FLOWER_LAYERcss: CssMap = {
   position: "absolute",

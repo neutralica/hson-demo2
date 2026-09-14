@@ -1,16 +1,7 @@
 import { create_locus } from "hson-live/locus";
-import type {
-  JsonValue,
-  LiveMap,
-  LiveMapAuthority,
-  Locus,
-  LocusActionPayloads,
-  LocusConnectionContext,
-  LocusDisposer,
-  LocusResult,
-  LocusSocketLike,
-  ProjectedLocusOptions,
-} from "hson-live/types";
+import type { JsonValue } from "hson-live/hson";
+import type { LiveMap, LiveMapAuthority } from "hson-live/livemap";
+import type { Locus, LocusActionPayloads, LocusConnectionContext, LocusDisposer, LocusResult, LocusSocketLike, DataLocusOptions } from "hson-live/locus";
 
 /** Production-owned registry for application Locus authorities. */
 export type ApplicationLocusStore = Readonly<{
@@ -19,7 +10,7 @@ export type ApplicationLocusStore = Readonly<{
   create<
     TState extends JsonValue | undefined = JsonValue | undefined,
     TActions extends LocusActionPayloads = LocusActionPayloads,
-  >(key: string, options?: ProjectedLocusOptions<TState, TActions>): LocusResult<Locus<LiveMap<TState>, TActions>>;
+  >(key: string, options?: DataLocusOptions<TState, TActions>): LocusResult<Locus<LiveMap<TState>, TActions>>;
   set<
     TMap extends LiveMapAuthority,
     TActions extends LocusActionPayloads = LocusActionPayloads,
@@ -42,7 +33,7 @@ export function create_application_locus_store(): ApplicationLocusStore {
     create<
       TState extends JsonValue | undefined = JsonValue | undefined,
       TActions extends LocusActionPayloads = LocusActionPayloads,
-    >(key: string, options: ProjectedLocusOptions<TState, TActions> = {}) {
+    >(key: string, options: DataLocusOptions<TState, TActions> = {}) {
       if (loci.has(key)) return failure(`Application Locus already exists: ${key}`, "LOCUS_STORE_DUPLICATE_ID");
       const locus = create_locus<TState, TActions>(options);
       loci.set(key, locus);

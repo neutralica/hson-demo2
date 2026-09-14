@@ -2,7 +2,7 @@
 
 import { hson } from "hson-live";
 import type { TestSuite } from "../../harness/core/test-contracts";
-import type { LiveMap } from "hson-live/types";
+import type { LiveMap } from "hson-live/livemap";
 
 export const SUITE = "livemap/store";
 

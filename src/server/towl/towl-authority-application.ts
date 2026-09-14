@@ -1,9 +1,4 @@
-import type {
-  LocusConnectionContext,
-  LocusResult,
-  LocusSessionOptions,
-  LocusSocketLike,
-} from "hson-live/types";
+import type { LocusConnectionContext, LocusResult, LocusSessionOptions, LocusSocketLike } from "hson-live/locus";
 import { create_livehost_locus_registry, type LiveHostLocusEvictionResult } from "hson-live/livehost";
 import { create_application_locus_store, type ApplicationLocusStore } from "../livehost/application-locus-store";
 import { create_application_idle_sweep, type ApplicationIdleSweep } from "../livehost/application-idle-sweep";

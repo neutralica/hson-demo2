@@ -1,6 +1,6 @@
 import type { TestCase, TestSuite } from "../../harness/core/test-contracts";
 import { Hson, hson } from "hson-live";
-import type { JsonValue } from "hson-live/types";
+import type { JsonValue } from "hson-live/hson";
 import {
   CELLSHEET_WORKBOOK_SCHEMA,
   create_cellsheet_workbook_store,

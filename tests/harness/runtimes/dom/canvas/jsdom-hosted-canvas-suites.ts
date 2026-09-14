@@ -8,16 +8,10 @@ import { JSDOM_HOSTED_CANVAS_DEFERRED_CASE_KEYS } from "./canvas-fidelity-manife
 export const JSDOM_HOSTED_CANVAS_SUITE_IDS = Object.freeze([
   "livetree/canvas",
   "livetree/canvas-stress",
-  "livetree/canvas-display",
-  "livetree/canvas-clear",
-  "livetree/canvas-plot",
   "livetree/canvas-pointer",
 ] as const);
 
-export const JSDOM_HOSTED_CANVAS_DUPLICATE_CASE_KEYS = Object.freeze([
-  "livetree/canvas-display::canvas.display.match.watch-manual-off-is-idempotent",
-  "livetree/canvas-pointer::canvas.display.match.watch-updates-backing-size-after-display-resize",
-] as const);
+export const JSDOM_HOSTED_CANVAS_DUPLICATE_CASE_KEYS = Object.freeze([] as const);
 
 export function all_jsdom_hosted_canvas_suites(): readonly TestSuite[] {
   const byId = new Map(all_livetree_suites().map((suite) => [suite.suite, suite]));

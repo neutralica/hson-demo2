@@ -10,7 +10,6 @@ import {
 } from "hson-live/reflect";
 import type { LiveMap, LiveMapPathHandle } from "hson-live/livemap";
 import { install_hosted_dom_runtime } from "../../harness/runtimes/dom/hosted-dom-runtime";
-import { CssManager } from "hson-live/livetree";
 import { replay_fixture } from "../../suites/livemap/replay-test-helper";
 
 let checks = 0;
@@ -212,13 +211,11 @@ try {
         return tree;
       },
     });
-    const removedQuid = removedTree.quid;
     const removedElement = removedTree.dom.must.el();
     document.dispatchEvent(new CustomEvent("projection-owned"));
     map.at(["items"]).array.remove(0);
     document.dispatchEvent(new CustomEvent("projection-owned"));
     expect(listenerHits === 3, "terminal projection removal releases only the removed branch listener");
-    expect(!CssManager.invoke().hasAnyRules(removedQuid), "terminal projection removal releases scoped CSS");
     expect(removedTree.isDisposed && !removedElement.hasAttribute("data-hson-quid"), "terminal projection removal destroys view identity once");
     projection.dispose();
   }

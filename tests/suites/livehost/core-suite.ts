@@ -2,6 +2,7 @@
 
 import type { TestCase, TestSuite } from "../../harness/core/test-contracts";
 import { create_locus } from "hson-live/locus";
+import { HsonData } from "hson-live/hson";
 import { equal_row, preview_value } from "../livemap/test-helpers";
 
 type LocusReadCaseSpec = Readonly<{
@@ -18,6 +19,13 @@ function locus_response_seq(response: unknown): number | undefined {
 
   const seq = (response as { seq?: unknown }).seq;
   return typeof seq === "number" ? seq : undefined;
+}
+
+function record_string(data: HsonData | undefined, key: string): string | undefined {
+  const value = data?.materialize();
+  if (typeof value !== "object" || value === null || Array.isArray(value)) return undefined;
+  const field = Reflect.get(value, key);
+  return typeof field === "string" ? field : undefined;
 }
 
 function locus_read_case(spec: LocusReadCaseSpec): TestCase {
@@ -101,8 +109,8 @@ export function locus_core_suite(): TestSuite {
             },
           });
 
-          const first = await host.dispatch_action({ type: "action", id: "a1", name: "record_seq" });
-          const second = await host.dispatch_action({ type: "action", id: "a2", name: "record_seq" });
+          const first = await host.dispatchAction({ type: "action", id: "a1", name: "record_seq" });
+          const second = await host.dispatchAction({ type: "action", id: "a2", name: "record_seq" });
 
           return {
             seenSeqs,
@@ -136,7 +144,7 @@ export function locus_core_suite(): TestSuite {
               },
             },
           });
-          await host.dispatch_action({ type: "action", id: "direct-a", name: "inspect" });
+          await host.dispatchAction({ type: "action", id: "direct-a", name: "inspect" });
           return { origin, contextFrozen, originFrozen };
         },
         expected: {
@@ -155,7 +163,7 @@ export function locus_core_suite(): TestSuite {
             state: {},
             actions: { inspect: (ctx) => { origin = ctx.origin; } },
           });
-          await host.dispatch_action({
+          await host.dispatchAction({
             type: "action",
             id: "direct-client-a",
             clientId: "impersonated-session",
@@ -180,7 +188,7 @@ export function locus_core_suite(): TestSuite {
             },
           });
 
-          const response = await host.dispatch_action({
+          const response = await host.dispatchAction({
             type: "action",
             id: "action-a",
             name: "mark_called",
@@ -209,14 +217,13 @@ export function locus_core_suite(): TestSuite {
             state: { user: { name: "Ada" } },
             actions: {
               rename_user: (ctx, payload) => {
-                if (!payload || typeof payload !== "object" || Array.isArray(payload)) return;
-                const name = (payload as { name?: unknown }).name;
-                if (typeof name === "string") void ctx.mutate((draft) => draft.set(["user", "name"], name));
+                const name = record_string(payload, "name");
+                if (name !== undefined) void ctx.mutate((draft) => draft.set(["user", "name"], name));
               },
             },
           });
 
-          const response = await host.dispatch_action({
+          const response = await host.dispatchAction({
             type: "action",
             id: "action-a",
             name: "rename_user",
@@ -248,7 +255,7 @@ export function locus_core_suite(): TestSuite {
             },
           });
 
-          const response = await host.dispatch_action({
+          const response = await host.dispatchAction({
             type: "action",
             id: "action-a",
             name: "mark_done",
@@ -280,8 +287,8 @@ export function locus_core_suite(): TestSuite {
             },
           });
 
-          const first = await host.dispatch_action({ type: "action", id: "a1", name: "noop" });
-          const second = await host.dispatch_action({ type: "action", id: "a2", name: "noop" });
+          const first = await host.dispatchAction({ type: "action", id: "a1", name: "noop" });
+          const second = await host.dispatchAction({ type: "action", id: "a2", name: "noop" });
 
           return {
             firstSeq: locus_response_seq(first),
@@ -301,7 +308,7 @@ export function locus_core_suite(): TestSuite {
         input: {},
         act: async () => {
           const host = create_locus({ state: {} });
-          const response = await host.dispatch_action({
+          const response = await host.dispatchAction({
             type: "action",
             id: "action-a",
             name: "missing_action",
@@ -341,7 +348,7 @@ export function locus_core_suite(): TestSuite {
             },
           });
 
-          const response = await host.dispatch_action({
+          const response = await host.dispatchAction({
             type: "action",
             id: "action-a",
             name: "explode",
@@ -382,7 +389,7 @@ export function locus_core_suite(): TestSuite {
             },
           });
 
-          const response = await host.dispatch_action({
+          const response = await host.dispatchAction({
             type: "action",
             id: "action-a",
             name: "reject",
@@ -418,25 +425,19 @@ export function locus_core_suite(): TestSuite {
             schema: {
               actions: {
                 rename_user: {
-                  payload: (value): value is { name: string } => {
-                    return typeof value === "object"
-                      && value !== null
-                      && !Array.isArray(value)
-                      && typeof (value as { name?: unknown }).name === "string";
-                  },
+                  payload: (value): value is HsonData => value instanceof HsonData && record_string(value, "name") !== undefined,
                 },
               },
             },
             actions: {
               rename_user: (ctx, payload) => {
-                if (!payload || typeof payload !== "object" || Array.isArray(payload)) return;
-                const name = (payload as { name?: unknown }).name;
-                if (typeof name === "string") void ctx.mutate((draft) => draft.set(["user", "name"], name));
+                const name = record_string(payload, "name");
+                if (name !== undefined) void ctx.mutate((draft) => draft.set(["user", "name"], name));
               },
             },
           });
 
-          const response = await host.dispatch_action({
+          const response = await host.dispatchAction({
             type: "action",
             id: "action-a",
             name: "rename_user",
@@ -467,25 +468,19 @@ export function locus_core_suite(): TestSuite {
             schema: {
               actions: {
                 rename_user: {
-                  payload: (value): value is { name: string } => {
-                    return typeof value === "object"
-                      && value !== null
-                      && !Array.isArray(value)
-                      && typeof (value as { name?: unknown }).name === "string";
-                  },
+                  payload: (value): value is HsonData => value instanceof HsonData && record_string(value, "name") !== undefined,
                 },
               },
             },
             actions: {
               rename_user: (ctx, payload) => {
-                if (!payload || typeof payload !== "object" || Array.isArray(payload)) return;
-                const name = (payload as { name?: unknown }).name;
-                if (typeof name === "string") void ctx.mutate((draft) => draft.set(["user", "name"], name));
+                const name = record_string(payload, "name");
+                if (name !== undefined) void ctx.mutate((draft) => draft.set(["user", "name"], name));
               },
             },
           });
 
-          const response = await host.dispatch_action({
+          const response = await host.dispatchAction({
             type: "action",
             id: "action-a",
             name: "rename_user",
@@ -523,25 +518,24 @@ export function locus_core_suite(): TestSuite {
               actions: {
                 rename_user: {
                   payload: (value) => {
-                    if (typeof value !== "string") {
+                    if (!(value instanceof HsonData) || value.kind !== "string" || typeof value.scalar() !== "string") {
                       return { ok: false, issues: ["name must be string"] } as const;
                     }
 
-                    return { ok: true, value: { name: value } } as const;
+                    return { ok: true, value: { name: value.scalar() } } as const;
                   },
                 },
               },
             },
             actions: {
               rename_user: (ctx, payload) => {
-                if (!payload || typeof payload !== "object" || Array.isArray(payload)) return;
-                const name = (payload as { name?: unknown }).name;
-                if (typeof name === "string") void ctx.mutate((draft) => draft.set(["user", "name"], name));
+                const name = record_string(payload, "name");
+                if (name !== undefined) void ctx.mutate((draft) => draft.set(["user", "name"], name));
               },
             },
           });
 
-          const response = await host.dispatch_action({
+          const response = await host.dispatchAction({
             type: "action",
             id: "action-a",
             name: "rename_user",
@@ -573,7 +567,7 @@ export function locus_core_suite(): TestSuite {
               actions: {
                 rename_user: {
                   payload: (value) => {
-                    if (typeof value !== "string") {
+                    if (!(value instanceof HsonData) || value.kind !== "string" || typeof value.scalar() !== "string") {
                       return { ok: false, issues: ["name must be string", "payload rejected"] } as const;
                     }
 
@@ -584,14 +578,13 @@ export function locus_core_suite(): TestSuite {
             },
             actions: {
               rename_user: (ctx, payload) => {
-                if (!payload || typeof payload !== "object" || Array.isArray(payload)) return;
-                const name = (payload as { name?: unknown }).name;
-                if (typeof name === "string") void ctx.mutate((draft) => draft.set(["user", "name"], name));
+                const name = record_string(payload, "name");
+                if (name !== undefined) void ctx.mutate((draft) => draft.set(["user", "name"], name));
               },
             },
           });
 
-          const response = await host.dispatch_action({
+          const response = await host.dispatchAction({
             type: "action",
             id: "action-a",
             name: "rename_user",
@@ -719,8 +712,8 @@ export function locus_core_suite(): TestSuite {
               read: () => ({ status: "done", count: 2 }),
             },
           });
-          const response = await host.dispatch_action({ type: "action", id: "result-a", name: "read" });
-          return response.type === "ack" ? response.result : undefined;
+          const response = await host.dispatchAction({ type: "action", id: "result-a", name: "read" });
+          return response.type === "ack" ? response.result?.materialize() : undefined;
         },
         expected: { status: "done", count: 2 },
       }),
@@ -735,7 +728,7 @@ export function locus_core_suite(): TestSuite {
               invalid: () => Number.NaN,
             },
           });
-          const response = await host.dispatch_action({ type: "action", id: "invalid-a", name: "invalid" });
+          const response = await host.dispatchAction({ type: "action", id: "invalid-a", name: "invalid" });
           return {
             type: response.type,
             code: response.type === "error" ? response.error.code : undefined,
@@ -755,26 +748,20 @@ export function locus_core_suite(): TestSuite {
             schema: {
               actions: {
                 update: {
-                  payload: (value): value is { value: string } => {
-                    return typeof value === "object"
-                      && value !== null
-                      && !Array.isArray(value)
-                      && typeof (value as { value?: unknown }).value === "string";
-                  },
+                  payload: (value): value is HsonData => value instanceof HsonData && record_string(value, "value") !== undefined,
                 },
               },
             },
             actions: {
               update: (ctx, payload) => {
                 calls += 1;
-                if (!payload || typeof payload !== "object" || Array.isArray(payload)) return;
-                const value = (payload as { value?: unknown }).value;
-                if (typeof value === "string") void ctx.mutate((draft) => draft.set(["value"], value));
+                const value = record_string(payload, "value");
+                if (value !== undefined) void ctx.mutate((draft) => draft.set(["value"], value));
               },
             },
           });
 
-          const response = await host.dispatch_action({
+          const response = await host.dispatchAction({
             type: "action",
             id: "invalid-update",
             name: "update",

@@ -1,6 +1,7 @@
 import { create_echo, type Echo } from "hson-live/echo";
-import { LocusDisconnectedError } from "hson-live/locus";
-import type { LocusActionPayloads } from "hson-live/types";
+import { HsonData } from "hson-live/hson";
+import { decode_locus_message, encode_locus_message, LocusDisconnectedError } from "hson-live/locus";
+import type { LocusActionPayloads, LocusClientMessage, LocusServerMessage } from "hson-live/locus";
 import type { TestCase, TestSuite } from "../../harness/core/test-contracts";
 import { equal_row, preview_value } from "../livemap/test-helpers";
 
@@ -10,8 +11,8 @@ type MemorySocket = Readonly<{
   close(): void;
   onMessage(listener: Listener): () => void;
   onClose(listener: () => void): () => void;
-  receive(message: unknown): void;
-  sent(): Array<Record<string, unknown>>;
+  receive(message: LocusServerMessage): void;
+  sent(): LocusClientMessage[];
   listener_count(): number;
 }>;
 
@@ -24,11 +25,15 @@ function make_memory_socket(): MemorySocket {
     close() { for (const listener of [...closes]) listener(); },
     onMessage(listener: Listener) { messages.add(listener); return () => messages.delete(listener); },
     onClose(listener: () => void) { closes.add(listener); return () => closes.delete(listener); },
-    receive(message: unknown) {
-      const raw = JSON.stringify(message);
+    receive(message: LocusServerMessage) {
+      const raw = encode_locus_message(message);
       for (const listener of [...messages]) listener(raw);
     },
-    sent: () => sent.map((message) => JSON.parse(message) as Record<string, unknown>),
+    sent: () => sent.map((message) => {
+      const decoded = decode_locus_message(message);
+      if (!decoded.ok) throw new Error(decoded.error.message);
+      return decoded.value;
+    }),
     listener_count: () => messages.size + closes.size,
   });
 }
@@ -40,6 +45,7 @@ async function establish<TActions extends LocusActionPayloads>(
   client.connect();
   const pending = client.session.create();
   const request = socket.sent().at(-1);
+  if (request === undefined) throw new Error("Expected session-create request.");
   socket.receive({
     type: "session-created", id: request?.id, sessionId: "session-a",
     credential: "credential-a", epoch: 1, logicalMapId: "main", incarnationId: "inc-a",
@@ -131,17 +137,19 @@ export function locus_client_suite(): TestSuite {
           await establish(client, socket);
           const pending = client.action("save", { id: "item-a" });
           const request = socket.sent().at(-1);
+          if (request?.type !== "action") throw new Error("Expected action request.");
           socket.receive({
-            type: "ack", id: request?.id, requestId: request?.requestId,
-            ok: true, seq: 2, result: { saved: "item-a" },
+            type: "ack", id: request.id,
+            ...(request.requestId === undefined ? {} : { requestId: request.requestId }),
+            ok: true, seq: 2, result: HsonData.from({ saved: "item-a" }),
           });
           const response = await pending;
           const result = {
             outbound: request?.type,
             name: request?.name,
-            payload: request?.payload,
+            payload: request.payload instanceof HsonData ? request.payload.materialize() : undefined,
             requestMatches: request?.requestId === pending.request.requestId,
-            result: response.type === "ack" ? response.result : undefined,
+            result: response.type === "ack" ? response.result?.materialize() : undefined,
           };
           client.dispose();
           return result;
@@ -161,6 +169,7 @@ export function locus_client_suite(): TestSuite {
           await establish(client, socket);
           const pending = client.actionStatus("request-a");
           const request = socket.sent().at(-1);
+          if (request?.type !== "action-status") throw new Error("Expected action-status request.");
           socket.receive({ type: "action-status", id: request?.id, requestId: "request-a", state: "pending" });
           const result = await pending;
           client.dispose();

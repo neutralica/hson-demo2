@@ -1,4 +1,4 @@
-import type { JsonValue } from "hson-live/types";
+import type { JsonValue } from "hson-live/hson";
 import type { LiveMapFeedEventPreview } from "./types";
 
 

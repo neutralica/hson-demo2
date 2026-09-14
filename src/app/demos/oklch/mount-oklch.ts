@@ -35,7 +35,7 @@ const OKLCH_DEFAULT_STATE: OklchValues = Object.freeze({
 
 function stateOrDefault(value: string | undefined, fallback: OklchValues): OklchValues {
   // CHANGED: this helper accepts concrete OKLCH strings only. Do not pass
-  // CssManager.api().var.get(...) here; that returns a CSS var reference such as
+  // The global CSS API returns a CSS variable reference such as
   // `var(--hson-color-main-text)`, not the current stored value.
   if (value === undefined) return fallback;
   if (value.trim().startsWith("var(")) return fallback;

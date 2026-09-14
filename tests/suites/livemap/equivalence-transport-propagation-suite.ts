@@ -1,6 +1,6 @@
 import { hson } from "hson-live";
 import { link_livemap } from "hson-live/livemap";
-import type { JsonValue } from "hson-live/types";
+import type { JsonValue } from "hson-live/hson";
 import type { TestCase, TestSuite } from "../../harness/core/test-contracts";
 import { equal_row, own_value_row, same_value_row } from "./assert-helpers";
 
@@ -80,7 +80,7 @@ export function livemap_equivalence_transport_propagation_suite(): TestSuite {
         return { assertRows: [same_value_row("observed", observed, -0)] };
       }),
       test("livehost-commits-expose-exact-payload-transport", "Locus commits expose exact payload transport", async () => {
-        const host = hson.locus.create({ state: { value: 0 } }); let payload: unknown; host.stream.on_commit((commit) => { payload = commit.payload; }); await host.mutate((draft) => draft.set(["value"], -0));
+        const host = hson.locus.create({ state: { value: 0 } }); let payload: unknown; host.stream.onCommit((commit) => { payload = commit.payload; }); await host.mutate((draft) => draft.set(["value"], -0));
         return { assertRows: [equal_row("payload type", typeof payload, "string"), same_value_row("state", host.map.snap(["value"]), -0)] };
       }),
       test("livehost-recovery-snapshot-closes-exact-state", "Locus recovery snapshot closes exact state", () => {

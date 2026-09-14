@@ -1,6 +1,6 @@
 import { create_locus } from "hson-live/locus";
-import { hson } from "hson-live";
-import type { LocusActionContext, LocusSessionLifecycleEvent, LocusActions, LocusSchema } from "hson-live/types";
+import { HsonData, hson } from "hson-live";
+import type { LocusActionContext, LocusSessionLifecycleEvent, LocusActions, LocusSchema } from "hson-live/locus";
 import { TOWL_SCHEMA } from "./towl.schema";
 import { reflect_towl_session_attached, reflect_towl_session_detached, remove_towl_session, join_towl_session, leave_towl_session, set_towl_ready, pull_towl_rope, reset_towl_round, create_towl_state } from "./towl.transitions";
 import type { TOWL_SCHEMAType } from "./towl.schema";
@@ -23,14 +23,20 @@ function decode_empty(value: unknown) {
 }
 
 function decode_ready(value: unknown) {
-  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+  if (!(value instanceof HsonData) || value.kind !== "object") {
     return { ok: false as const, issues: ["TOWL set_ready requires one ready boolean."] };
   }
-  const record = value as Readonly<Record<string, unknown>>;
-  if (Object.keys(record).length !== 1 || typeof record.ready !== "boolean") {
+  const entries = value.entries();
+  const entry = entries?.[0];
+  if (entries?.length !== 1 || entry === undefined || entry[0] !== "ready") {
     return { ok: false as const, issues: ["TOWL set_ready requires one ready boolean."] };
   }
-  return { ok: true as const, value: { ready: record.ready } };
+  const ready = entry[1];
+  const readyValue = ready.scalar();
+  if (ready.kind !== "boolean" || typeof readyValue !== "boolean") {
+    return { ok: false as const, issues: ["TOWL set_ready requires one ready boolean."] };
+  }
+  return { ok: true as const, value: { ready: readyValue } };
 }
 
 function require_session(context: LocusActionContext<TowlGovernedMap>): string {
@@ -92,17 +98,21 @@ function reflect_lifecycle(
 }
 
 export function create_towl_runtime(options: TowlRuntimeOptions = {}): TowlRuntime {
-  const actions: LocusActions<TowlActions, TowlGovernedMap> = {
+  const actions = {
     join: (context) => apply_transition(context, join_towl_session(context.map.snap(), require_session(context))),
     leave: (context) => apply_transition(context, leave_towl_session(context.map.snap(), require_session(context))),
-    set_ready: (context, payload) => apply_transition(
-      context,
-      set_towl_ready(context.map.snap(), require_session(context), payload.ready),
-    ),
+    set_ready: (context, payload) => {
+      const decoded = decode_ready(payload);
+      if (!decoded.ok) throw new Error(decoded.issues.join(" "));
+      return apply_transition(
+        context,
+        set_towl_ready(context.map.snap(), require_session(context), decoded.value.ready),
+      );
+    },
     pull: (context) => apply_transition(context, pull_towl_rope(context.map.snap(), require_session(context))),
     reset_round: (context) => apply_transition(context, reset_towl_round(context.map.snap(), require_session(context))),
-  };
-  const schema: LocusSchema<TOWL_SCHEMAType, TowlActions> = {
+  } satisfies LocusActions<TowlActions, TowlGovernedMap>;
+  const schema = {
     actions: {
       join: { payload: decode_empty },
       leave: { payload: decode_empty },
@@ -110,7 +120,7 @@ export function create_towl_runtime(options: TowlRuntimeOptions = {}): TowlRunti
       pull: { payload: decode_empty },
       reset_round: { payload: decode_empty },
     },
-  };
+  } satisfies LocusSchema<TOWL_SCHEMAType, TowlActions>;
   const map = hson.liveMap.fromJson(create_towl_state()).schema.use(TOWL_SCHEMA);
   const host = create_locus({
     map,
@@ -121,7 +131,7 @@ export function create_towl_runtime(options: TowlRuntimeOptions = {}): TowlRunti
     ...(options.sessions !== undefined ? { sessions: options.sessions } : {}),
   });
   let disposed = false;
-  const stopLifecycle = host.sessions.on_change((event) => {
+  const stopLifecycle = host.sessions.onChange((event) => {
     if (!disposed && !(event.kind === "revoked" && event.reason === "locus_disposed")) {
       reflect_lifecycle(host, event);
     }

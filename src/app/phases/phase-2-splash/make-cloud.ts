@@ -271,7 +271,6 @@ export function create_clouds(tree: LiveTree, tune?: Partial<CloudTune>): LiveTr
 
     gcss.keyframes.set({
       name: sinkOpacityName,
-      source: "global",
       steps: {
         "0%": { opacity: "calc(var(--layer-max) * var(--layer-fade))" },
         [`${fadeHoldPct}%`]: { opacity: "calc(var(--layer-max) * var(--layer-fade))" },
@@ -283,7 +282,6 @@ export function create_clouds(tree: LiveTree, tune?: Partial<CloudTune>): LiveTr
 
     gcss.keyframes.set({
       name: sinkMotionName,
-      source: "global",
       steps: {
         "0%": { transform: `translateY(${cloudDropPct}%)` },
         "100%": { transform: `translateY(calc(${cloudDropPct}% + (${sinkPx}px )))` },

@@ -1,6 +1,6 @@
 import type { LiveTree } from "hson-live/livetree";
 import { type PointPanelRig, point_init } from "./point";
-import type { CssMap } from "hson-live/types";
+import type { CssMap } from "hson-live/livetree";
 
 import { ROW_GRIDcss, CELL_CLAMPcss, POINTER_TRACKERcss, POINTER_COORDScss, POINT_ROOTcss, STACK_TABLEcss, TRACKERcss, TRACKER_ORIGINcss, ELEMENT_STACKcss, MOUSE_COORD_Xcss, MOUSE_COORD_Ycss, TRACKER_THETAcss } from "./point.css";
 import { mk_div_cls, mk_div_id } from "../../utils/makers";

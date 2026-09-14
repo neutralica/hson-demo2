@@ -1,4 +1,4 @@
-import type { Artifact } from "hson-live/diagnostics";
+export type Artifact = string;
 
 export type TestCapability =
   | "javascript"

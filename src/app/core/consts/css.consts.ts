@@ -1,4 +1,4 @@
-import type { CssMap } from "hson-live/types";
+import type { CssMap } from "hson-live/livetree";
 import { _fontSize, SYS_MONOfont,  _fontWeight } from "./ui-consts";
 
 export const FONT_FAM_MONO: CssMap = {

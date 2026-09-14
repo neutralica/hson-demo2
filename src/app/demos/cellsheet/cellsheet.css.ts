@@ -1,4 +1,4 @@
-import type { CssMap } from "hson-live/types";
+import type { CssMap } from "hson-live/livetree";
 import { _colors } from "../../core/consts/colors.consts";
 import { COLS } from "./cellsheet-evaluator";
 

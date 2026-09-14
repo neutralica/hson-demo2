@@ -1,4 +1,4 @@
-import type { CssMap } from "hson-live/types";
+import type { CssMap } from "hson-live/livetree";
 import { OKLCH_FLEURS } from "../fleurs/fleurs.consts";
 import { _colors } from "../../core/consts/colors.consts";
 import { ACID_WASH_OKLCH } from "../../core/consts/oklch.consts";

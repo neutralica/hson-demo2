@@ -6,12 +6,14 @@ import {
   type BrowserWebSocketConstructor,
 } from "hson-live/locus";
 import { start_node_application_host } from "hson-live/livehost/node";
-import type { JsonValue, LocusSocketLike } from "hson-live/types";
+import { HsonData, type JsonValue } from "hson-live/hson";
+import type { LocusSocketLike } from "hson-live/locus";
 import type { TestSuite } from "../../harness/core/test-contracts";
 import {
   CIRCUIT_VERIFICATION_MAX_SOURCE_LENGTH,
   CIRCUIT_VERIFICATION_PROGRESS_EVENT,
   decode_circuit_verification_progress,
+  decode_circuit_verification_result,
   type CircuitVerificationActions,
   type CircuitVerificationProgress,
   type CircuitVerificationProgressListener,
@@ -31,6 +33,12 @@ const SUITE = "livehost/circuit-worker-action";
 
 function expect(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`circuit Locus action: ${message}`);
+}
+
+function circuit_action_result(response: Awaited<ReturnType<Echo<undefined, CircuitVerificationActions>["action"]>>): CircuitVerificationResult | undefined {
+  if (response.type !== "ack" || !(response.result instanceof HsonData)) return undefined;
+  const decoded = decode_circuit_verification_result(response.result.materialize());
+  return decoded.ok ? decoded.value : undefined;
 }
 
 type PairSocket = LocusSocketLike & Readonly<{ sent(): readonly unknown[]; listenerCount(): number }>;
@@ -191,7 +199,7 @@ export function circuit_locus_integration_suite(): TestSuite {
         const service = mock_service(); const connected = await pair(service);
         try {
           const response = await connected.client.action("circuit.verify", request());
-          expect(response.type === "ack" && (response.result as { status?: unknown })?.status === "verified", "valid action must acknowledge a detached result");
+          expect(circuit_action_result(response)?.status === "verified", "valid action must acknowledge a detached result");
         } finally { connected.close(); }
       } }),
       Object.freeze({ suite: SUITE, caseId: "schema-decoder-detaches-and-freezes-payload-before-dispatch", name: "schema decoder detaches and freezes payload before dispatch", run: async () => {
@@ -264,7 +272,7 @@ export function circuit_locus_integration_suite(): TestSuite {
         const service = mock_service({ status: "failed" }); const connected = await pair(service);
         try {
           const response = await connected.client.action("circuit.verify", request());
-          expect(response.type === "ack" && (response.result as { status?: unknown })?.status === "failed", "semantic failure must not become infrastructure error");
+          expect(circuit_action_result(response)?.status === "failed", "semantic failure must not become infrastructure error");
         } finally { connected.close(); }
       } }),
       Object.freeze({ suite: SUITE, caseId: "service-failure-retains-its-stable-livehost-error-code", name: "service failure retains its stable Locus error code", run: async () => {
@@ -342,7 +350,7 @@ export function circuit_locus_integration_suite(): TestSuite {
         const service = mock_service(); const connected = await pair(service);
         try {
           const response = await connected.client.action("circuit.verify", request("panel-fence", 9));
-          const result = response.type === "ack" ? response.result as unknown as CircuitVerificationResult : undefined;
+          const result = circuit_action_result(response);
           expect(result?.panelId === "panel-fence" && result.inputRevision === 9, "result correlation must match validated request");
         } finally { connected.close(); }
       } }),
@@ -355,7 +363,7 @@ export function circuit_locus_integration_suite(): TestSuite {
         const connected = await pair(service);
         try {
           const response = await connected.client.action("circuit.verify", request("real", 1));
-          const result = response.type === "ack" ? response.result as unknown as CircuitVerificationResult : undefined;
+          const result = circuit_action_result(response);
           expect(result?.status === "verified" && result.operationCounts.serializations === 24 && result.operationCounts.comparisons === 25, "actual worker certificate must cross Locus intact");
         } finally { connected.close(); await service.dispose(); }
       } }),
@@ -384,7 +392,7 @@ export function circuit_locus_integration_suite(): TestSuite {
           client.connect();
           await client.session.create();
           const response = await client.action("circuit.verify", request("localhost", 1));
-          const result = response.type === "ack" ? response.result as unknown as CircuitVerificationResult : undefined;
+          const result = circuit_action_result(response);
           expect(result?.status === "verified" && result.operationCounts.parses === 25, "localhost route must return the universal worker certificate");
         } finally {
           client?.disconnect();

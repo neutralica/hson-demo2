@@ -1,6 +1,7 @@
 import { hson } from "hson-live";
 import { link_livemap } from "hson-live/livemap";
-import type { JsonValue, LiveMap } from "hson-live/types";
+import type { JsonValue } from "hson-live/hson";
+import type { LiveMap } from "hson-live/livemap";
 import type { TestAssertRow, TestCase, TestSuite } from "../../harness/core/test-contracts";
 import { equal_row } from "./assert-helpers";
 
@@ -41,7 +42,7 @@ function rejection_rows(witness: unknown, route: Route): readonly TestAssertRow[
   link_livemap(source, target, { path: ["value"] });
   const sourceBefore = source.capture(); const targetBefore = target.capture();
   let commits = 0; let feeds = 0; let stores = 0; let hostCommits = 0;
-  source.commits.observe(() => { commits += 1; }); source.feed([], () => { feeds += 1; }); source.sub.diff(() => { stores += 1; }); host.stream.on_commit(() => { hostCommits += 1; });
+  source.commits.observe(() => { commits += 1; }); source.feed([], () => { feeds += 1; }); source.sub.diff(() => { stores += 1; }); host.stream.onCommit(() => { hostCommits += 1; });
   const mutationRejected = rejects(() => mutate(route, source, witness));
   return [
     equal_row("Transform rejected", rejects(() => hson.fromJson(witness as JsonValue)), true),

@@ -1,7 +1,7 @@
 import { hson } from "hson-live";
 import { create_echo } from "hson-live/echo";
 import { create_locus, decode_locus_server_message } from "hson-live/locus";
-import type { LocusSocketLike } from "hson-live/types";
+import type { LocusSocketLike } from "hson-live/locus";
 import type { TestCase, TestSuite } from "../../harness/core/test-contracts";
 import { equal_row, preview_value } from "../livemap/test-helpers";
 
@@ -130,7 +130,7 @@ export function locus_pair_suite(): TestSuite {
           const host = create_locus<undefined, Actions>({
             state: undefined,
             logicalMapId: "events",
-            actions: { mark: (context, payload) => context.emit_event("marked", payload) },
+            actions: { mark: (context, payload) => context.emitEvent("marked", payload?.materialize() ?? null) },
           });
           host.connect(hostSocket);
           const events: unknown[] = [];

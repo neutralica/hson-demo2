@@ -4,7 +4,7 @@ import type {
   LiveHostConnection,
 } from "hson-live/livehost";
 import type { NodeApplicationSecurity } from "hson-live/livehost/node";
-import type { LocusSocketLike } from "hson-live/types";
+import type { LocusSocketLike } from "hson-live/locus";
 import { towl_room_id_from_host_id } from "../../app/demos/towl/index";
 import {
   create_towl_authority_application,

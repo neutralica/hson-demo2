@@ -1,5 +1,5 @@
 // stipple.layers.css.ts
-import type { CssMap } from "hson-live/types";
+import type { CssMap } from "hson-live/livetree";
 
 const STIPPLE_LAYER_BASE: CssMap = {
   position: "absolute",

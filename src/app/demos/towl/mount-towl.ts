@@ -1,5 +1,5 @@
 import type { LiveTree } from "hson-live/livetree";
-import type { LocusSessionCredential } from "hson-live/types";
+import type { LocusSessionCredential } from "hson-live/locus";
 import {
   create_browser_locus_socket,
 } from "hson-live/locus";

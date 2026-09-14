@@ -2,40 +2,18 @@ import { run_test_suites } from "../../core/test-runner";
 import type { RunOptions, RunResult, TestEvent, TestSuite } from "../../core/test-contracts";
 import { all_livemap_suites } from "../../../suites/livemap/suite-registry";
 import { all_livetree_suites } from "../../../suites/livetree/suite-registry";
-import { all_deterministic_transform_test_suites } from "../../hosted/deterministic-transform-test-suites";
 import { with_hosted_dom_runtime } from "./hosted-dom-mutex";
 
 export const JSDOM_HOSTED_TEST_SUITE_IDS = Object.freeze([
-  "livemap/bridge-livetree", "livemap/bridge-livetree-controls",
-  "livemap/schema-controls", "livemap/schema-validation-controls", "livemap/bind", "livemap/document-foundation",
-  "livetree/find", "livetree/attrs-and-flags", "livetree/mixed-regression", "livetree/extra-cases",
-  "livetree/regressions/graft", "livetree/legacy-attrs-flags", "livetree/legacy-empty-append",
-  "livetree/legacy-dataset", "livetree/identity-stability", "livetree/legacy-css-value-selection",
-  "livetree/final-legacy-css-empty", "livetree/more-dataset", "livetree/more-css", "livetree/more-find",
-  "livetree/css-manager-lifecycle", "livetree/node-lifecycle", "livetree/listeners-teardown",
-  "livetree/root-multi-isolation", "livetree/document-question", "livetree/error-handling",
-  "livetree/roundtrip-projection", "livetree/sync-perf", "livetree/completionist", "livetree/svg/basic",
-  "livetree/svg/gnarly", "livetree/recent-api", "livetree/listener-cleanup", "livetree/form",
-  "livetree/css-surface-accessors", "livetree/css-refinements", "livetree/new-css-vars-get-sel",
-  "livetree/more-find-findall", "livetree/css-pseudo-selector-unification",
-  "livetree/css-var-facade-surfaces", "livetree/get-many-surface",
-  "livetree/animation-identifier-preservation", "livetree/dom-contains-surface",
-  "livetree/listen-api-surface", "livetree/quid-scoped-media", "livetree/find-query-surface",
+  "livemap/bind",
+  "livetree/svg/basic", "livetree/svg/gnarly", "livetree/svg/intermediate",
+  "livetree/listener-cleanup", "livetree/form", "livetree/new-svg",
+  "livetree/document-ownership", "livetree/css-var-facade-surfaces", "livetree/get-many-surface",
   "livetree/text-content-surface", "livetree/listener-builder-corners", "livetree/dom-helper-surface",
-  "livetree/regression-2", "livetree/quid-level-2", "livetree/lifecycle-public", "livetree/lifecycle-ownership", "livetree/allocation", "livetree/node-representation",
-  "livetree/coverage-css-and-content", "livetree/css-pseudo", "livetree/document", "livetree/create-size",
-  "livetree/new-svg", "livetree-18/treeselector-surface", "livetree/graph-dom-markup-surface",
-  "livetree/append-and-create", "livetree/regressions/css", "livetree/scheduling-and-events",
-  "livetree/svg/intermediate", "livetree/document-ownership", "livetree/construction-parity",
-  "transform/json/basic-test", "transform/legacy/json", "transform/misc-extra", "transform/hson",
-  "transform/json/level-2", "transform/invalid", "transform/hson/invalid",
-  "transform/legacy/html", "transform/html/new",
+  "livetree/graph-dom-markup-surface", "livetree/regression-2", "livetree/allocation",
 ] as const);
 
-export const JSDOM_HOSTED_DUPLICATE_CASE_KEYS = Object.freeze([
-  "livetree/css-manager-lifecycle::cssmanager-lifecycle-setting-same-value-twice-does-not-duplicate-declaration",
-  "livetree/document-question::multi-instance-find-is-scoped-to-instance-root-not-whole-document",
-] as const);
+export const JSDOM_HOSTED_DUPLICATE_CASE_KEYS = Object.freeze([] as const);
 
 export const JSDOM_HOSTED_DEFERRED_CASE_KEYS = Object.freeze([] as const);
 
@@ -45,7 +23,6 @@ export function all_jsdom_hosted_test_suites(): readonly TestSuite[] {
   const candidates = [
     ...all_livemap_suites(),
     ...all_livetree_suites(),
-    ...all_deterministic_transform_test_suites(),
   ];
   const byId = new Map(candidates.map((suite) => [suite.suite, suite]));
   const duplicateCaseKeys: string[] = [];

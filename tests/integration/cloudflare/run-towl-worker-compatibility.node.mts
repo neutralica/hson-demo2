@@ -1,4 +1,4 @@
-import type { LocusSocketLike } from "hson-live/types";
+import type { LocusSocketLike } from "hson-live/locus";
 import { resolve_towl_websocket_url } from "../../../src/app/demos/towl/mount-towl";
 import { make_towl_durable_object_runtime } from "../../../src/server/cloudflare/towl-durable-object-runtime";
 import { TOWL_DURABLE_OBJECT_INSTANCE_NAME, route_towl_worker_request } from "../../../src/server/cloudflare/towl-worker-routing";

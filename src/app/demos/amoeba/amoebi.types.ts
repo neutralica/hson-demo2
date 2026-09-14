@@ -1,5 +1,5 @@
 import type { LiveTree } from "hson-live/livetree";
-import type { SvgLiveTree } from "hson-live/types";
+import type { SvgLiveTree } from "hson-live/livetree";
 import type {
   SoftTileContactMetadata,
   SoftTilePackingDiagnostics,

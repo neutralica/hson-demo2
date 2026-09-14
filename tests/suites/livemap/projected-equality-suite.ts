@@ -1,5 +1,6 @@
 import { hson } from "hson-live";
-import type { JsonValue, LiveMap } from "hson-live/types";
+import type { JsonValue } from "hson-live/hson";
+import type { LiveMap } from "hson-live/livemap";
 import type { TestCase, TestSuite } from "../../harness/core/test-contracts";
 import { equal_row, ordered_keys_row, own_value_row, same_value_row } from "./assert-helpers";
 import { replay_fixture } from "./replay-test-helper";

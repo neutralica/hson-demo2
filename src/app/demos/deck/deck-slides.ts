@@ -116,7 +116,7 @@ server-side authority, coordination, history, and recovery
       kind: "text",
       text: `
 ### The core of hson-live
-A circuit of parsers and serializers that convert data to and from Hson. Transformations are stable across multiple cycles, without structural drift or data loss. hson-live's _circuit_test() diagnostic allows independent verification of the transformer chain for any valid string.
+A circuit of parsers and serializers that convert data to and from Hson. Transformations are stable across multiple cycles, without structural drift or data loss.
 hson-live supports:
 - JSON
 - HTML*

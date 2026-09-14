@@ -1,7 +1,7 @@
 // bud-config.ts
 
 import type { LiveTree } from "hson-live/livetree";
-import type { CssMap, KeyframesInput, AnimSpec } from "hson-live/types";
+import type { CssMap, KeyframesInput, AnimSpec } from "hson-live/livetree";
 import type { PropertyRegistration } from "hson-live/livetree";
 
 export type BudList = Record<string, BudSpec>;

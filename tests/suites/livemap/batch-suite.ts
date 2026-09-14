@@ -1,7 +1,7 @@
 // batch-suite.ts
 
 import { hsonLiveMap, make_livemap_core } from "hson-live/livemap";
-import type { JsonValue } from "hson-live/types";
+import type { JsonValue } from "hson-live/hson";
 import type { TestCase, TestSuite } from "../../harness/core/test-contracts";
 import { equal_row, preview_value } from "./test-helpers";
 import { hsonTransform } from "hson-live/transform";

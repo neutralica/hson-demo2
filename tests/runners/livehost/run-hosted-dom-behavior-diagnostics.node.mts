@@ -1,5 +1,3 @@
-import { _circuit_test } from "hson-live/diagnostics";
-import { all_deterministic_transform_test_suites } from "../../harness/hosted/deterministic-transform-test-suites";
 import { run_test_suites } from "../../harness/core/test-runner";
 import type { TestSuite } from "../../harness/core/test-contracts";
 import { with_hosted_dom_runtime } from "../../harness/runtimes/dom/hosted-dom-mutex";
@@ -12,13 +10,10 @@ const BEHAVIOR_SUITE_IDS = Object.freeze([
   "livetree/svg/intermediate",
   "livetree/document-ownership",
   "livetree/construction-parity",
-  "transform/legacy/html",
-  "transform/html/new",
 ] as const);
 
 const candidates: readonly TestSuite[] = [
   ...all_livetree_suites(),
-  ...all_deterministic_transform_test_suites(),
 ];
 const byId = new Map(candidates.map((suite) => [suite.suite, suite]));
 

@@ -2,7 +2,7 @@ import { hson } from "hson-live";
 import { flush_dom } from "../inspector/inspector.helpers";
 import type { TestSuite } from "../../harness/core/test-contracts";
 import type { LiveTreeCaseSpec } from "../livemap/livemap-tests.types";
-import { tick } from "./livetree-03";
+import { tick } from "../../helpers/tick";
 import { make_livetree_suite } from "./make-livetree-suite";
 import { notify_hosted_test_resize } from "../../harness/runtimes/dom/hosted-test-geometry";
 
@@ -453,7 +453,7 @@ export function livetree_canvas_pointer(): TestSuite {
 
     {
       suite: SUITE,
-      caseId: "canvas.display.match.watch-updates-backing-size-after-display-resize", name: "canvas.display.match.watch updates backing size after display resize",
+      caseId: "canvas.display.match.watch-updates-backing-size-after-display-resize-first", name: "canvas.display.match.watch updates backing size after display resize",
       dom: true,
       fixture: "canvas/pointer",
       sub: "match-watch-resize",
@@ -517,7 +517,7 @@ export function livetree_canvas_pointer(): TestSuite {
 
     {
       suite: SUITE,
-      caseId: "canvas.display.match.watch-updates-backing-size-after-display-resize", name: "canvas.display.match.watch updates backing size after display resize",
+      caseId: "canvas.display.match.watch-updates-backing-size-after-display-resize-repeat", name: "canvas.display.match.watch updates backing size after display resize",
       dom: true,
       fixture: "canvas/pointer",
       sub: "match-watch-resize",

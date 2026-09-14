@@ -1,6 +1,19 @@
 // tests.types.ts
 
-import type { Artifact, FixtureAtom, LoopOpts, LoopReport } from "hson-live/diagnostics";
+export type Artifact = string;
+export type FixtureAtom = unknown;
+export type LoopOpts = Readonly<{
+  entry?: string;
+  dual?: boolean;
+  times?: number;
+  verbose?: boolean;
+  capture?: boolean;
+  stopOnFirstFail?: boolean;
+}>;
+export type LoopReport = Readonly<{
+  ok: boolean;
+  failures?: readonly Readonly<{ step: string; error?: string }> [];
+}>;
 import type {
   CaseMeta,
   TestDescriptorMetadata,
@@ -173,11 +186,6 @@ export type SuiteLog = Readonly<{
 
 export type FixtureMap = Readonly<Record<string, FixtureAtom>>;
 export type FixtureBundle = Readonly<Record<string, FixtureMap>>;
-
-export type HsonTestApi = Readonly<{
-  _circuit_test: (atom: FixtureAtom, opts?: Partial<LoopOpts>) => LoopReport;
-}>;
-
 
 export type BuildSuitesOpts = Readonly<{
   seed?: number;

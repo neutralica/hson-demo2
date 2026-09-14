@@ -1,4 +1,4 @@
-import { tick } from "../livetree/livetree-03";
+import { tick } from "../../helpers/tick";
 
 /** Historical location retained only for deterministic DOM scheduling fixtures. */
 export async function flush_dom(): Promise<void> {

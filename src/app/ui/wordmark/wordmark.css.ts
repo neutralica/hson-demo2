@@ -1,4 +1,4 @@
-import type { CssMap } from "hson-live/types";
+import type { CssMap } from "hson-live/livetree";
 import { _fontWeight, _fontSize } from "../../core/consts/ui-consts";
 import { _colors } from "../../core/consts/colors.consts";
 import { SYS_MONOfont } from "../../core/consts/ui-consts";

@@ -63,7 +63,7 @@ export function locus_host_disposal_suite(): TestSuite {
           actions: { act: () => { calls += 1; } },
         });
         const lifecycle: string[] = [];
-        host.sessions.on_change((event) => {
+        host.sessions.onChange((event) => {
           if (event.kind === "revoked") lifecycle.push(`${event.kind}:${event.reason}`);
           else lifecycle.push(event.kind);
         });
@@ -81,7 +81,7 @@ export function locus_host_disposal_suite(): TestSuite {
         const lateConnection = host.connect(lateSocket);
         lateConnection();
         lateConnection();
-        const response = await host.dispatch_action({ type: "action", id: "direct-a", name: "act" });
+        const response = await host.dispatchAction({ type: "action", id: "direct-a", name: "act" });
         return {
           listenersBefore,
           listenersAfter,
@@ -124,7 +124,7 @@ export function locus_host_disposal_suite(): TestSuite {
           },
         });
         const events: string[] = [];
-        host.sessions.on_change((event) => {
+        host.sessions.onChange((event) => {
           events.push(event.kind === "revoked" ? `${event.kind}:${event.reason}` : event.kind);
         });
         const socket = make_socket();
@@ -238,7 +238,7 @@ export function locus_host_disposal_suite(): TestSuite {
               origin = ctx.origin;
               await gate;
               await ctx.mutate((draft) => draft.set(["finished"], true));
-              emitted = ctx.emit_event("late", null);
+              emitted = ctx.emitEvent("late", null);
             },
           },
         });
@@ -266,10 +266,10 @@ export function locus_host_disposal_suite(): TestSuite {
         if (!created.ok) throw new Error(created.error.message);
         const host = created.value;
         const deleted = store.delete("room-a");
-        const responseBeforeDispose = await host.dispatch_action({ type: "action", id: "increment-a", name: "increment" });
+        const responseBeforeDispose = await host.dispatchAction({ type: "action", id: "increment-a", name: "increment" });
         host.dispose();
         const deletedAgain = store.delete("room-a");
-        const responseAfterDispose = await host.dispatch_action({ type: "action", id: "increment-b", name: "increment" });
+        const responseAfterDispose = await host.dispatchAction({ type: "action", id: "increment-b", name: "increment" });
         return {
           deleted,
           deletedAgain,

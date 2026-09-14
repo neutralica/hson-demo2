@@ -175,7 +175,7 @@ function install_towl_focus_rules(): void {
 }
 
 export const set_global_css = (): void => {
-  const gcss =CssManager.api();
+  const gcss = CssManager.api();
   gcss.rule("ua:form-fields:transparent", "textarea, input, select, button").setMany({
     background: "transparent",
     color: "inherit",

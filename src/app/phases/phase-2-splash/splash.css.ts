@@ -1,6 +1,6 @@
 // css.consts.ts
 
-import type { CssMap } from "hson-live/types";
+import type { CssMap } from "hson-live/livetree";
 import { sunColor, sunFade, SKY_GRADIENT } from "./splash.consts";
 import { _colors } from "../../core/consts/colors.consts";
 

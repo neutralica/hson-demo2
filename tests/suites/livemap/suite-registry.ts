@@ -1,6 +1,7 @@
 // all-livemap-suites.ts
 
-import type { HsonNode, JsonValue, LivePath } from "hson-live/types";
+import type { HsonNode, JsonValue } from "hson-live/hson";
+import type { LivePath } from "hson-live/livemap";
 import type { Asserter, TestSuite } from "../../harness/core/test-contracts";
 import { livemap_suites_core } from "./core-suite";
 import { livemap_suite_editor } from "./editor-suite";
@@ -19,15 +20,10 @@ import { livemap_link_contract_suites } from "./link-contract-suite";
 import { snap_live_path } from "hson-live/livemap";
 import { livemap_suite_html_proof } from "./html-livemap-suite";
 import { livemap_suites_bridge } from "./bridge-suite";
-import { livemap_suites_bridge_livetree } from "./bridge-livetree-suite";
-import { livemap_suites_bridge_livetree_controls } from "./bridge-livetree-2";
-import { livemap_suites_schema_controls } from "./generated-control-suite";
-import { livemap_suites_schema_validation_controls } from "./schema-control-suite-2";
 import { livemap_misc_suite } from "./misc-suite";
 import { livemap_bind_suite } from "./bind-suite";
 import { livemap_suite_rev } from "./rev-suite";
 import { livemap_suite_replay } from "./replay-suite";
-import { livemap_document_foundation_suite } from "./document-foundation-suite";
 import {
   livemap_projected_ingress_rejection_suite,
   livemap_projected_ingress_suite,
@@ -100,15 +96,10 @@ export function all_livemap_suites(): readonly TestSuite[] {
     livemap_editor_contract(),
     livemap_link_contract_suites(),
     livemap_suites_bridge(),
-    livemap_suites_bridge_livetree(),
-    livemap_suites_bridge_livetree_controls(),
-    livemap_suites_schema_controls(),
-    livemap_suites_schema_validation_controls(),
     livemap_misc_suite(),
     livemap_bind_suite(),
     livemap_suite_rev(),
     livemap_suite_replay(),
-    livemap_document_foundation_suite(),
     livemap_projected_ingress_suite(),
     livemap_projected_ingress_rejection_suite(),
     livemap_projected_equality_suite(),

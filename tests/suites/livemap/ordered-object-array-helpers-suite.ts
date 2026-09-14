@@ -1,5 +1,5 @@
 import { hson } from "hson-live";
-import type { JsonValue } from "hson-live/types";
+import type { JsonValue } from "hson-live/hson";
 import type { TestCase, TestSuite } from "../../harness/core/test-contracts";
 import { equal_row, own_value_row, same_value_row } from "./assert-helpers";
 

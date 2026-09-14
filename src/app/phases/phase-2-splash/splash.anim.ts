@@ -1,4 +1,4 @@
-import type { AnimSpec } from "hson-live/types";
+import type { AnimSpec } from "hson-live/livetree";
 import { SKY_DURstr, SUN_TIMEstr, STAR_DURstr, STAR_DELstr, STAR_DURnum, SHORT_FLASHstr, flareDurStr, flareDelayNum, CLOUD_DURnum, CLOUD_DURstr, CLOUD_BAND_LOOPstr, CLOUD_FADE_ONCEstr, CLOUD_LAYER_FADEstr, CLOUD_SUN_KISSstr, flareLengthNum } from "./splash.consts";
 
 

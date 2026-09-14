@@ -1,4 +1,4 @@
-import { create_locus } from "hson-live/locus";
+import { create_locus, decode_locus_server_message } from "hson-live/locus";
 import type { TestCase, TestSuite } from "../../harness/core/test-contracts";
 import { equal_row, preview_value } from "../livemap/test-helpers";
 
@@ -11,6 +11,7 @@ type MemorySocket = Readonly<{
   receive(message: unknown): Promise<void>;
   receive_raw(message: string): Promise<void>;
   sent(): Array<Record<string, unknown>>;
+  raw(): readonly string[];
   listener_count(): number;
 }>;
 
@@ -30,6 +31,7 @@ function make_memory_socket(): MemorySocket {
     receive: (message: unknown) => deliver(JSON.stringify(message)),
     receive_raw: deliver,
     sent: () => sent.map((message) => JSON.parse(message) as Record<string, unknown>),
+    raw: () => sent,
     listener_count: () => messages.size + closes.size,
   });
 }
@@ -114,12 +116,14 @@ export function locus_socket_suite(): TestSuite {
           await create_session(socket, "create-a");
           await socket.receive({ type: "action", id: "action-a", name: "increment" });
           const response = socket.sent().at(-1);
+          const decoded = socket.raw().at(-1);
+          const semantic = decoded === undefined ? undefined : decode_locus_server_message(decoded);
           const result = {
             type: response?.type,
             id: response?.id,
             ok: response?.ok,
             seq: response?.seq,
-            result: response?.result,
+            result: semantic?.ok && semantic.value.type === "ack" ? semantic.value.result?.materialize() : undefined,
             count: host.map.at(["count"]).snap(),
           };
           host.dispose();

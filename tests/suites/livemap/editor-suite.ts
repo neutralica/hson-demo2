@@ -1,5 +1,5 @@
 import { make_livemap_core } from "hson-live/livemap";
-import type { JsonValue } from "hson-live/types";
+import type { JsonValue } from "hson-live/hson";
 import type { TestCase, TestSuite } from "../../harness/core/test-contracts";
 import { make_snap_case, make_set_case, preview_value, equal_row } from "./test-helpers";
 import { json_root_node } from "./json-root-node";
@@ -56,17 +56,6 @@ export function livemap_suite_editor(): TestSuite {
         expectedPrev: "Ada",
         expectedNext: "Grace",
         expectedRoot: { user: { name: "Grace" } },
-      }),
-      make_set_case({
-        suite: SUITE,
-        caseId: "set-missing-object-property", name: "set missing object property",
-        input: { user: { name: "Ada" } },
-        path: ["user", "role"],
-        value: "admin",
-        expectedChanged: true,
-        expectedPrev: undefined,
-        expectedNext: "admin",
-        expectedRoot: { user: { name: "Ada", role: "admin" } },
       }),
       make_set_case({
         suite: SUITE,

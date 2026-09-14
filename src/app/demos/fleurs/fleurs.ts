@@ -1,6 +1,6 @@
 // fleurs.ts
 
-import type { SvgLiveTree } from "hson-live/types";
+import type { SvgLiveTree } from "hson-live/livetree";
 import { make_flower_rng, type Rng } from "./fleurs-rng";
 import { pickFlowerPalette, pick_center_color, fmtNum } from "./fleurs-cols";
 import { lerp, pickOne } from "./fleurs-helpers";

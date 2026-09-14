@@ -1,4 +1,4 @@
-import type { KeyframesInput } from "hson-live/types";
+import type { KeyframesInput } from "hson-live/livetree";
 
 
 

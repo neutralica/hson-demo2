@@ -1,6 +1,4 @@
 import { with_hosted_dom_runtime } from "../../harness/runtimes/dom/hosted-dom-mutex";
-import { _circuit_test } from "hson-live/diagnostics";
-import { all_deterministic_transform_test_suites } from "../../harness/hosted/deterministic-transform-test-suites";
 import { run_test_suites } from "../../harness/core/test-runner";
 import type { TestSuite } from "../../harness/core/test-contracts";
 import { all_livemap_suites } from "../../suites/livemap/suite-registry";
@@ -9,13 +7,11 @@ import { all_livetree_suites } from "../../suites/livetree/suite-registry";
 const DOM_LIVEMAP_IDS = new Set([
   "livemap/bridge-livetree", "livemap/bridge-livetree-controls",
   "livemap/schema-controls", "livemap/schema-validation-controls", "livemap/bind",
-  "livemap/document-foundation",
 ]);
 
 const suites: readonly TestSuite[] = [
   ...all_livemap_suites().filter((suite) => DOM_LIVEMAP_IDS.has(suite.suite)),
   ...all_livetree_suites(),
-  ...all_deterministic_transform_test_suites(),
 ];
 
 const originalLog = console.log;

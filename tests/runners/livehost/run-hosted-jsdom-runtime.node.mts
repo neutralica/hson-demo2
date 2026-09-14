@@ -1,5 +1,4 @@
 import { JSDOM } from "jsdom";
-import { make_sanitizer } from "hson-live";
 import { HOSTED_TEST_GEOMETRY_SERVICE } from "../../harness/runtimes/dom/hosted-test-geometry";
 import { HOSTED_DOM_GLOBAL_NAMES, install_hosted_dom_runtime } from "../../harness/runtimes/dom/hosted-dom-runtime";
 import {
@@ -24,15 +23,6 @@ function same_descriptor(left: PropertyDescriptor | undefined, right: PropertyDe
 
 const before = new Map(HOSTED_DOM_GLOBAL_NAMES.map((name) => [name, Object.getOwnPropertyDescriptor(globalThis, name)]));
 const geometryServiceBefore = Object.getOwnPropertyDescriptor(globalThis, HOSTED_TEST_GEOMETRY_SERVICE);
-const purifierDomA = new JSDOM("<!doctype html><p>A</p>");
-const purifierDomB = new JSDOM("<!doctype html><p>B</p>");
-const sanitizerA = make_sanitizer(purifierDomA.window as unknown as Window);
-const sanitizerAAgain = make_sanitizer(purifierDomA.window as unknown as Window);
-const sanitizerB = make_sanitizer(purifierDomB.window as unknown as Window);
-expect_runtime(sanitizerA === sanitizerAAgain && sanitizerA !== sanitizerB, "sanitizers cache per window and never cross windows");
-purifierDomA.window.close();
-expect_runtime(sanitizerB.sanitize("<b>B</b>") === "<b>B</b>", "closing window A does not rebind window B's sanitizer");
-purifierDomB.window.close();
 const runtime = install_hosted_dom_runtime();
 expect_runtime(runtime.document === globalThis.document && runtime.window === globalThis.window, "runtime installs its own window and document");
 expect_runtime(new DOMParser().parseFromString("<x/>", "application/xml").documentElement.tagName === "x", "DOMParser is operational");

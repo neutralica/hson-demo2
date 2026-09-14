@@ -1,4 +1,4 @@
-import type { LocusSocketLike } from "hson-live/locus";
+import { encode_locus_client_message, type LocusSocketLike } from "hson-live/locus";
 import type { TestCase } from "../../harness/core/test-contracts";
 import { equal_row, preview_value } from "../livemap/test-helpers";
 import type { TowlActions, TowlRuntime } from "../../../src/app/demos/towl/index";
@@ -26,7 +26,7 @@ export function make_towl_socket(): TowlMemorySocket {
       return () => { closes.delete(listener); };
     },
     async receive(message: unknown): Promise<void> {
-      const raw = JSON.stringify(message);
+      const raw = typeof message === "string" ? message : JSON.stringify(message);
       for (const listener of [...messages]) listener(raw);
       for (let index = 0; index < 16; index += 1) await Promise.resolve();
     },
@@ -88,14 +88,14 @@ export async function send_towl_action<TName extends keyof TowlActions & string>
 ): Promise<Record<string, unknown>> {
   const id = `towl-action-${++nextActionId}`;
 
-  await socket.receive({
+  await socket.receive(encode_locus_client_message({
     type: "action",
     id,
     name,
     ...(payload !== undefined ? { payload } : {}),
     ...(options.clientId !== undefined ? { clientId: options.clientId } : {}),
     ...(options.requestId !== undefined ? { requestId: options.requestId } : {}),
-  });
+  }));
 
   const sent = socket.sent();
 

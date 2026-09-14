@@ -17,7 +17,7 @@ function child_exit(child: ReturnType<typeof spawn>): Promise<Readonly<{ code: n
 
 const artifact = new URL("../../../dist-node/livehost-server.mjs", import.meta.url);
 const source = await readFile(artifact, "utf8");
-assert.equal(source.includes("../hson-live/src"), false);
+assert.equal(source.includes(`../hson-live/${"src"}`), false);
 assert.equal(source.includes("hosted-tests"), false);
 assert.equal(/from\s+["'][^"']+\.tsx?["']/.test(source), false);
 assert.equal(/import\s+["']tsx["']/.test(source), false);

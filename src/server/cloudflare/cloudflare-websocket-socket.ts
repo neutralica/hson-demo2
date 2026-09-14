@@ -1,4 +1,4 @@
-import type { LocusSocketLike } from "hson-live/types";
+import type { LocusSocketLike } from "hson-live/locus";
 
 export type CloudflareLocusSocket = Readonly<{
   socket: LocusSocketLike;

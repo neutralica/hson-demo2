@@ -1,7 +1,7 @@
 // error-underline.ts
 
 import { hsonLiveTree, type LiveTree } from "hson-live/livetree";
-import type { SvgLiveTree } from "hson-live/types";
+import type { SvgLiveTree } from "hson-live/livetree";
 
 
 export const ERROR_UNDERLINE_PRESET = {

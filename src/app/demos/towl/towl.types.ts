@@ -2,7 +2,7 @@ import type {
   Locus,
   LocusSessionOptions,
 } from "hson-live/locus";
-import type { LiveMap, LiveMapPathHandle } from "hson-live/types";
+import type { LiveMap, LiveMapPathHandle } from "hson-live/livemap";
 import type { TOWL_SCHEMAType } from "./towl.schema";
 
 export type TowlSeatId = "player1" | "player2";

@@ -1,10 +1,6 @@
 import { LocusDisconnectedError } from "hson-live/locus";
 import { EchoRecoveryError, EchoSessionError } from "hson-live/echo";
-import type {
-  LocusDisposer,
-  LocusSessionCredential,
-  LocusSocketLike,
-} from "hson-live/types";
+import type { LocusDisposer, LocusSessionCredential, LocusSocketLike } from "hson-live/locus";
 import type { TestSuite } from "../../harness/core/test-contracts";
 import { TOWL_SCHEMA } from "../../../src/app/demos/towl/towl.schema";
 import {

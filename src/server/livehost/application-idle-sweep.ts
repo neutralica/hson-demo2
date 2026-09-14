@@ -1,4 +1,4 @@
-import type { LocusActivity, LocusDisposer } from "hson-live/types";
+import type { LocusActivity, LocusDisposer } from "hson-live/locus";
 
 type ApplicationIdleEntry = {
   readonly activity: LocusActivity;
@@ -96,7 +96,7 @@ export function create_application_idle_sweep(
         idleSince: now(),
         stopActivity: () => {},
       };
-      entry.stopActivity = activity.on_change(() => reconcile(entry));
+      entry.stopActivity = activity.onChange(() => reconcile(entry));
       reconcile(entry);
       entries.set(key, entry);
     },

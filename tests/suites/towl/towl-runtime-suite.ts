@@ -1,4 +1,4 @@
-import type { LocusDisposer } from "hson-live/locus";
+import { decode_locus_server_message, encode_locus_client_message, type LocusDisposer } from "hson-live/locus";
 import type { TestSuite } from "../../harness/core/test-contracts";
 import {
   create_towl_runtime,
@@ -50,7 +50,10 @@ function error_code(response: Record<string, unknown>): unknown {
 }
 
 function result_value(response: Record<string, unknown>): unknown {
-  return response.type === "ack" ? response.result : undefined;
+  const decoded = decode_locus_server_message(JSON.stringify(response));
+  return decoded.ok && decoded.value.type === "ack" && decoded.value.result !== undefined
+    ? decoded.value.result.materialize()
+    : undefined;
 }
 
 async function with_runtime<TResult>(
@@ -72,7 +75,7 @@ export function towl_runtime_suite(): TestSuite {
     cases: [
       towl_case(SUITE, "direct-dispatch-cannot-claim-player-authority", "direct dispatch cannot claim player authority", async () => with_runtime(async (runtime) => {
         const before = runtime.host.map.rev;
-        const response = await runtime.host.dispatch_action({ type: "action", id: "direct-join", name: "join" });
+        const response = await runtime.host.dispatchAction({ type: "action", id: "direct-join", name: "join" });
         return { type: response.type, code: response.type === "error" ? response.error.code : undefined, rev: runtime.host.map.rev - before };
       }), { type: "error", code: "TOWL_SESSION_REQUIRED", rev: 0 }),
       towl_case(SUITE, "lazy-non-resumable-session-cannot-occupy-a-seat", "lazy non-resumable session cannot occupy a seat", async () => with_runtime(async (runtime) => {
@@ -146,7 +149,7 @@ export function towl_runtime_suite(): TestSuite {
       towl_case(SUITE, "ready-actions-start-play-in-one-commit-each", "ready actions start play in one commit each", async () => with_runtime(async (runtime) => {
         const pair = await join_towl_pair(runtime);
         const commits: unknown[] = [];
-        const stop = runtime.host.stream.on_commit((commit) => commits.push(commit));
+        const stop = runtime.host.stream.onCommit((commit) => commits.push(commit));
         const before = runtime.host.map.rev;
         await send_towl_action(pair.first, "set_ready", { ready: true });
         const afterFirst = runtime.host.map.snap().phase;
@@ -181,12 +184,12 @@ export function towl_runtime_suite(): TestSuite {
       towl_case(SUITE, "malformed-action-payload-is-rejected-before-game-code", "malformed action payload is rejected before game code", async () => with_runtime(async (runtime) => {
         const pair = await join_towl_pair(runtime);
         const before = runtime.host.map.rev;
-        await pair.first.receive({
+        await pair.first.receive(encode_locus_client_message({
           type: "action",
           id: "invalid-ready",
           name: "set_ready",
           payload: { ready: true, extra: true },
-        });
+        }));
         const response = pair.first.sent().find((message) => message.id === "invalid-ready");
         return { code: response === undefined ? undefined : error_code(response), revDelta: runtime.host.map.rev - before };
       }), { code: "LOCUS_SCHEMA_INVALID_PAYLOAD", revDelta: 0 }),
@@ -211,7 +214,7 @@ export function towl_runtime_suite(): TestSuite {
         const pair = await start_towl_round(runtime);
         for (let index = 1; index < TOWL_WIN_POSITION; index += 1) await send_towl_action(pair.first, "pull");
         const snapshots: unknown[] = [];
-        const stop = runtime.host.stream.on_commit(() => snapshots.push(runtime.host.map.snap()));
+        const stop = runtime.host.stream.onCommit(() => snapshots.push(runtime.host.map.snap()));
         const before = runtime.host.map.rev;
         const response = await send_towl_action(pair.first, "pull");
         stop();
@@ -389,7 +392,7 @@ export function towl_runtime_suite(): TestSuite {
         const pair = await start_towl_round(runtime);
         await send_towl_action(pair.first, "pull");
         await send_towl_action(pair.second, "pull");
-        const history = runtime.host.stream.history.replay_after(1);
+        const history = runtime.host.stream.history.replayAfter(1);
         return {
           commits: history?.length,
           revs: history?.map((commit) => [

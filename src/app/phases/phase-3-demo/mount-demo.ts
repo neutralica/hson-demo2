@@ -1,5 +1,5 @@
 import { LiveTree } from "hson-live/livetree";
-import type { SvgLiveTree } from "hson-live/types";
+import type { SvgLiveTree } from "hson-live/livetree";
 import { _colors } from "../../core/consts/colors.consts";
 import { LETTER_LOWS, HSONlower } from "../../core/consts/config.consts";
 import { OKLCH_NEUTRALS } from "../../core/consts/oklch.consts";

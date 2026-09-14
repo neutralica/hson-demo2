@@ -1,6 +1,4 @@
-import { performance } from "node:perf_hooks";
-import { JSDOM } from "jsdom";
-import { hson, make_sanitizer } from "hson-live";
+import { hson } from "hson-live";
 import { with_hosted_dom_runtime } from "../../harness/runtimes/dom/hosted-dom-mutex";
 
 function expect_sanitizer(condition: unknown, message: string): asserts condition {
@@ -8,19 +6,6 @@ function expect_sanitizer(condition: unknown, message: string): asserts conditio
 }
 
 expect_sanitizer(typeof window === "undefined", "hson-live imports without ambient window access");
-const domA = new JSDOM("<!doctype html><p>A</p>");
-const domB = new JSDOM("<!doctype html><p>B</p>");
-const started = performance.now();
-const sanitizerA = make_sanitizer(domA.window as unknown as Window);
-const sanitizerConstructionMs = performance.now() - started;
-const sanitizerAAgain = make_sanitizer(domA.window as unknown as Window);
-const sanitizerB = make_sanitizer(domB.window as unknown as Window);
-expect_sanitizer(sanitizerA === sanitizerAAgain, "one window reuses its WeakMap-cached sanitizer");
-expect_sanitizer(sanitizerA !== sanitizerB, "different windows receive distinct sanitizers");
-expect_sanitizer(sanitizerA.sanitize("<script>x</script><b>A</b>").includes("<b>A</b>"), "window A sanitizer is operational");
-domA.window.close();
-expect_sanitizer(sanitizerB.sanitize("<i>B</i>") === "<i>B</i>", "disposing window A cannot rebind window B");
-domB.window.close();
 
 let documentA: Document | undefined;
 await with_hosted_dom_runtime((runtime) => {
@@ -43,4 +28,4 @@ await with_hosted_dom_runtime((runtime) => {
 });
 expect_sanitizer(typeof window === "undefined" && typeof document === "undefined", "sanitizer runs leave no hosted DOM globals");
 
-console.log(JSON.stringify({ sanitizerConstructionMs }));
+console.log(JSON.stringify({ sanitizer: "public ingress" }));

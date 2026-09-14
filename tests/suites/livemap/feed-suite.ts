@@ -1,7 +1,8 @@
 // livemap-suites-feed.ts
 
 import { make_livemap_core, make_livemap_feed_hub, paths_overlap } from "hson-live/livemap";
-import type { JsonValue, LiveMapCommit, LiveMapFeedEvent, LivePath } from "hson-live/types";
+import type { JsonValue } from "hson-live/hson";
+import type { LiveMapCommit, LiveMapFeedEvent, LivePath } from "hson-live/livemap";
 import type { TestCase, TestSuite } from "../../harness/core/test-contracts";
 import { equal_row, preview_value } from "./test-helpers";
 import type { LiveMapFeedEventPreview } from "./types";

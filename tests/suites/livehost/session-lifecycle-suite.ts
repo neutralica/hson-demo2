@@ -111,7 +111,7 @@ export function locus_session_lifecycle_suite(): TestSuite {
       lifecycle_case("explicit-resumable-creation-emits-attached-created", "explicit resumable creation emits attached created", async () => {
         const host = create_locus({ state: {}, sessionId: () => "resume-a" });
         const events: string[] = [];
-        host.sessions.on_change((event) => events.push(label(event)));
+        host.sessions.onChange((event) => events.push(label(event)));
         const socket = make_socket();
         host.connect(socket);
         await socket.receive({ type: "session-create", id: "create-a" });
@@ -127,7 +127,7 @@ export function locus_session_lifecycle_suite(): TestSuite {
           sessions: { graceMs: 50, now: clock.now, schedule: clock.schedule },
         });
         const snapshots: unknown[] = [];
-        host.sessions.on_change((event) => {
+        host.sessions.onChange((event) => {
           if (event.kind === "detached") snapshots.push(event.session);
         });
         const socket = make_socket();
@@ -158,7 +158,7 @@ export function locus_session_lifecycle_suite(): TestSuite {
         let next = 0;
         const host = create_locus({ state: {}, sessionId: () => `fence-${++next}` });
         const events: string[] = [];
-        host.sessions.on_change((event) => events.push(label(event)));
+        host.sessions.onChange((event) => events.push(label(event)));
         const first = make_socket();
         host.connect(first);
         await first.receive({ type: "session-create", id: "create-c" });
@@ -187,7 +187,7 @@ export function locus_session_lifecycle_suite(): TestSuite {
           actions: { inspect: (ctx) => { origins.push(ctx.origin); } },
         });
         const events: string[] = [];
-        host.sessions.on_change((event) => events.push(label(event)));
+        host.sessions.onChange((event) => events.push(label(event)));
         const first = make_socket();
         host.connect(first);
         await first.receive({ type: "session-create", id: "create-d" });
@@ -221,7 +221,7 @@ export function locus_session_lifecycle_suite(): TestSuite {
           sessions: { graceMs: 10, now: clock.now, schedule: clock.schedule },
         });
         const events: string[] = [];
-        host.sessions.on_change((event) => events.push(label(event)));
+        host.sessions.onChange((event) => events.push(label(event)));
         const socket = make_socket();
         host.connect(socket);
         await socket.receive({ type: "session-create", id: "create-e" });
@@ -249,7 +249,7 @@ export function locus_session_lifecycle_suite(): TestSuite {
           sessions: { graceMs: 10, now: clock.now, schedule: clock.schedule },
         });
         const events: string[] = [];
-        host.sessions.on_change((event) => events.push(label(event)));
+        host.sessions.onChange((event) => events.push(label(event)));
         const socket = make_socket();
         host.connect(socket);
         await socket.receive({ type: "session-create", id: "create-f" });
@@ -269,7 +269,7 @@ export function locus_session_lifecycle_suite(): TestSuite {
           sessions: { graceMs: 5, now: clock.now, schedule: clock.schedule },
         });
         const events: string[] = [];
-        host.sessions.on_change((event) => events.push(label(event)));
+        host.sessions.onChange((event) => events.push(label(event)));
         const owner = make_socket();
         host.connect(owner);
         await owner.receive({ type: "session-create", id: "create-g" });
@@ -303,8 +303,8 @@ export function locus_session_lifecycle_suite(): TestSuite {
         const host = create_locus({ state: {}, sessionId: () => "listener-a" });
         const delivered: string[] = [];
         const agreements: boolean[] = [];
-        host.sessions.on_change(() => { throw new Error("observer failure"); });
-        const stop = host.sessions.on_change((event) => {
+        host.sessions.onChange(() => { throw new Error("observer failure"); });
+        const stop = host.sessions.onChange((event) => {
           delivered.push(label(event));
           if ("session" in event) {
             const current = host.sessions.debug().sessions.find((item) => item.sessionId === event.session.sessionId);
@@ -352,7 +352,7 @@ export function locus_session_lifecycle_suite(): TestSuite {
           sessions: { graceMs: 20, now: clock.now, schedule: clock.schedule },
         });
         const events: string[] = [];
-        host.sessions.on_change((event) => events.push(label(event)));
+        host.sessions.onChange((event) => events.push(label(event)));
         const attached = make_socket();
         const disconnected = make_socket();
         host.connect(attached);
@@ -363,7 +363,7 @@ export function locus_session_lifecycle_suite(): TestSuite {
         host.sessions.dispose();
         host.sessions.dispose();
         let replayed = false;
-        host.sessions.on_change(() => { replayed = true; })();
+        host.sessions.onChange(() => { replayed = true; })();
         clock.advance(100);
         return {
           events,
